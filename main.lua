@@ -1,8 +1,19 @@
 local mod = RegisterMod("DND", 1)
+local VeeHelper = require("src_dndtable.veeHelper")
 DnDMod = mod
-local game = Game()
-local sound = SFXManager()
 
-local function KidNamedMrSeemsGood()
-	print("sanio dont add the eevee burger to the mod dont do it")
+function mod:OnPostRender()
+
 end
+mod:AddCallback(ModCallbacks.MC_POST_RENDER, mod.OnPostRender)
+
+function mod:OnPostUpdate()
+
+end
+mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.OnPostUpdate)
+
+---@param player EntityPlayer
+function mod:OnPostPlayerUpdate(player)
+
+end
+mod:AddCallback(ModCallbacks.MC_POST_PLAYER_UPDATE)
