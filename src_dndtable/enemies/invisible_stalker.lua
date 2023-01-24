@@ -1,4 +1,4 @@
-local g = require('src_dndtable.globals')
+local invisStalker = {}
 
 ---@param entity Entity
 local function setTransparency(entity, newTransparency)
@@ -12,18 +12,16 @@ local function resetTransparency(entity)
 end
 
 ---@param npc EntityNPC
-g.mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, function(_, npc)
-    if npc.Variant ~= 1 then return end
+function invisStalker:OnNPCUpdate(npc)
+    if npc.Variant ~= 0 then return end
     local s = npc:GetSprite()
 
     if npc.FrameCount == 1 then
-        s:Play('Idle')
+        s:Play('Idle', true)
         npc:GetData().startingPos = npc.Position
         npc:GetData().closingInCooldown = 0 -- after Invisible stalker is hit, it takes time to retreat.
                                             -- Then it sits and rests for 2 seconds before attempting next attack
     end
-
-    print(s:GetAnimation())
 
     local player = npc:GetPlayerTarget()
     if player then
@@ -49,7 +47,7 @@ g.mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, function(_, npc)
     if s:IsPlaying('Retreat') then
         if (npc:GetData().startingPos - npc.Position):LengthSquared() > 20 then
             -- retreating
-            npc.Velocity = (npc:GetData().startingPos - npc.Position):Normalized() * 7.5
+            npc.Velocity = (npc:GetData().startingPos - npc.Position):Normalized():Resized(7.5)
         else
             -- resting
             npc.Friction = 0
@@ -57,15 +55,17 @@ g.mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, function(_, npc)
             s:Play('Idle', true)
         end
     end
-end, g.ENTITY_DND_ENEMY)
+end
 
 ---@param tookDamage Entity
 ---@param source EntityRef
-g.mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, function(_, tookDamage, amount, damageFlags, source, countdownFrames)
-    if tookDamage.Variant ~= 1 then return end
+function invisStalker:OnTakeDamage(tookDamage, amount, damageFlags, source, countdownFrames)
+    if tookDamage.Variant ~= 0 then return end
 
     if tookDamage:GetSprite():IsPlaying("CloseIn") then
         tookDamage:GetSprite():Play("Retreat", true)
         resetTransparency(tookDamage)
     end
-end, g.ENTITY_DND_ENEMY)
+end
+
+return invisStalker

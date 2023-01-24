@@ -1,9 +1,8 @@
 local mod = RegisterMod("DND", 1)
-local VeeHelper = include("src_dndtable.veeHelper")
+local g = require("src_dndtable.globals")
 local dnd = include("src_dndtable.dndMinigame")
-require("src_dndtable.enemies.invisible_stalker")
-include("src_dndtable.enemies.bodak")
-DnDMod = mod
+local invisStalker = include("src_dndtable.enemies.invisible_stalker")
+local bodak = include("src_dndtable.enemies.bodak")
 
 function mod:OnPostRender()
 	dnd:OnRender()
@@ -23,3 +22,6 @@ function mod:OnPostPlayerUpdate(player)
 end
 
 mod:AddCallback(ModCallbacks.MC_POST_PLAYER_UPDATE, mod.OnPostPlayerUpdate)
+
+mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, invisStalker.OnNPCUpdate, g.INVIS_STALKER)
+mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, invisStalker.OnTakeDamage, g.INVIS_STALKER)
