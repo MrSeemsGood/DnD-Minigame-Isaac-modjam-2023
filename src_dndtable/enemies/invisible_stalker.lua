@@ -1,4 +1,5 @@
 local invisStalker = {}
+local invisStalker = {}
 
 ---@param entity Entity
 local function setTransparency(entity, newTransparency)
@@ -17,7 +18,7 @@ function invisStalker:onNpcUpdate(npc)
     local s = npc:GetSprite()
 
     if npc.FrameCount == 1 then
-        s:Play('Idle')
+        s:Play('Idle', true)
         npc:GetData().startingPos = npc.Position
         npc:GetData().closingInCooldown = 0 -- after Invisible stalker is hit, it takes time to retreat.
                                             -- Then it sits and rests for 2 seconds before attempting next attack
@@ -47,7 +48,7 @@ function invisStalker:onNpcUpdate(npc)
     if s:IsPlaying('Retreat') then
         if (npc:GetData().startingPos - npc.Position):LengthSquared() > 20 then
             -- retreating
-            npc.Velocity = (npc:GetData().startingPos - npc.Position):Normalized() * 7.5
+            npc.Velocity = (npc:GetData().startingPos - npc.Position):Normalized():Resized(7.5)
         else
             -- resting
             npc.Friction = 0
