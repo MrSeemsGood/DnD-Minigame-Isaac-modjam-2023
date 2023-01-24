@@ -1,4 +1,4 @@
-local g = require('src_dndtable.globals')
+local invisStalker = {}
 
 ---@param entity Entity
 local function setTransparency(entity, newTransparency)
@@ -12,7 +12,7 @@ local function resetTransparency(entity)
 end
 
 ---@param npc EntityNPC
-g.mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, function(_, npc)
+function invisStalker:onNpcUpdate(npc)
     if npc.Variant ~= 1 then return end
     local s = npc:GetSprite()
 
@@ -22,8 +22,6 @@ g.mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, function(_, npc)
         npc:GetData().closingInCooldown = 0 -- after Invisible stalker is hit, it takes time to retreat.
                                             -- Then it sits and rests for 2 seconds before attempting next attack
     end
-
-    print(s:GetAnimation())
 
     local player = npc:GetPlayerTarget()
     if player then
@@ -57,15 +55,17 @@ g.mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, function(_, npc)
             s:Play('Idle', true)
         end
     end
-end, g.ENTITY_DND_ENEMY)
+end
 
 ---@param tookDamage Entity
 ---@param source EntityRef
-g.mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, function(_, tookDamage, amount, damageFlags, source, countdownFrames)
+function invisStalker:onEntityTakeDmg(tookDamage, amount, damageFlags, source, countdownFrames)
     if tookDamage.Variant ~= 1 then return end
 
     if tookDamage:GetSprite():IsPlaying("CloseIn") then
         tookDamage:GetSprite():Play("Retreat", true)
         resetTransparency(tookDamage)
     end
-end, g.ENTITY_DND_ENEMY)
+end
+
+return invisStalker
