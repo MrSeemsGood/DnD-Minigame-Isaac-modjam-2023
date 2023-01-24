@@ -738,7 +738,7 @@ end
 ---@param rng RNG
 function VeeHelper.GetDifferentRandomNum(currentNums, maxNum, rng)
 	local checkCount = 0
-	local randomNum = function() return rng:RandomInt(maxNum) end
+	local randomNum = function() return rng:RandomInt(maxNum) + 1 end
 	local num = randomNum()
 	local allNums = {}
 	for _, int in ipairs(currentNums) do
