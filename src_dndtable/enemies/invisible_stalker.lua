@@ -1,5 +1,9 @@
 local invisStalker = {}
-local invisStalker = {}
+local g = require("src_dndtable.globals")
+
+local STALKER_MOVESPEED_ATTACK = 7
+local STALKER_MOVESPEED_RETREAT = 9
+local STALKER_ATTACK_COOLDOWN = 60
 
 ---@param entity Entity
 local function setTransparency(entity, newTransparency)
@@ -32,23 +36,27 @@ function invisStalker:onNpcUpdate(npc)
                 npc:GetData().closingInCooldown = npc:GetData().closingInCooldown - 1
             else
                 npc.Friction = 1
-                npc:GetData().closingInCooldown = 60
-                s:Play('CloseIn', true)
+                npc:GetData().closingInCooldown = STALKER_ATTACK_COOLDOWN
+                g.sfx:Play(SoundEffect.SOUND_THE_FORSAKEN_LAUGH)
+                s:Play('AttackStart', true)
             end
-        elseif s:IsPlaying('CloseIn') then
-            npc.Velocity = (player.Position - npc.Position):Normalized() * 5
+        elseif s:IsFinished('AttackStart') then
+            g.sfx:Play(SoundEffect.SOUND_BIRD_FLAP)
+            s:Play('Attack', true)
+        elseif s:IsPlaying('Attack') then
+            npc.Velocity = (player.Position - npc.Position):Normalized() * STALKER_MOVESPEED_ATTACK
 
             -- reset transparency
             resetTransparency(npc)
 
-            setTransparency(npc, math.min(1, (npc.Position - player.Position):Length() / 100))
+            setTransparency(npc, math.min(1, (npc.Position - player.Position):Length() / 300))
         end
     end
 
     if s:IsPlaying('Retreat') then
         if (npc:GetData().startingPos - npc.Position):LengthSquared() > 20 then
             -- retreating
-            npc.Velocity = (npc:GetData().startingPos - npc.Position):Normalized():Resized(7.5)
+            npc.Velocity = (npc:GetData().startingPos - npc.Position):Normalized() * STALKER_MOVESPEED_RETREAT
         else
             -- resting
             npc.Friction = 0
@@ -63,8 +71,9 @@ end
 function invisStalker:onEntityTakeDmg(tookDamage, amount, damageFlags, source, countdownFrames)
     if tookDamage.Variant ~= 1 then return end
 
-    if tookDamage:GetSprite():IsPlaying("CloseIn") then
-        tookDamage:GetSprite():Play("Retreat", true)
+    if tookDamage:GetSprite():IsPlaying('Attack') then
+        tookDamage:GetSprite():Play('Retreat', true)
+        g.sfx:Play(SoundEffect.SOUND_BOSS_LITE_HISS)
         resetTransparency(tookDamage)
     end
 end

@@ -5,7 +5,7 @@
     </entity>
 
     <!-- enemies -->
-    <entity anm2path="898.001_invisiblestalker.anm2" baseHP="20" boss="0" champion="0" collisionDamage="1" collisionMass="3" collisionRadius="12" friction="1" id="898" variant="1" name="Invisible stalker" numGridCollisionPoints="12" shadowSize="16" stageHP="0">
+    <entity anm2path="898.001_invisiblestalker.anm2" baseHP="20" boss="0" champion="0" gridCollision="walls" collisionDamage="1" collisionMass="3" collisionRadius="12" friction="1" id="898" variant="1" name="Invisible stalker" numGridCollisionPoints="12" shadowSize="16" stageHP="0">
         <gibs amount="0" blood="0" bone="0" eye="0" gut="0" large="0" />
     </entity>
 
