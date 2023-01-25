@@ -1,9 +1,15 @@
 local invisStalker = {}
 local g = require("src_dndtable.globals")
 
-local STALKER_MOVESPEED_ATTACK = 7
-local STALKER_MOVESPEED_RETREAT = 9
-local STALKER_ATTACK_COOLDOWN = 60
+--[[
+    Invisible Stalkers start stationary. On a room start, they wake up and start chasing Isaac,
+    becoming more transparent the closer they are to him. Once hit, they become fully opaque
+    and return to their starting position, where they remain idle for a while before starting the next approach. 
+]]
+
+local STALKER_MOVESPEED_ATTACK = 6.75
+local STALKER_MOVESPEED_RETREAT = 10
+local STALKER_ATTACK_COOLDOWN = 48
 
 ---@param entity Entity
 local function setTransparency(entity, newTransparency)
@@ -21,7 +27,7 @@ function invisStalker:onNpcUpdate(npc)
     if npc.Variant ~= 1 then return end
     local s = npc:GetSprite()
 
-    if npc.FrameCount == 1 then
+    if npc.FrameCount == 30 then
         s:Play('Idle', true)
         npc:GetData().startingPos = npc.Position
         npc:GetData().closingInCooldown = 0 -- after Invisible stalker is hit, it takes time to retreat.
@@ -49,12 +55,12 @@ function invisStalker:onNpcUpdate(npc)
             -- reset transparency
             resetTransparency(npc)
 
-            setTransparency(npc, math.min(1, (npc.Position - player.Position):Length() / 300))
+            setTransparency(npc, math.min(1, (npc.Position - player.Position):Length() / 300 - 0.15))
         end
     end
 
     if s:IsPlaying('Retreat') then
-        if (npc:GetData().startingPos - npc.Position):LengthSquared() > 20 then
+        if (npc:GetData().startingPos - npc.Position):LengthSquared() > 25 then
             -- retreating
             npc.Velocity = (npc:GetData().startingPos - npc.Position):Normalized() * STALKER_MOVESPEED_RETREAT
         else

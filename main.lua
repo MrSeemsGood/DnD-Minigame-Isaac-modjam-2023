@@ -5,6 +5,7 @@ local VeeHelper = include("src_dndtable.veeHelper")
 local dnd = include("src_dndtable.dndMinigame")
 
 local invisStalker = require("src_dndtable.enemies.invisible_stalker")
+local yochlol = require("src_dndtable.enemies.yochlol")
 local bodak = require("src_dndtable.enemies.bodak")
 
 function mod:OnPostRender()
@@ -29,6 +30,9 @@ mod:AddCallback(ModCallbacks.MC_POST_PLAYER_UPDATE, mod.OnPostPlayerUpdate)
 -- invisible stalker
 mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, invisStalker.onNpcUpdate, globals.ENTITY_DND_ENEMY)
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, invisStalker.onEntityTakeDmg, globals.ENTITY_DND_ENEMY)
+
+-- yochlol
+mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, yochlol.onNpcUpdate, globals.ENTITY_DND_ENEMY)
 
 --- bodak
 mod:AddCallback(ModCallbacks.MC_PRE_NPC_UPDATE, bodak.onPreNpcUpdate, EntityType.ENTITY_BLACK_GLOBIN_BODY)
