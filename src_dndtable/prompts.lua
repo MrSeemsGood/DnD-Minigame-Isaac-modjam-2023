@@ -1,12 +1,23 @@
 local dndText = {}
 
-dndText.GameState = {
-	SelectedCharacters = {
+dndText.CharacterSprites = {
+	"gfx/characters/costumes/character_001_isaac.png",
+	"gfx/characters/costumes/character_002_magdalene.png",
+	"gfx/characters/costumes/character_003_cain.png",
+	"gfx/characters/costumes/character_004_judas.png"
+}
 
+dndText.GameState = {
+	Active = false,
+	SelectedCharacters = {
+		1,
+		2,
+		3,
+		4
 	},
 	PromptProgress = 0,
 	PromptSelected = 1,
-	HasRolled = false,
+	HasSelected = false,
 	NumRolled = 0,
 	MaxPrompts = 3,
 	PromptsSeen = {},
@@ -14,6 +25,7 @@ dndText.GameState = {
 	AdventureEnded = false,
 }
 
+---@class RewardType
 dndText.RewardType = {
 	HEAL = 0,
 	TRINKET = 1,
@@ -23,6 +35,7 @@ dndText.RewardType = {
 	CONSUMABLE = 5,
 }
 
+---@class AdvantageType
 dndText.AdvantageType = {
 	DODGE = 0,
 	BURN = 1,
@@ -35,35 +48,58 @@ dndText.AdvantageType = {
 	DAMAGE = 8,
 }
 
-dndText.OptionType = {
-	ROLL = 0,
-	ACCEPT = 1,
-	DECLINE = 2,
-}
+---@class Prompt
+---@field Title string
+---@field Options table<string, string> | table<string, string, PlayerType>
+---@field Outcome string[]
 
-
+---@type Prompt[]
 dndText.Prompts = {
-	{
-		Text = "Yo mama approaches",
+	--[[ {
+		Title = "Yo mama approaches",
 		Options = {
-			[1] = { dndText.OptionType.ROLL, "Fight her ass" },
-			[2] = { dndText.OptionType.DECLINE, "Get yo ass outta there" },
-			[3] = { dndText.OptionType.ACCEPT, "Fucking stab her", PlayerType.PLAYER_JUDAS}
+			[1] = { "Roll", "Fight her ass" },
+			[2] = { "Select", "Get yo ass outta there" },
+			[3] = { "Select", "Fucking stab her", PlayerType.PLAYER_JUDAS}
 		},
 		Outcome = {
 			[1] = {
 				[1] = "you're fucking dead bro",
 				[5] = "you're severely damaged'",
 				[10] = "You both barely manage to scrape one another, both of you part ways",
-				[15] = {dndText.AdvantageType.DAMAGE, "You damage her"},
-				[20] = {dndText.RewardType.ITEM, "she dead as hell"},
+				[15] = "You damage her",
+				[20] = "she dead as hell"
 			},
 			[2] = "You escape",
-			[3] = {dndText.RewardType.ITEM, "she dead as hell"}
+			[3] = "she dead as hell"
 		},
-	}
+	}, ]]
+	{
+		Title = "Go forward or go backwards?",
+		Options = {
+			[1] = { "Select", "Forwards" },
+			[2] = { "Select", "Backwards" },
+			[3] = { "Select", "Upwards" },
+			[4] = { "Select", "Speen" },
+		},
+		Outcome = {
+			[1] = "You do in fact, go forwards.",
+			[2] = "You go backwards before realizing you need to move forward to progress",
+		},
+	},
+	--[[ {
+		Title = "You feel a grumbling in your stomach with the urge to fart",
+		Outcome = {
+			[1] = "you're fucking dead bro",
+			[5] = "you're severely damaged'",
+			[10] = "You both barely manage to scrape one another, both of you part ways",
+			[15] = "You damage her",
+			[20] = "she dead as hell"
+		},
+	}, ]]
 }
 
+---@type Prompt
 dndText.Encounters = {
 
 }

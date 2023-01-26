@@ -22,10 +22,12 @@ mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.OnPostUpdate)
 
 ---@param player EntityPlayer
 function mod:OnPostPlayerUpdate(player)
-
+	dnd:KeyDelayHandle(player)
 end
 
 mod:AddCallback(ModCallbacks.MC_POST_PLAYER_UPDATE, mod.OnPostPlayerUpdate)
+
+mod:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, dnd.OnPreGameExit)
 
 -- invisible stalker
 mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, invisStalker.onNpcUpdate, globals.ENTITY_DND_ENEMY)
