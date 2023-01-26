@@ -85,6 +85,8 @@ dndText.Prompts = {
 		Outcome = {
 			[1] = "You do in fact, go forwards.",
 			[2] = "You go backwards before realizing you need to move forward to progress",
+			[3] = "You go up!",
+			[4] = "SPEEEEEEEEEN",
 		},
 	},
 	--[[ {

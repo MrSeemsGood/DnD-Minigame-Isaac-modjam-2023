@@ -1,5 +1,6 @@
 local dnd = {}
 local g = require("src_dndtable.globals")
+local VeeHelper = require("src_dndtable.veeHelper")
 local dndText = include("src_dndtable.prompts")
 local state = dndText.GameState --For easier time typing and less space taken
 local font = Font()
@@ -57,7 +58,6 @@ local numPlayers = 1
 local newPlayers = {}
 
 local function initMinigame()
-	print("minigame init")
 	blackScreen:Load("gfx/ui/dnd_overlay.anm2", true)
 	blackScreen:Play("Start", true)
 	for i = 1, #characterSprites do
@@ -68,6 +68,7 @@ local function initMinigame()
 	end
 	font:Load("font/teammeatfont12.fnt")
 	Isaac.GetPlayer().ControlsEnabled = false
+	print("minigame init")
 end
 
 local function resetMinigame()
@@ -102,6 +103,29 @@ function ChangePlayerCount(i)
 	numPlayers = i
 end
 
+---@param stringTable table
+---@param posMult number
+---@param textPosInTable? integer
+local function RenderText(stringTable, posMult, textPosInTable)
+	local center = getCenterScreen()
+	local mult = posMult
+
+	for i = 1, #stringTable do
+		posMult = mult
+		local middleNum = (math.ceil(#stringTable / 2))
+
+		if (#stringTable % 1 == 0 and i < middleNum) or (#stringTable % 2 == 0 and i <= middleNum) then
+			posMult = posMult - (0.15 * (#stringTable - i))
+		elseif i > middleNum then
+			posMult = (0.15 * (i - (middleNum))) - (posMult / 2)
+		end
+		posMult = posMult + (0.05 * #stringTable)
+		local optionPos = center.Y + (center.Y * posMult)
+		local text = textPosInTable and stringTable[i][textPosInTable] or stringTable[i]
+		font:DrawString(text, 0, optionPos, KColor(1, 1, 1, 1), Isaac.GetScreenWidth(), true)
+	end
+end
+
 ---@param playerType PlayerType
 ---@param player EntityPlayer
 --Thank you tem
@@ -121,6 +145,91 @@ function dnd:SpawnPlayer(playerType, player)
 	end
 end
 
+function dnd:RenderCharacterSelect()
+	local center = getCenterScreen()
+	local player1 = Isaac.GetPlayer()
+
+	font:DrawStringScaled("Welcome to Basements & Monsters!", 0, center.Y - 50, 1.5, 1.5, KColor(1, 1, 1, 1),
+		Isaac.GetScreenWidth(), true)
+	font:DrawString("Select your character", 0, center.Y - 20, KColor(1, 1, 1, 1), Isaac.GetScreenWidth(), true)
+
+	local players = newPlayers[1] ~= nil and newPlayers or VeeHelper.GetAllMainPlayers()
+	if #players > 4 then players = { players[1], players[2], players[3], players[4] } end
+
+	if override and not hasShitted then
+		newPlayers = {}
+		for _ = 1, numPlayers do
+			table.insert(newPlayers, player1)
+		end
+		hasShitted = true
+	end
+	for i = 1, #players do
+		local player = players[i]
+		local data = player:GetData()
+		if (
+			Input.IsActionTriggered(ButtonAction.ACTION_MENULEFT, player.ControllerIndex)
+				or Input.IsActionTriggered(ButtonAction.ACTION_MENURIGHT, player.ControllerIndex)
+				or Input.IsActionTriggered(ButtonAction.ACTION_MENUCONFIRM, player.ControllerIndex)
+				or Input.IsActionTriggered(ButtonAction.ACTION_BOMB, player.ControllerIndex)
+			)
+			and not player:GetData().DNDKeyDelay
+			and not g.game:IsPaused()
+		then
+			if (
+				Input.IsActionTriggered(ButtonAction.ACTION_MENULEFT, player.ControllerIndex)
+					or Input.IsActionTriggered(ButtonAction.ACTION_MENURIGHT, player.ControllerIndex)
+				)
+				and charactersConfirmed[i] == false
+			then
+				local num = Input.IsActionTriggered(ButtonAction.ACTION_MENULEFT, player.ControllerIndex) and -1 or 1
+				local soundToPlay = Input.IsActionTriggered(ButtonAction.ACTION_MENULEFT, player.ControllerIndex) and
+					SoundEffect.SOUND_CHARACTER_SELECT_LEFT or SoundEffect.SOUND_CHARACTER_SELECT_RIGHT
+				state.SelectedCharacters[i] = state.SelectedCharacters[i] + num
+				state.SelectedCharacters[i] = state.SelectedCharacters[i] > 4 and 1 or state.SelectedCharacters[i] < 1 and 4 or
+					state.SelectedCharacters[i]
+				updateCharacterSprite(characterSprites[i], state.SelectedCharacters[i])
+				g.sfx:Play(soundToPlay)
+				data.DNDKeyDelay = keyDelay
+			end
+
+			if Input.IsActionTriggered(ButtonAction.ACTION_MENUCONFIRM, player.ControllerIndex)
+				and charactersConfirmed[i] == false
+			then
+				characterSprites[i]:Play("Happy", true)
+				charactersConfirmed[i] = true
+				g.sfx:Play(SoundEffect.SOUND_THUMBSUP)
+				numConfirmed = numConfirmed + 1
+				data.DNDKeyDelay = keyDelay
+			elseif Input.IsActionTriggered(ButtonAction.ACTION_BOMB, player.ControllerIndex)
+				and charactersConfirmed[i] == true
+			then
+				charactersConfirmed[i] = false
+				numConfirmed = numConfirmed - 1
+				data.DNDKeyDelay = keyDelay
+			end
+		end
+
+		if charactersConfirmed[i] == false
+			and characterSprites[i]:GetFrame() > 0 then
+			characterSprites[i]:SetFrame(characterSprites[i]:GetFrame() - 1)
+		elseif charactersConfirmed[i] == true
+			and characterSprites[i]:GetFrame() == 6
+		then
+			characterSprites[i]:Stop()
+		end
+		characterSprites[i]:Render(Vector((center.X + (center.X * characterOffsets[#players][i])), center.Y + 50),
+			Vector.Zero, Vector.Zero)
+		characterSprites[i]:Update()
+	end
+	if numConfirmed >= #players
+		and Input.IsActionTriggered(ButtonAction.ACTION_MENUCONFIRM, player1.ControllerIndex)
+		and not player1:GetData().DNDKeyDelay then
+		startNextPrompt()
+		player1:GetData().DNDKeyDelay = keyDelay
+	end
+end
+
+
 function dnd:WriteText()
 	--if g.game:IsPaused() then return end
 	local center = getCenterScreen()
@@ -134,84 +243,7 @@ function dnd:WriteText()
 		initMinigame()
 	elseif state.Active then
 		if state.PromptProgress == 0 and blackScreen:IsFinished("Start") then
-			font:DrawStringScaled("Welcome to Basements & Monsters!", 0, center.Y - 50, 1.5, 1.5, KColor(1, 1, 1, 1),
-				Isaac.GetScreenWidth(), true)
-			font:DrawString("Select your character", 0, center.Y - 20, KColor(1, 1, 1, 1), Isaac.GetScreenWidth(), true)
-
-			local players = newPlayers[1] ~= nil and newPlayers or VeeHelper.GetAllMainPlayers()
-			if #players > 4 then players = { players[1], players[2], players[3], players[4] } end
-
-			if override and not hasShitted then
-				newPlayers = {}
-				for _ = 1, numPlayers do
-					table.insert(newPlayers, player1)
-				end
-				hasShitted = true
-			end
-			for i = 1, #players do
-				local player = players[i]
-				local data = player:GetData()
-				if (
-					Input.IsActionTriggered(ButtonAction.ACTION_MENULEFT, player.ControllerIndex)
-						or Input.IsActionTriggered(ButtonAction.ACTION_MENURIGHT, player.ControllerIndex)
-						or Input.IsActionTriggered(ButtonAction.ACTION_MENUCONFIRM, player.ControllerIndex)
-						or Input.IsActionTriggered(ButtonAction.ACTION_BOMB, player.ControllerIndex)
-					)
-					and not player:GetData().DNDKeyDelay
-					and not g.game:IsPaused()
-				then
-					if (
-						Input.IsActionTriggered(ButtonAction.ACTION_MENULEFT, player.ControllerIndex)
-							or Input.IsActionTriggered(ButtonAction.ACTION_MENURIGHT, player.ControllerIndex)
-						)
-						and charactersConfirmed[i] == false
-					then
-						local num = Input.IsActionTriggered(ButtonAction.ACTION_MENULEFT, player.ControllerIndex) and -1 or 1
-						local soundToPlay = Input.IsActionTriggered(ButtonAction.ACTION_MENULEFT, player.ControllerIndex) and
-							SoundEffect.SOUND_CHARACTER_SELECT_LEFT or SoundEffect.SOUND_CHARACTER_SELECT_RIGHT
-						state.SelectedCharacters[i] = state.SelectedCharacters[i] + num
-						state.SelectedCharacters[i] = state.SelectedCharacters[i] > 4 and 1 or state.SelectedCharacters[i] < 1 and 4 or
-							state.SelectedCharacters[i]
-						updateCharacterSprite(characterSprites[i], state.SelectedCharacters[i])
-						g.sfx:Play(soundToPlay)
-						data.DNDKeyDelay = keyDelay
-					end
-
-					if Input.IsActionTriggered(ButtonAction.ACTION_MENUCONFIRM, player.ControllerIndex)
-						and charactersConfirmed[i] == false
-					then
-						characterSprites[i]:Play("Happy", true)
-						charactersConfirmed[i] = true
-						g.sfx:Play(SoundEffect.SOUND_THUMBSUP)
-						numConfirmed = numConfirmed + 1
-						data.DNDKeyDelay = keyDelay
-					elseif Input.IsActionTriggered(ButtonAction.ACTION_BOMB, player.ControllerIndex)
-						and charactersConfirmed[i] == true
-					then
-						charactersConfirmed[i] = false
-						numConfirmed = numConfirmed - 1
-						data.DNDKeyDelay = keyDelay
-					end
-				end
-
-				if charactersConfirmed[i] == false
-					and characterSprites[i]:GetFrame() > 0 then
-					characterSprites[i]:SetFrame(characterSprites[i]:GetFrame() - 1)
-				elseif charactersConfirmed[i] == true
-					and characterSprites[i]:GetFrame() == 6
-				then
-					characterSprites[i]:Stop()
-				end
-				characterSprites[i]:Render(Vector((center.X + (center.X * characterOffsets[#players][i])), center.Y + 50),
-					Vector.Zero, Vector.Zero)
-				characterSprites[i]:Update()
-			end
-			if numConfirmed >= #players
-				and Input.IsActionTriggered(ButtonAction.ACTION_MENUCONFIRM, player1.ControllerIndex)
-				and not player1:GetData().DNDKeyDelay then
-				startNextPrompt()
-				player1:GetData().DNDKeyDelay = keyDelay
-			end
+			dnd:RenderCharacterSelect()
 		elseif state.PromptProgress >= 1 then
 			local prompt = dndText.Prompts[state.PromptSelected]
 			local data = player1:GetData()
@@ -236,23 +268,11 @@ function dnd:WriteText()
 			end ]]
 
 			if not state.HasSelected then
-				font:DrawStringScaled(prompt.Title, 0, center.Y - (center.Y * 0.5), 1.5, 1.5, KColor(1, 1, 1, 1), Isaac.GetScreenWidth(), true)
+				RenderText({prompt.Title}, -0.5)
 			end
 
 			if prompt.Options then
-				for i = 1, #prompt.Options do
-					local mult = 0.2
-					local middleNum = (math.ceil(#prompt.Options / 2))
-					
-					if (#prompt.Options % 1 == 0 and i < middleNum) or (#prompt.Options % 2 == 0 and i <= middleNum) then
-						mult = mult - (0.15 * (#prompt.Options - i))
-					elseif i > middleNum then
-						mult = (0.15 * (i - (middleNum))) - (mult / 2)
-					end
-					mult = mult + (0.05 * #prompt.Options)
-					local optionPos = center.Y + (center.Y * mult)
-					font:DrawString(prompt.Options[i][2], 0, optionPos, KColor(1, 1, 1, 1), Isaac.GetScreenWidth(), true)
-				end
+				RenderText(prompt.Options, 0.2, 2)
 			end
 			--[[ if state.HasRolled == false then
 				font:DrawString("Press SPACE to roll the dice", center.X, center.Y + 50, KColor(1, 1, 1, 1), Isaac.GetScreenWidth()

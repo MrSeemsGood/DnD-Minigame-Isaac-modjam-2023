@@ -1,18 +1,20 @@
 local mod = RegisterMod("DND", 1)
 DnDMod = mod
 local globals = require("src_dndtable.globals")
-local VeeHelper = include("src_dndtable.veeHelper")
 local dnd = include("src_dndtable.dndMinigame")
 
 local invisStalker = require("src_dndtable.enemies.invisible_stalker")
 local yochlol = require("src_dndtable.enemies.yochlol")
 local bodak = require("src_dndtable.enemies.bodak")
 
-function mod:OnPostRender()
-	dnd:OnRender()
+---@param shaderName string
+function mod:OnGetShaderParams(shaderName)
+	if shaderName == "DnDMinigame-RenderAboveHUD" then
+		dnd:OnRender()
+	end
 end
 
-mod:AddCallback(ModCallbacks.MC_POST_RENDER, mod.OnPostRender)
+mod:AddCallback(ModCallbacks.MC_GET_SHADER_PARAMS, mod.OnGetShaderParams)
 
 function mod:OnPostUpdate()
 
