@@ -36,9 +36,10 @@ end
 
 ---@param laser EntityLaser
 function bodak:onLaserUpdate(laser)
-    if laser:GetData().toRecolor then
+    if laser:GetData().toRecolor
+    and laser.FrameCount == 1 then
         laser:SetColor(Color(1, 1, 1, 1, 0, 0, 0), 1000, 1, false, false)
-        --laser:Update()
+        laser:Update()
     end
 end
 
