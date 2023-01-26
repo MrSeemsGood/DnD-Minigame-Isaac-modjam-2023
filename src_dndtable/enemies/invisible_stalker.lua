@@ -30,8 +30,7 @@ function invisStalker:onNpcUpdate(npc)
     if npc.FrameCount == 30 then
         s:Play('Idle', true)
         npc:GetData().startingPos = npc.Position
-        npc:GetData().closingInCooldown = 0 -- after Invisible stalker is hit, it takes time to retreat.
-                                            -- Then it sits and rests for 2 seconds before attempting next attack
+        npc:GetData().closingInCooldown = 0
     end
 
     local player = npc:GetPlayerTarget()

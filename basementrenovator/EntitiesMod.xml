@@ -1,3 +1,5 @@
 <data>
     <entity Group="DnD Enemies" ID="898" Image="dnd/invisible stalker.png" Kind="Floors" Name="Invisible Stalker" Subtype="0" Variant="1" />
+    <entity Group="DnD Enemies" ID="898" Image="dnd/yochlol.png" Kind="Floors" Name="Yochlol" Subtype="0" Variant="2" />
+    <entity Group="DnD Enemies" ID="39" Image="dnd/bodak.png" Kind="Floors" Name="Invisible Stalker" Subtype="3" Variant="0" />
 </data>

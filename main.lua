@@ -37,5 +37,6 @@ mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, invisStalker.onEntityTakeDmg, g
 mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, yochlol.onNpcUpdate, globals.ENTITY_DND_ENEMY)
 
 --- bodak
-mod:AddCallback(ModCallbacks.MC_PRE_NPC_UPDATE, bodak.onPreNpcUpdate, EntityType.ENTITY_BLACK_GLOBIN_BODY)
-mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, bodak.onNpcUpdate, EntityType.ENTITY_BLACK_GLOBIN_BODY)
+mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, bodak.onNpcUpdate, EntityType.ENTITY_VIS)
+mod:AddCallback(ModCallbacks.MC_POST_LASER_UPDATE, bodak.onLaserUpdate)
+

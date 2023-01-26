@@ -2,16 +2,16 @@ local yochlol = {}
 local g = require("src_dndtable.globals")
 
 local YOCHLOL_MOVESPEED_WALK = 3
-local YOCHLOL_MOVESPEED_GAS = 5
+local YOCHLOL_MOVESPEED_GAS = 6
 local YOCHLOL_ATTACK_DECIDE_DISTANCE = 90
-local YOCHLOL_SLAM_HIT_DISTANCE = 75
+local YOCHLOL_SLAM_HIT_DISTANCE = 64
 local YOCHLOL_SLAM_COOLDOWN = 60
 local YOCHLOL_GAS_COOLDOWN = 120
-local YOCHLOL_GAS_DURATION = 150
+local YOCHLOL_GAS_DURATION = 120
 
 --[[
     Yochlols slowly walk towards Isaac. They can perform two attacks:
-    - do a melee swipe in Isaac's direction if he is nearby
+    - do an AoE slam if Isaac is nearby, spawning creep puddle and a small maggot
     - turn into a poisonous gas cloud, gaining temporary invincibility and increased movement speed
 ]]
 
@@ -20,19 +20,15 @@ function yochlol:onNpcUpdate(npc)
     if npc.Variant ~= 2 then return end
     local s = npc:GetSprite()
 
-    if npc.FrameCount == 1 then
+    if npc.FrameCount == 30 then
         s:Play('Walk', true)
         npc:GetData().slamCooldown = 0
         npc:GetData().gasTurnCooldown = 0
         npc:GetData().gasDuration = 0
     end
 
-    print(s:GetAnimation())
-
     local player = npc:GetPlayerTarget()
     if player then
-        print(math.ceil(player.Position:Distance(npc.Position)))
-
         if s:IsPlaying('Walk') then
             npc.Velocity = (player.Position - npc.Position):Normalized() * YOCHLOL_MOVESPEED_WALK
             npc:GetData().slamCooldown = npc:GetData().slamCooldown - 1
@@ -50,12 +46,20 @@ function yochlol:onNpcUpdate(npc)
             and npc:GetData().gasTurnCooldown < 0
             and math.random(40) == 1 then
                 s:Play('GasTurn', true)
+                g.sfx:Play(SoundEffect.SOUND_DEATH_REVERSE)
                 npc.Velocity = Vector.Zero
                 npc.Friction = 0
             end
         elseif s:IsPlaying('Slam') then
             if s:IsEventTriggered('Slam') then
-                g.sfx:Play(SoundEffect.SOUND_BIRD_FLAP)
+                g.sfx:Play(SoundEffect.SOUND_MEAT_JUMPS)
+                local creep = Isaac.Spawn(1000, EffectVariant.CREEP_GREEN, 0, npc.Position, Vector.Zero, npc):ToEffect()
+                creep.Scale = 2
+                creep.Timeout = 60
+
+                local maggot = Isaac.Spawn(EntityType.ENTITY_SMALL_MAGGOT, 0, 0, npc.Position, Vector.Zero, npc)
+                maggot:ClearEntityFlags(EntityFlag.FLAG_APPEAR)
+
                 if player.Position:Distance(npc.Position) < YOCHLOL_SLAM_HIT_DISTANCE then
                     player:TakeDamage(1, 0, EntityRef(npc), 0)
                 end
@@ -79,13 +83,16 @@ function yochlol:onNpcUpdate(npc)
         if s:IsPlaying('Gas') then
             if npc:GetData().gasDuration % 6 == 0 then
                 local gas = Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.SMOKE_CLOUD, 0, npc.Position, Vector.Zero, npc):ToEffect()
-                gas.Timeout = 120
+                gas.Timeout = 100
             end
             npc:GetData().gasDuration = npc:GetData().gasDuration - 1
             npc.Velocity = (player.Position - npc.Position):Normalized() * YOCHLOL_MOVESPEED_GAS
 
             if npc:GetData().gasDuration < 0 then
+                g.sfx:Play(SoundEffect.SOUND_DEATH_REVERSE)
                 s:Play('GasTurnEnd', true)
+                npc.Velocity = Vector.Zero
+                npc.Friction = 0
             end
         end
 
