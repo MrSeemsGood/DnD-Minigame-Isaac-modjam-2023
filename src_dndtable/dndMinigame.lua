@@ -46,7 +46,7 @@ local testStartPrompt = Keyboard.KEY_J
 local testEndPrompt = Keyboard.KEY_K
 local keyDelay = 10
 local numConfirmed = 0
-local selectedCharacters = {1, 2, 3, 4}
+local selectedCharacters = { 1, 2, 3, 4 }
 local optionSelected = 1
 local promptOptions = {}
 local globalAlpha = 1
@@ -69,9 +69,9 @@ local newPlayers = {}
 
 local function initMinigame()
 	state.Active = true
-	background:Load("gfx/ui/dnd_overlay.anm2", true)
+	background:Load("gfx/ui/dndminigame_background.anm2", true)
 	background:Play("Start", true)
-	optionCursor:Load("gfx/ui/dnd_option_cursor.anm2", true)
+	optionCursor:Load("gfx/ui/dndminigame_cursor_option.anm2", true)
 	optionCursor:Play(optionCursor:GetDefaultAnimation(), true)
 	for i = 1, #characterSprites do
 		characterSprites[i]:Load("gfx/001.000_player.anm2", true)
@@ -135,6 +135,14 @@ local function startNextPrompt()
 	print("next pussy")
 end
 
+---@param numPlayers integer
+local function initFirstPrompt(numPlayers)
+	local player1 = Isaac.GetPlayer()
+	background:SetFrame(tostring(3), 0)
+	startNextPrompt()
+	player1:GetData().DNDKeyDelay = keyDelay
+end
+
 function ChangePlayerCount(i)
 	hasShitted = false
 	numPlayers = i
@@ -162,16 +170,19 @@ local function renderText(stringTable, posMult, isOptionText, scale)
 		local middleNum = (math.ceil(#stringTable / 2))
 		local numOffset = (#stringTable > 2 and #stringTable % 2 == 0) and 0 or 1
 
-		if (#stringTable % 2 == 0 and i <= middleNum) or i < middleNum  then
+		if (#stringTable % 2 == 0 and i <= middleNum) or i < middleNum then
 			posMult = posMult - (0.15 * ((#stringTable + numOffset) - i))
-		elseif (#stringTable % 2 == 0 and i > middleNum) or (i >= middleNum and #stringTable > 1)  then
+		elseif (#stringTable % 2 == 0 and i > middleNum) or (i >= middleNum and #stringTable > 1) then
 			posMult = (0.15 * (i - (middleNum))) - (posMult / 2)
 		end
 		posMult = posMult + (0.05 * #stringTable)
-		local optionPos = center.Y + (center.Y * posMult)
+		local optionPos = center.Y + (100 * posMult)
 		local text = isOptionText and stringTable[i][2] or stringTable[i]
 
-		if isOptionText and #stringTable > 1 and i == optionSelected then
+		if isOptionText
+		and #stringTable > 1 and i == optionSelected
+		and globalYOffset == 0
+		then
 			renderCursor(text, optionPos + 8)
 		end
 
@@ -216,7 +227,7 @@ function dnd:RenderCharacterSelect()
 	local player1 = Isaac.GetPlayer()
 
 	renderText({ "Welcome to Caves n' Creatures!" }, -0.5, false, 1.5)
-	renderText({ "Select your character" }, -0.2)
+	renderText({ "Select your character" }, -0.3)
 
 	local players = newPlayers[1] ~= nil and newPlayers or VeeHelper.GetAllMainPlayers()
 	if #players > 4 then players = { players[1], players[2], players[3], players[4] } end
@@ -291,8 +302,7 @@ function dnd:RenderCharacterSelect()
 	if numConfirmed >= #players
 		and isTriggered(ButtonAction.ACTION_MENUCONFIRM, player1)
 		and not player1:GetData().DNDKeyDelay then
-		startNextPrompt()
-		player1:GetData().DNDKeyDelay = keyDelay
+		initFirstPrompt(#players)
 	end
 end
 
@@ -365,7 +375,7 @@ function dnd:WriteText()
 				renderText(promptOptions, 0.2, true)
 			else
 				if promptOptions[optionSelected][1] == "Roll" then
-					renderText({state.RollResult}, 0.2)
+					renderText({ state.RollResult }, 0.2)
 					if state.NumAvailableRolls > 0 then
 						renderText({ "You have more players, roll again" }, 0)
 					else
@@ -407,9 +417,41 @@ function dnd:HandleTransitionText()
 	end
 end
 
+local frameOffset = 0
+local frameOffsetTimer = 30
+function dnd:AnimationTimer()
+	if frameOffsetTimer > 0 then
+		frameOffsetTimer = frameOffsetTimer - 1
+	else
+		frameOffset = frameOffset == 0 and 1 or 0
+		frameOffsetTimer = 30
+	end
+end
+
 function dnd:ScreenBackground()
 	if state.Active then
-		background:Render(getCenterScreen(), Vector.Zero, Vector.Zero)
+		local center = getCenterScreen()
+		if state.PromptProgress == 0 then
+			background:Render(center, Vector.Zero, Vector.Zero)
+		elseif state.PromptProgress > 0 then
+			dnd:AnimationTimer()
+			if background:GetAnimation() == "1"
+				or background:GetAnimation() == "2"
+				or background:GetAnimation() == "3"
+				or background:GetAnimation() == "4"
+			then
+				background:RenderLayer(0, center, Vector.Zero, Vector.Zero)
+				background:RenderLayer(1, center, Vector.Zero, Vector.Zero)
+				for i = 1, tonumber(background:GetAnimation()) do
+					local startingFrame = (i * 2) - 2
+					local characterLayer = selectedCharacters[i] + 2
+					background:RenderLayer(characterLayer, center, Vector.Zero, Vector.Zero)
+					background:SetLayerFrame(characterLayer, startingFrame + frameOffset)
+				end
+				background:RenderLayer(2, center, Vector.Zero, Vector.Zero)
+				background:SetLayerFrame(2, 0 + frameOffset)
+			end
+		end
 		background:Update()
 	end
 end
