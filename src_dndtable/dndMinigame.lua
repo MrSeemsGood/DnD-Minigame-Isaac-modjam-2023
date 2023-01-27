@@ -91,6 +91,7 @@ local function resetMinigame()
 	Isaac.GetPlayer().ControlsEnabled = true
 	numConfirmed = 0
 	optionSelected = 1
+	selectedCharacters = {}
 	charactersConfirmed = {
 		false,
 		false,
@@ -129,6 +130,7 @@ local function startNextPrompt()
 			promptOptions[i] = {}
 			promptOptions[i][1] = option[1]
 			promptOptions[i][2] = option[2]
+			promptOptions[i][3] = option[3]
 		end
 	end
 	transitionText()
@@ -138,7 +140,7 @@ end
 ---@param numPlayers integer
 local function initFirstPrompt(numPlayers)
 	local player1 = Isaac.GetPlayer()
-	background:SetFrame(tostring(3), 0)
+	background:SetFrame(tostring(numPlayers), 0)
 	startNextPrompt()
 	player1:GetData().DNDKeyDelay = keyDelay
 end
@@ -329,12 +331,13 @@ function dnd:WriteText()
 					if promptOptions[optionSelected][1] == "Roll" then
 						rollDice()
 					end
-					local playerType = promptOptions[optionSelected][3]
+					local characterIndex = promptOptions[optionSelected][3] + 1
+
 					if state.OutcomeResult < 3
-						and playerType ~= nil
-						and state.ActiveCharacters[optionSelected[3] + 1] > 1
+						and characterIndex ~= nil
+						and state.ActiveCharacters[characterIndex] > 1
 					then
-						state.NumAvailableRolls = state.ActiveCharacters[playerType + 1]
+						state.NumAvailableRolls = state.ActiveCharacters[characterIndex] - 1
 					end
 					state.HasSelected = true
 				else
