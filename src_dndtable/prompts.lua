@@ -7,18 +7,21 @@ dndText.CharacterSprites = {
 	"gfx/characters/costumes/character_004_judas.png"
 }
 
+---@class GameState
 dndText.GameState = {
 	Active = false,
-	SelectedCharacters = {
-		1,
-		2,
-		3,
-		4
+	ActiveCharacters = { --Numbers represent how many of each character there is in the game
+		0, --Isaac
+		0, --Maggy
+		0, --Cain
+		0, --Judas
 	},
 	PromptProgress = 0,
 	PromptSelected = 1,
 	HasSelected = false,
-	NumRolled = 0,
+	RollResult = 0,
+	OutcomeResult = 0,
+	NumAvailableRolls = 1,
 	MaxPrompts = 3,
 	PromptsSeen = {},
 	EncountersSeen = {},
@@ -51,7 +54,7 @@ dndText.AdvantageType = {
 ---@class Prompt
 ---@field Title string
 ---@field Options table<string, string> | table<string, string, PlayerType>
----@field Outcome string[]
+---@field Outcome string[] | table<integer, table<integer, string>>
 
 ---@type Prompt[]
 dndText.Prompts = {
@@ -74,13 +77,13 @@ dndText.Prompts = {
 			[3] = "she dead as hell"
 		},
 	}, ]]
-	{
+--[[ 	{
 		Title = "Go forward or go backwards?",
 		Options = {
 			[1] = { "Select", "Forwards" },
 			[2] = { "Select", "Backwards" },
 			[3] = { "Select", "Upwards" },
-			[4] = { "Select", "Speen" },
+			[4] = { "Select", "Speen", PlayerType.PLAYER_ISAAC },
 		},
 		Outcome = {
 			[1] = "You do in fact, go forwards.",
@@ -88,17 +91,30 @@ dndText.Prompts = {
 			[3] = "You go up!",
 			[4] = "SPEEEEEEEEEN",
 		},
-	},
-	--[[ {
-		Title = "You feel a grumbling in your stomach with the urge to fart",
-		Outcome = {
-			[1] = "you're fucking dead bro",
-			[5] = "you're severely damaged'",
-			[10] = "You both barely manage to scrape one another, both of you part ways",
-			[15] = "You damage her",
-			[20] = "she dead as hell"
-		},
 	}, ]]
+	{
+		Title = "You feel a grumbling in your stomach with the urge to fart",
+		Options = {
+			[1] = { "Roll", "Roll the dice bitch" },
+			[2] = { "Roll", "Roll the dice but Isaac", PlayerType.PLAYER_ISAAC },
+			--[3] = { "Roll", "Roll the dice again" },
+			--[4] = { "Roll", "Roll the dice gaming" },
+		},
+		Outcome = {
+			[1] = {
+				[1] = "you're fucking dead bro",
+				[2] = "nothin hapen",
+				[3] = "you did it!!!!!!",
+			},
+			[2] = {
+				[1] = "you're fucking dead bro",
+				[2] = "nothin hapen",
+				[3] = "you did it!!!!!!",
+			},
+			--[3] = "Hi",
+			--[4] = "Hi",
+		},
+	},
 }
 
 ---@type Prompt
