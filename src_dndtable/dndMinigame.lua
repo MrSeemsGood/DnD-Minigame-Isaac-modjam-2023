@@ -8,6 +8,8 @@ VeeHelper.CopyOverTable(dndText.GameState, state)
 local font = Font()
 local background = Sprite()
 local optionCursor = Sprite()
+local dice = Sprite()
+local diceFlash = Sprite()
 local characterSprites = {
 	Sprite(),
 	Sprite(),
