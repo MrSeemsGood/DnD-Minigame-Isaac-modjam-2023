@@ -29,7 +29,7 @@ function mod:OnPostRender()
 	end
 end
 
-mod:AddCallback(ModCallbacks.MC_GET_SHADER_PARAMS, mod.OnPostRender)
+mod:AddCallback(ModCallbacks.MC_POST_RENDER, mod.OnPostRender)
 
 function mod:OnPostUpdate()
 
