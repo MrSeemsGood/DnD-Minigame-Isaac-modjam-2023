@@ -6,6 +6,7 @@ local ettercap = include("src_dndtable.enemies.ettercap")
 local invisStalker = include("src_dndtable.enemies.invisible_stalker")
 local yochlol = include("src_dndtable.enemies.yochlol")
 local bodak = include("src_dndtable.enemies.bodak")
+local durrt = include("src_dndtable.enemies.durrt")
 
 
 -- Sanio, you forgor something :skull:
@@ -59,5 +60,8 @@ mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, yochlol.onNpcUpdate, g.INVIS_STALKER
 mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, ettercap.onNpcUpdate, EntityType.ENTITY_BLOATY)
 mod:AddCallback(ModCallbacks.MC_POST_PROJECTILE_UPDATE, ettercap.onProjectileUpdate)
 
---- bodak
+-- bodak
 mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, bodak.onNpcUpdate, EntityType.ENTITY_VIS)
+
+-- durrt
+mod:AddCallback(ModCallbacks.MC_NPC_UPDATE,  durrt.onNpcUpdate, g.INVIS_STALKER)

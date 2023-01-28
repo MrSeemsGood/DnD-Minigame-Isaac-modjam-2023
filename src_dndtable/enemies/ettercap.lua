@@ -36,10 +36,6 @@ function ettercap:onNpcUpdate(npc)
     if npc.Variant ~= 3 then return end
     local s = npc:GetSprite()
 
-    if npc.FrameCount == 30 then
-
-    end
-
     if s:IsEventTriggered('ShootAlt') then
         print(s:GetAnimation() .. " " .. tostring(s.FlipX))
 
