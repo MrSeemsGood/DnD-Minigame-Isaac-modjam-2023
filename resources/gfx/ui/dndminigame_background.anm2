@@ -1,12 +1,12 @@
 <AnimatedActor>
-	<Info CreatedBy="Unknown" CreatedOn="1/27/2023 8:50:06 PM" Version="21" Fps="30"/>
+	<Info CreatedBy="Unknown" CreatedOn="27/1/2023 22:55:06" Version="22" Fps="30"/>
 	<Content>
 		<Spritesheets>
-			<Spritesheet Path="bgblack.png" Id="0"/>
-			<Spritesheet Path="debugframe.png" Id="1"/>
-			<Spritesheet Path="heads.png" Id="2"/>
-			<Spritesheet Path="test.png" Id="3"/>
-			<Spritesheet Path="cnc_title.png" Id="4"/>
+			<Spritesheet Path="ui\bgblack.png" Id="0"/>
+			<Spritesheet Path="ui\debugframe.png" Id="1"/>
+			<Spritesheet Path="ui\heads.png" Id="2"/>
+			<Spritesheet Path="ui\test.png" Id="3"/>
+			<Spritesheet Path="ui\cnc_title.png" Id="4"/>
 		</Spritesheets>
 		<Layers>
 			<Layer Name="thefuckingvoid" Id="0" SpritesheetId="0"/>
