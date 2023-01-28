@@ -1,5 +1,6 @@
 local yochlol = {}
 local g = require("src_dndtable.globals")
+local vee = require('src_dndtable.veeHelper')
 
 local YOCHLOL_MOVESPEED_WALK = 3
 local YOCHLOL_MOVESPEED_GAS = 6
@@ -36,7 +37,7 @@ function yochlol:onNpcUpdate(npc)
 
             if player.Position:Distance(npc.Position) < YOCHLOL_ATTACK_DECIDE_DISTANCE
             and npc:GetData().slamCooldown < 0
-            and math.random(10) == 1 then
+            and vee.RandomNum(10) == 1 then
                 npc.Velocity = Vector.Zero
                 npc.Friction = 0
                 s:Play('Slam', true)
@@ -44,7 +45,7 @@ function yochlol:onNpcUpdate(npc)
 
             if player.Position:Distance(npc.Position) > YOCHLOL_ATTACK_DECIDE_DISTANCE
             and npc:GetData().gasTurnCooldown < 0
-            and math.random(40) == 1 then
+            and vee.RandomNum(40) == 1 then
                 s:Play('GasTurn', true)
                 g.sfx:Play(SoundEffect.SOUND_DEATH_REVERSE)
                 npc.Velocity = Vector.Zero

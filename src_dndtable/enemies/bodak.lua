@@ -3,7 +3,7 @@ local g = require('src_dndtable.globals')
 
 --[[
     Bodaks act similarly to the Vis enemy, with two corrections:
-    - their lasers are white
+    - ???their lasers are white
     - they can't be pushed around when they are attacking
 ]]
 
@@ -38,8 +38,8 @@ end
 function bodak:onLaserUpdate(laser)
     if laser:GetData().toRecolor
     and laser.FrameCount == 1 then
-        laser:SetColor(Color(1, 1, 1, 1, 0, 0, 0), 1000, 1, false, false)
-        laser:Update()
+        --[[laser:SetColor(Color(1, 1, 1, 1, 0, 0, 0), 1000, 1, false, false)
+        laser:Update()--]]
     end
 end
 

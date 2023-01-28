@@ -2,11 +2,15 @@ local mod = RegisterMod("DND", 1)
 DnDMod = mod
 local g = require("src_dndtable.globals")
 local dnd = include("src_dndtable.dndMinigame")
+
+-- enemies
 local ettercap = require("src_dndtable.enemies.ettercap")
 local invisStalker = require("src_dndtable.enemies.invisible_stalker")
 local yochlol = require("src_dndtable.enemies.yochlol")
 local bodak = require("src_dndtable.enemies.bodak")
 
+
+-- Sanio, you forgor something :skull:
 function mod:OnGameStart(isContinued)
 	Isaac.ExecuteCommand('reloadshaders')
 end
@@ -55,6 +59,7 @@ mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, yochlol.onNpcUpdate, g.INVIS_STALKER
 
 -- ettercap
 mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, ettercap.onNpcUpdate, EntityType.ENTITY_BLOATY)
+mod:AddCallback(ModCallbacks.MC_POST_PROJECTILE_UPDATE, ettercap.onProjectileUpdate)
 
 --- bodak
 mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, bodak.onNpcUpdate, EntityType.ENTITY_VIS)
