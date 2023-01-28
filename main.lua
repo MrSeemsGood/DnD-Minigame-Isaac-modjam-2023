@@ -2,12 +2,10 @@ local mod = RegisterMod("DND", 1)
 DnDMod = mod
 local g = require("src_dndtable.globals")
 local dnd = include("src_dndtable.dndMinigame")
-
--- enemies
-local ettercap = require("src_dndtable.enemies.ettercap")
-local invisStalker = require("src_dndtable.enemies.invisible_stalker")
-local yochlol = require("src_dndtable.enemies.yochlol")
-local bodak = require("src_dndtable.enemies.bodak")
+local ettercap = include("src_dndtable.enemies.ettercap")
+local invisStalker = include("src_dndtable.enemies.invisible_stalker")
+local yochlol = include("src_dndtable.enemies.yochlol")
+local bodak = include("src_dndtable.enemies.bodak")
 
 
 -- Sanio, you forgor something :skull:
