@@ -10,6 +10,12 @@ dndText.CharacterSprites = {
 ---@class GameState
 dndText.GameState = {
 	Active = false,
+	CharacterSelect = {
+		1,
+		2,
+		3,
+		4
+	},
 	ActiveCharacters = { --Numbers represent how many of each character there is in the game
 		0, --Isaac
 		0, --Maggy
@@ -93,12 +99,12 @@ dndText.Prompts = {
 		},
 	}, ]]
 	{
-		Title = "aaaaaaaaaaaaaaaaaaaaaa",
+		Title = "What if I told you#that you could be#a millionare#ogoogmogmog",
 		Options = {
 			[1] = { "Roll", "Roll the dice bitch" },
 			[2] = { "Roll", "Roll the dice but Isaac", PlayerType.PLAYER_ISAAC },
-			--[3] = { "Roll", "Roll the dice again" },
-			--[4] = { "Roll", "Roll the dice gaming" },
+			[3] = { "Roll", "Roll the dice again" },
+			[4] = { "Roll", "Roll the dice gaming" },
 		},
 		Outcome = {
 			[1] = {
@@ -111,8 +117,8 @@ dndText.Prompts = {
 				[2] = "nothin hapen",
 				[3] = "you did it!!!!!!",
 			},
-			--[3] = "Hi",
-			--[4] = "Hi",
+			[3] = "Hi",
+			[4] = "Hi",
 		},
 	},
 }

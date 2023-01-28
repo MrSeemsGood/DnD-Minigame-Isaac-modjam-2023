@@ -46,9 +46,12 @@ local testStartPrompt = Keyboard.KEY_J
 local testEndPrompt = Keyboard.KEY_K
 local keyDelay = 10
 local numConfirmed = 0
-local selectedCharacters = { 1, 2, 3, 4 }
 local optionSelected = 1
-local promptOptions = {}
+local renderPrompt = {
+	Title = {},
+	Options = {},
+	Outcome = {}
+}
 local globalAlpha = 1
 local globalYOffset = 0
 
@@ -89,12 +92,15 @@ end
 
 local function resetMinigame()
 	VeeHelper.CopyOverTable(dndText.GameState, state)
-	promptOptions = {}
+	renderPrompt = {
+		Title = {},
+		Options = {},
+		Outcome = {}
+	}
 	background:Reset()
 	Isaac.GetPlayer().ControlsEnabled = true
 	numConfirmed = 0
 	optionSelected = 1
-	selectedCharacters = {}
 	charactersConfirmed = {
 		false,
 		false,
@@ -120,7 +126,7 @@ local function startNextPrompt()
 	state.NumAvailableRolls = 1
 	optionSelected = 1
 	local prompt = dndText.Prompts[state.PromptSelected]
-	promptOptions = {}
+	renderPrompt.Options = {}
 	for i, option in ipairs(prompt.Options) do
 		local shouldCreate = true
 		--print(state.ActiveCharacters[1], state.ActiveCharacters[2], state.ActiveCharacters[3], state.ActiveCharacters[4])
@@ -130,14 +136,22 @@ local function startNextPrompt()
 			shouldCreate = false
 		end
 		if shouldCreate then
-			promptOptions[i] = {}
-			promptOptions[i][1] = option[1]
-			promptOptions[i][2] = option[2]
-			promptOptions[i][3] = option[3]
+			renderPrompt.Options[i] = {}
+			renderPrompt.Options[i][1] = option[1]
+			renderPrompt.Options[i][2] = option[2]
+			renderPrompt.Options[i][3] = option[3]
 		end
 	end
-	transitionText()
-	print("next pussy")
+	local title = {prompt.Title}
+	local shit = 0
+	while string.find(title[#title], "#") ~= nil do
+		local curText = title[#title]
+		local line1, line2 = string.find(curText, "#")
+		local nextLine = string.sub(curText, line2 + 1, -1)
+		title[#title] = string.sub(curText, 1, line1 -1)
+		table.insert(title, nextLine)
+	end
+	renderPrompt.Title = title
 end
 
 ---@param numPlayers integer
@@ -163,37 +177,40 @@ local function renderCursor(text, posY)
 end
 
 ---@param stringTable table
----@param posMult number
+---@param startingPos number
 ---@param textType? string
 ---@param scale? number
-local function renderText(stringTable, posMult, textType, scale)
+local function renderText(stringTable, startingPos, textType, scale)
 	local center = getCenterScreen()
-	local mult = posMult
-	local posX = textType == "Title" and 119 or 0
+	local nextLineMult = 0.15
+	local posPerLineMult = (textType == "Title" and (#stringTable < 4 and 0.15 or #stringTable >= 4 and 0.1)) or 0.05
+	local lineSpacingMult = 125
+	
+	local posX = textType == "Title" and (center.X - 120) or 0
 	local boxLength = textType == "Title" and 235 or Isaac.GetScreenWidth()
 
 	for i = 1, #stringTable do
-		posMult = mult
+		local mult = 0.2
 		local middleNum = (math.ceil(#stringTable / 2))
 		local numOffset = (#stringTable > 2 and #stringTable % 2 == 0) and 0 or 1
 
 		if (#stringTable % 2 == 0 and i <= middleNum) or i < middleNum then
-			posMult = posMult - (0.15 * ((#stringTable + numOffset) - i))
+			mult = mult - (nextLineMult * ((#stringTable + numOffset) - i))
 		elseif (#stringTable % 2 == 0 and i > middleNum) or (i >= middleNum and #stringTable > 1) then
-			posMult = (0.15 * (i - (middleNum))) - (posMult / 2)
+			mult = (nextLineMult * (i - (middleNum))) - (mult / 2)
 		end
-		posMult = posMult + (0.05 * #stringTable)
-		local optionPos = center.Y + (100 * posMult)
+		mult = mult + (posPerLineMult * #stringTable)
+		local posY = center.Y + startingPos + (lineSpacingMult * mult)
 		local text = textType == "Option" and stringTable[i][2] or stringTable[i]
 
 		if textType == "Option"
-		and #stringTable > 1 and i == optionSelected
-		and globalYOffset == 0
+			and #stringTable > 1 and i == optionSelected
+			and globalYOffset == 0
 		then
-			renderCursor(text, optionPos + 8)
+			renderCursor(text, posY + 8)
 		end
 
-		font:DrawString(text, posX, optionPos + globalYOffset, KColor(1, 1, 1, globalAlpha), boxLength, true)
+		font:DrawString(text, posX, posY + globalYOffset, KColor(1, 1, 1, globalAlpha), boxLength, true)
 	end
 end
 
@@ -267,10 +284,10 @@ function dnd:RenderCharacterSelect()
 				local num = isTriggered(ButtonAction.ACTION_MENULEFT, player) and -1 or 1
 				local soundToPlay = isTriggered(ButtonAction.ACTION_MENULEFT, player) and
 					SoundEffect.SOUND_CHARACTER_SELECT_LEFT or SoundEffect.SOUND_CHARACTER_SELECT_RIGHT
-				selectedCharacters[i] = selectedCharacters[i] + num
-				selectedCharacters[i] = selectedCharacters[i] > 4 and 1 or selectedCharacters[i] < 1 and 4 or
-					selectedCharacters[i]
-				updateCharacterSprite(characterSprites[i], selectedCharacters[i])
+				state.CharacterSelect[i] = state.CharacterSelect[i] + num
+				state.CharacterSelect[i] = state.CharacterSelect[i] > 4 and 1 or state.CharacterSelect[i] < 1 and 4 or
+					state.CharacterSelect[i]
+				updateCharacterSprite(characterSprites[i], state.CharacterSelect[i])
 				g.sfx:Play(soundToPlay)
 				data.DNDKeyDelay = keyDelay
 			end
@@ -279,7 +296,7 @@ function dnd:RenderCharacterSelect()
 				and charactersConfirmed[i] == false
 			then
 				characterSprites[i]:Play("Happy", true)
-				state.ActiveCharacters[selectedCharacters[i]] = state.ActiveCharacters[selectedCharacters[i]] + 1
+				state.ActiveCharacters[state.CharacterSelect[i]] = state.ActiveCharacters[state.CharacterSelect[i]] + 1
 				charactersConfirmed[i] = true
 				g.sfx:Play(SoundEffect.SOUND_THUMBSUP)
 				numConfirmed = numConfirmed + 1
@@ -288,7 +305,7 @@ function dnd:RenderCharacterSelect()
 				and charactersConfirmed[i] == true
 			then
 				charactersConfirmed[i] = false
-				state.ActiveCharacters[selectedCharacters[i]] = state.ActiveCharacters[selectedCharacters[i]] - 1
+				state.ActiveCharacters[state.CharacterSelect[i]] = state.ActiveCharacters[state.CharacterSelect[i]] - 1
 				numConfirmed = numConfirmed - 1
 				data.DNDKeyDelay = keyDelay
 			end
@@ -335,10 +352,10 @@ function dnd:WriteText()
 				and not data.DNDKeyDelay
 			then
 				if not state.HasSelected then
-					if promptOptions[optionSelected][1] == "Roll" then
+					if renderPrompt.Options[optionSelected][1] == "Roll" then
 						rollDice()
 					end
-					local characterIndex = promptOptions[optionSelected][3] + 1
+					local characterIndex = renderPrompt.Options[optionSelected][3] + 1
 
 					if state.OutcomeResult < 3
 						and characterIndex ~= nil
@@ -348,7 +365,7 @@ function dnd:WriteText()
 					end
 					state.HasSelected = true
 				else
-					if promptOptions[optionSelected][1] == "Roll"
+					if renderPrompt.Options[optionSelected][1] == "Roll"
 						and state.NumAvailableRolls > 0 then
 						rollDice()
 					else
@@ -363,11 +380,11 @@ function dnd:WriteText()
 			end
 
 			if not state.HasSelected then
-				renderText({ prompt.Title }, -0.5, "Title")
+				renderText(renderPrompt.Title, -120, "Title")
 			end
 
 			if not state.HasSelected then
-				if promptOptions[2] ~= nil then
+				if renderPrompt.Options[2] ~= nil then
 					if (
 						isTriggered(ButtonAction.ACTION_MENUUP, player1)
 							or isTriggered(ButtonAction.ACTION_MENUDOWN, player1)
@@ -378,7 +395,8 @@ function dnd:WriteText()
 						optionSelected = isTriggered(ButtonAction.ACTION_MENUUP, player1) and
 							optionSelected - 1
 							or optionSelected + 1
-						optionSelected = optionSelected < 1 and #promptOptions or optionSelected > #promptOptions and 1 or optionSelected
+						optionSelected = optionSelected < 1 and #renderPrompt.Options or optionSelected > #renderPrompt.Options and 1
+							or optionSelected
 						local soundToPlay = isTriggered(ButtonAction.ACTION_MENUUP, player1) and
 							SoundEffect.SOUND_CHARACTER_SELECT_LEFT or SoundEffect.SOUND_CHARACTER_SELECT_RIGHT
 						g.sfx:Play(soundToPlay)
@@ -386,9 +404,9 @@ function dnd:WriteText()
 						print(optionSelected)
 					end
 				end
-				renderText(promptOptions, 0.2, "Option")
+				renderText(renderPrompt.Options, 25, "Option")
 			else
-				if promptOptions[optionSelected][1] == "Roll" then
+				if renderPrompt.Options[optionSelected][1] == "Roll" then
 					renderText({ state.RollResult }, 0.2)
 					if state.NumAvailableRolls > 0 then
 						renderText({ "You have more players, roll again" }, 0)
@@ -446,11 +464,7 @@ function dnd:ScreenBackground()
 	if state.Active then
 		local center = getCenterScreen()
 		if state.PromptProgress == 0 then
-			if background:IsPlaying("Start") then
-				background:Render(center, Vector.Zero, Vector.Zero)
-			elseif background:IsPlaying("Title") then
-
-			end
+			background:Render(center, Vector.Zero, Vector.Zero)
 		elseif state.PromptProgress > 0 then
 			dnd:AnimationTimer()
 			if background:GetAnimation() == "1"
@@ -463,7 +477,7 @@ function dnd:ScreenBackground()
 				background:RenderLayer(7, center, Vector.Zero, Vector.Zero)
 				for i = 1, tonumber(background:GetAnimation()) do
 					local startingFrame = (i * 2) - 2
-					local characterLayer = selectedCharacters[i] + 2
+					local characterLayer = state.CharacterSelect[i] + 2
 					background:RenderLayer(characterLayer, center, Vector.Zero, Vector.Zero)
 					background:SetLayerFrame(characterLayer, startingFrame + headOffset)
 				end
