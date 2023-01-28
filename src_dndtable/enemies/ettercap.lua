@@ -8,43 +8,64 @@ local vee = require('src_dndtable.veeHelper')
     they will shoot egg tears that spawn cobwebs and spiders when landing.
 ]]
 
+local AnimToDirection = {
+    ['AttackDown'] = {
+        [true] = Vector(0, 1),
+        [false] = Vector(0, 1)
+    },
+    ['AttackUp'] = {
+        [true] = Vector(0, -1),
+        [false] = Vector(0, -1)
+    },
+    ['AttackRight'] = {
+        [true] = Vector(-1, 0),
+        [false] = Vector(1, 0)
+    },
+    ['AttackUpRight'] = {
+        [true] = Vector(-0.71, -0.71),
+        [false] = Vector(0.71, -0.71)
+    },
+    ['AttackDownRight'] = {
+        [true] = Vector(-0.71, 0.71),
+        [false] = Vector(0.71, 0.71)
+    },
+}
+
 ---@param npc EntityNPC
 function ettercap:onNpcUpdate(npc)
     if npc.Variant ~= 3 then return end
     local s = npc:GetSprite()
 
     if npc.FrameCount == 30 then
-        npc:GetData().attacks = -1
+
     end
 
-    if s:IsEventTriggered('Shoot') then
-        npc:GetData().attacks = 0
-    end
+    if s:IsEventTriggered('ShootAlt') then
+        print(s:GetAnimation() .. " " .. tostring(s.FlipX))
 
-    if npc:GetData().attacks > -1 and npc:GetData().attacks < 8 then
-        npc:GetData().attacks = npc:GetData().attacks + 1
+        local shootingDir = AnimToDirection[s:GetAnimation()][s.FlipX]
+        local numProj = vee.RandomNum(4, 6)
 
-        for _, entity in pairs(Isaac.GetRoomEntities()) do
-            if entity.FrameCount == 0 and (not entity.SpawnerEntity or entity.SpawnerType == EntityType.ENTITY_BLOATY) then
-                if entity.Type == EntityType.ENTITY_PROJECTILE then
-                    entity:GetData().webTear = true
-                    local c = entity.Color
-                    c:SetColorize(1, 1, 1, 1)
-                    entity:SetColor(c, 100, 1, false, false)
-                    entity:GetSprite():Load('gfx/009.633_egg.anm2', true)
-                    if vee.RandomNum() < 0.5 then
-                        entity:GetSprite():Play('Stone2Idle')
-                    else
-                        entity:GetSprite():Play('Stone3Idle')
-                    end
-                    entity:ToProjectile():AddFallingAccel(vee.RandomNum(10, 25) / (-100))
-                end
-            end
+        for _ = 1, numProj do
+            local proj = Isaac.Spawn(
+                EntityType.ENTITY_PROJECTILE,
+                ProjectileVariant.PROJECTILE_TEAR,
+                0,
+                npc.Position,
+                Vector.FromAngle(shootingDir:GetAngleDegrees() + vee.RandomNum(-10, 10)):Resized(vee.RandomNum(3, 5)),
+                npc
+            ):ToProjectile()
+
+            proj.FallingSpeed = -18
+            proj.FallingAccel = vee.RandomNum(10, 25) / 25
+
+            proj:GetData().webTear = true
+
+            proj:GetSprite():Load('gfx/009.633_egg.anm2', true)
+            proj:GetSprite():Play(vee.RandomNum() < 0.5 and 'Stone2Idle' or 'Stone3Idle')
         end
 
-        g.sfx:Stop(SoundEffect.SOUND_BOSS_GURGLE_ROAR)
-    elseif npc:GetData().attacks >= 8 then
-        npc:GetData().attacks = -1
+        g.sfx:Play(SoundEffect.SOUND_BOSS_GURGLE_ROAR)
     end
 end
 
@@ -67,7 +88,16 @@ function ettercap:onProjectileUpdate(projectile)
         end
         g.sfx:Play(SoundEffect.SOUND_BOIL_HATCH, 1, 15, false, 1, 0)
 
+        Isaac.Spawn(1000, EffectVariant.CREEP_WHITE, 0, projectile.Position, Vector.Zero, projectile)
+
         -- spawn tear poof
+        local splash = Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.TEAR_POOF_A, 0, projectile.Position, Vector.Zero, projectile)
+		splash:SetColor(projectile.Color, 100, 1, false, false)
+
+        projectile:Remove()
+    end
+
+    if projectile:CollidesWithGrid() then
         local splash = Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.TEAR_POOF_A, 0, projectile.Position, Vector.Zero, projectile)
 		splash:SetColor(projectile.Color, 100, 1, false, false)
 

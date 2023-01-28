@@ -63,4 +63,3 @@ mod:AddCallback(ModCallbacks.MC_POST_PROJECTILE_UPDATE, ettercap.onProjectileUpd
 
 --- bodak
 mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, bodak.onNpcUpdate, EntityType.ENTITY_VIS)
-mod:AddCallback(ModCallbacks.MC_POST_LASER_UPDATE, bodak.onLaserUpdate)

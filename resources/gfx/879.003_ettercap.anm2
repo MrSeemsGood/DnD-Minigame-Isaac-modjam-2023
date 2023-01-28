@@ -1,5 +1,5 @@
 <AnimatedActor>
-	<Info CreatedBy="trtv" CreatedOn="27.01.2023 0:52:02" Version="5" Fps="30"/>
+	<Info CreatedBy="trtv" CreatedOn="28.01.2023 18:32:31" Version="6" Fps="30"/>
 	<Content>
 		<Spritesheets>
 			<Spritesheet Path="enemies\ettercap.png" Id="0"/>
@@ -12,7 +12,7 @@
 			<Null Name="OverlayEffect" Id="0" ShowRect="false"/>
 		</Nulls>
 		<Events>
-			<Event Name="Shoot" Id="0"/>
+			<Event Name="ShootAlt" Id="0"/>
 		</Events>
 	</Content>
 	<Animations DefaultAnimation="WalkHori">

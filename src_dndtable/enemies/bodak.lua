@@ -3,7 +3,7 @@ local g = require('src_dndtable.globals')
 
 --[[
     Bodaks act similarly to the Vis enemy, with two corrections:
-    - ???their lasers are white
+    - their lasers are white
     - they can't be pushed around when they are attacking
 ]]
 
@@ -27,19 +27,21 @@ function bodak:onNpcUpdate(npc)
 
     if s:IsEventTriggered('Shoot') then
         for _, laser in pairs(Isaac.FindByType(EntityType.ENTITY_LASER)) do
-            if laser.SpawnerType == EntityType.ENTITY_VIS then
-                laser:GetData().toRecolor = true
+            if laser.SpawnerType == EntityType.ENTITY_VIS
+            and laser.FrameCount == 0 then
+                local c = laser.Color
+                c:SetColorize(4, 4, 4, 1)
+                laser:SetColor(c, 100, 1, false, false)
             end
         end
-    end
-end
 
----@param laser EntityLaser
-function bodak:onLaserUpdate(laser)
-    if laser:GetData().toRecolor
-    and laser.FrameCount == 1 then
-        --[[laser:SetColor(Color(1, 1, 1, 1, 0, 0, 0), 1000, 1, false, false)
-        laser:Update()--]]
+        for _, impact in pairs(Isaac.FindByType(EntityType.ENTITY_EFFECT, EffectVariant.LASER_IMPACT)) do
+            if impact.FrameCount == 0 then
+                local c = impact.Color
+                c:SetColorize(4, 4, 4, 1)
+                impact:SetColor(c, 100, 1, false, false)
+            end
+        end
     end
 end
 
