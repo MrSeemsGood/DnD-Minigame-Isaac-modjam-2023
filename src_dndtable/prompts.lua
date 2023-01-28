@@ -93,7 +93,7 @@ dndText.Prompts = {
 		},
 	}, ]]
 	{
-		Title = "You feel a grumbling in your stomach with the urge to fart",
+		Title = "aaaaaaaaaaaaaaaaaaaaaa",
 		Options = {
 			[1] = { "Roll", "Roll the dice bitch" },
 			[2] = { "Roll", "Roll the dice but Isaac", PlayerType.PLAYER_ISAAC },

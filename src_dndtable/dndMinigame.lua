@@ -73,6 +73,9 @@ local function initMinigame()
 	background:Play("Start", true)
 	optionCursor:Load("gfx/ui/dndminigame_cursor_option.anm2", true)
 	optionCursor:Play(optionCursor:GetDefaultAnimation(), true)
+	dice:Load("gfx/ui/dndminigame_d20.anm2", true)
+	diceFlash:Load("gfx/ui/dndminigame_d20.anm2", true)
+	diceFlash:SetFrame("Result", 0)
 	for i = 1, #characterSprites do
 		characterSprites[i]:Load("gfx/001.000_player.anm2", true)
 		characterSprites[i]:SetFrame("Happy", 0)
@@ -161,11 +164,13 @@ end
 
 ---@param stringTable table
 ---@param posMult number
----@param isOptionText? boolean
+---@param textType? string
 ---@param scale? number
-local function renderText(stringTable, posMult, isOptionText, scale)
+local function renderText(stringTable, posMult, textType, scale)
 	local center = getCenterScreen()
 	local mult = posMult
+	local posX = textType == "Title" and 119 or 0
+	local boxLength = textType == "Title" and 235 or Isaac.GetScreenWidth()
 
 	for i = 1, #stringTable do
 		posMult = mult
@@ -179,16 +184,16 @@ local function renderText(stringTable, posMult, isOptionText, scale)
 		end
 		posMult = posMult + (0.05 * #stringTable)
 		local optionPos = center.Y + (100 * posMult)
-		local text = isOptionText and stringTable[i][2] or stringTable[i]
+		local text = textType == "Option" and stringTable[i][2] or stringTable[i]
 
-		if isOptionText
+		if textType == "Option"
 		and #stringTable > 1 and i == optionSelected
 		and globalYOffset == 0
 		then
 			renderCursor(text, optionPos + 8)
 		end
 
-		font:DrawString(text, 0, optionPos + globalYOffset, KColor(1, 1, 1, globalAlpha), Isaac.GetScreenWidth(), true)
+		font:DrawString(text, posX, optionPos + globalYOffset, KColor(1, 1, 1, globalAlpha), boxLength, true)
 	end
 end
 
@@ -228,8 +233,8 @@ function dnd:RenderCharacterSelect()
 	local center = getCenterScreen()
 	local player1 = Isaac.GetPlayer()
 
-	renderText({ "Welcome to Caves n' Creatures!" }, -0.5, false, 1.5)
-	renderText({ "Select your character" }, -0.3)
+	--renderText({ "Welcome to Caves n' Creatures!" }, -0.5, "Title", 1.5)
+	--renderText({ "Select your character" }, -0.3)
 
 	local players = newPlayers[1] ~= nil and newPlayers or VeeHelper.GetAllMainPlayers()
 	if #players > 4 then players = { players[1], players[2], players[3], players[4] } end
@@ -318,6 +323,8 @@ function dnd:WriteText()
 		initMinigame()
 	elseif state.Active then
 		if state.PromptProgress == 0 and background:IsFinished("Start") then
+			background:Play("Title")
+		elseif state.PromptProgress == 0 and background:IsFinished("Title") then
 			dnd:RenderCharacterSelect()
 		elseif state.PromptProgress >= 1 then
 			local prompt = dndText.Prompts[state.PromptSelected]
@@ -351,8 +358,12 @@ function dnd:WriteText()
 				data.DNDKeyDelay = keyDelay
 			end
 
+			if dice:GetAnimation() ~= "Idle" then
+				dice:Render(getCenterScreen(), Vector.Zero, Vector.Zero)
+			end
+
 			if not state.HasSelected then
-				renderText({ prompt.Title }, -0.5)
+				renderText({ prompt.Title }, -0.5, "Title")
 			end
 
 			if not state.HasSelected then
@@ -375,7 +386,7 @@ function dnd:WriteText()
 						print(optionSelected)
 					end
 				end
-				renderText(promptOptions, 0.2, true)
+				renderText(promptOptions, 0.2, "Option")
 			else
 				if promptOptions[optionSelected][1] == "Roll" then
 					renderText({ state.RollResult }, 0.2)
@@ -420,14 +431,14 @@ function dnd:HandleTransitionText()
 	end
 end
 
-local frameOffset = 0
-local frameOffsetTimer = 30
+local headOffset = 0
+local headOffsetTimer = 30
 function dnd:AnimationTimer()
-	if frameOffsetTimer > 0 then
-		frameOffsetTimer = frameOffsetTimer - 1
+	if headOffsetTimer > 0 then
+		headOffsetTimer = headOffsetTimer - 1
 	else
-		frameOffset = frameOffset == 0 and 1 or 0
-		frameOffsetTimer = 30
+		headOffset = headOffset == 0 and 1 or 0
+		headOffsetTimer = 30
 	end
 end
 
@@ -435,7 +446,11 @@ function dnd:ScreenBackground()
 	if state.Active then
 		local center = getCenterScreen()
 		if state.PromptProgress == 0 then
-			background:Render(center, Vector.Zero, Vector.Zero)
+			if background:IsPlaying("Start") then
+				background:Render(center, Vector.Zero, Vector.Zero)
+			elseif background:IsPlaying("Title") then
+
+			end
 		elseif state.PromptProgress > 0 then
 			dnd:AnimationTimer()
 			if background:GetAnimation() == "1"
@@ -445,14 +460,15 @@ function dnd:ScreenBackground()
 			then
 				background:RenderLayer(0, center, Vector.Zero, Vector.Zero)
 				background:RenderLayer(1, center, Vector.Zero, Vector.Zero)
+				background:RenderLayer(7, center, Vector.Zero, Vector.Zero)
 				for i = 1, tonumber(background:GetAnimation()) do
 					local startingFrame = (i * 2) - 2
 					local characterLayer = selectedCharacters[i] + 2
 					background:RenderLayer(characterLayer, center, Vector.Zero, Vector.Zero)
-					background:SetLayerFrame(characterLayer, startingFrame + frameOffset)
+					background:SetLayerFrame(characterLayer, startingFrame + headOffset)
 				end
 				background:RenderLayer(2, center, Vector.Zero, Vector.Zero)
-				background:SetLayerFrame(2, 0 + frameOffset)
+				background:SetLayerFrame(2, 0 + headOffset)
 			end
 		end
 		background:Update()
