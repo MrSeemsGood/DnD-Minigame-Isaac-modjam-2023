@@ -69,12 +69,12 @@ end
 
 local function initMinigame()
 	state.Active = true
-	background:Load("gfx/ui/dndminigame_background.anm2", true)
+	background:Load("gfx/dndminigame_background.anm2", true)
 	background:Play("Start", true)
-	optionCursor:Load("gfx/ui/dndminigame_cursor_option.anm2", true)
+	optionCursor:Load("gfx/dndminigame_cursor_option.anm2", true)
 	optionCursor:Play(optionCursor:GetDefaultAnimation(), true)
-	dice:Load("gfx/ui/dndminigame_d20.anm2", true)
-	diceFlash:Load("gfx/ui/dndminigame_d20.anm2", true)
+	dice:Load("gfx/dndminigame_d20.anm2", true)
+	diceFlash:Load("gfx/dndminigame_d20.anm2", true)
 	diceFlash:SetFrame("Result", 0)
 	for i = 1, #characterSprites do
 		characterSprites[i]:Load("gfx/001.000_player.anm2", true)
