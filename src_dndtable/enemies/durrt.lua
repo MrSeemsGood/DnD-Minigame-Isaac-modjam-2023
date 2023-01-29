@@ -2,6 +2,15 @@ local durrt = {}
 local g = require('src_dndtable.globals')
 local vee = require('src_dndtable.veeHelper')
 
+--[[
+    Durrts wander around the room very slowly, not attempting to follow Isaac.
+    - if Isaac stays diagonal to them in their line of sight, they roll towards them with an increased speed.
+    - they can occasionally pick up and throw nearby rocks.
+]]
+
+--TODO projectiles spawned by durrt error out if they exist and their durrt doesn't
+--TODO2 make the projectile have the actual rock sprite?
+
 local DURRT_MOVESPEED_NORMAL = 2
 local DURRT_MOVESPEED_ROLLING = 10
 local DURRT_ATTACK_DISTANCE = 200
@@ -23,7 +32,7 @@ function durrt:onNpcUpdate(npc)
     local player = npc:GetPlayerTarget()
     local room = g.game:GetRoom()
 
-    if npc.FrameCount == 1 then
+    if npc.FrameCount == 30 then
         npc:AddEntityFlags(EntityFlag.FLAG_NO_KNOCKBACK | EntityFlag.FLAG_NO_PHYSICS_KNOCKBACK)
         npc:GetData().rollCooldown = 0
         npc:GetData().throwCooldown = 0
@@ -37,7 +46,9 @@ function durrt:onNpcUpdate(npc)
     end
 
     --print(s:GetAnimation())
-    npc:GetData().throwCooldown = npc:GetData().throwCooldown - 1
+    if npc:GetData().throwCooldown then
+        npc:GetData().throwCooldown = npc:GetData().throwCooldown - 1
+    end
 
     --? do we only want to play it when it's moving, maybe? or not play it at all?
     --npc:PlaySound(SoundEffect.SOUND_STONE_WALKER, 0.75, vee.RandomNum(60, 120), false, 1)
@@ -68,7 +79,7 @@ function durrt:onNpcUpdate(npc)
             end
         end
 
-        if player and npc:GetData().throwCooldown <= 0
+        if player and npc:GetData().throwCooldown and npc:GetData().throwCooldown <= 0
         and #nearbyRocks > 0 and vee.RandomNum(2) == 1 then
             npc:GetData().rockToPickup = nearbyRocks[vee.RandomNum(#nearbyRocks)]
             s:Play('Pick')
@@ -94,7 +105,7 @@ function durrt:onNpcUpdate(npc)
     end
 
     -- Rolling attack
-    if player and npc:GetData().rollCooldown <= 0
+    if player and npc:GetData().rollCooldown and npc:GetData().rollCooldown <= 0
     and player.Position:Distance(npc.Position) < DURRT_ATTACK_DISTANCE
     and room:CheckLine(npc.Position, player.Position, 0) then
         local playerAngle = (player.Position - npc.Position):GetAngleDegrees()
@@ -161,14 +172,14 @@ function durrt:onNpcUpdate(npc)
             s:Play('RollEnd', true)
             npc.CollisionDamage = 1
         end
-    else
+    elseif npc:GetData().rollCooldown then
         npc:GetData().rollCooldown = npc:GetData().rollCooldown - 1
     end
 end
 
 ---@param proj EntityProjectile
 function durrt:onProjectileUpdate(proj)
-    if proj.SpawnerType ~= g.INVIS_STALKER or proj.SpawnerVariant ~= 3 then return end
+    if proj.SpawnerType ~= g.CUSTOM_DUNGEON_ENEMY_TYPE or proj.SpawnerVariant ~= 3 then return end
 
     if proj.FrameCount == 1 then
         proj:GetSprite():SetFrame('Rotate6', 0)

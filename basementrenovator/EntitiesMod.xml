@@ -2,6 +2,7 @@
     <entity Group="DnD Enemies" ID="898" Image="dnd/invisible stalker.png" Kind="Floors" Name="Invisible Stalker" Subtype="0" Variant="1" />
     <entity Group="DnD Enemies" ID="898" Image="dnd/yochlol.png" Kind="Floors" Name="Yochlol" Subtype="0" Variant="2" />
     <entity Group="DnD Enemies" ID="898" Image="dnd/durrt.png" Kind="Floors" Name="Durrt" Subtype="0" Variant="3" />
+    <entity Group="DnD Enemies" ID="898" Image="dnd/grell.png" Kind="Floors" Name="Grell" Subtype="0" Variant="4" />
     <entity Group="DnD Enemies" ID="39" Image="dnd/bodak.png" Kind="Floors" Name="Bodak" Subtype="3" Variant="0" />
     <entity Group="DnD Enemies" ID="879" Image="dnd/ettercap.png" Kind="Floors" Name="Ettercap" Subtype="0" Variant="3" />
 </data>

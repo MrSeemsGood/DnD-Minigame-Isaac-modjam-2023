@@ -7,6 +7,7 @@ local invisStalker = include("src_dndtable.enemies.invisible_stalker")
 local yochlol = include("src_dndtable.enemies.yochlol")
 local bodak = include("src_dndtable.enemies.bodak")
 local durrt = include("src_dndtable.enemies.durrt")
+local grell = include("src_dndtable.enemies.grell")
 
 
 -- Sanio, you forgor something :skull:
@@ -50,11 +51,11 @@ mod:AddCallback(ModCallbacks.MC_POST_PLAYER_UPDATE, mod.OnPostPlayerUpdate)
 mod:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, dnd.OnPreGameExit)
 
 -- invisible stalker
-mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, invisStalker.onNpcUpdate, g.INVIS_STALKER)
-mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, invisStalker.onEntityTakeDmg, g.INVIS_STALKER)
+mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, invisStalker.onNpcUpdate, g.CUSTOM_DUNGEON_ENEMY_TYPE)
+mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, invisStalker.onEntityTakeDmg, g.CUSTOM_DUNGEON_ENEMY_TYPE)
 
 -- yochlol
-mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, yochlol.onNpcUpdate, g.INVIS_STALKER)
+mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, yochlol.onNpcUpdate, g.CUSTOM_DUNGEON_ENEMY_TYPE)
 
 -- ettercap
 mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, ettercap.onNpcUpdate, EntityType.ENTITY_BLOATY)
@@ -65,5 +66,8 @@ mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, bodak.onNpcUpdate, EntityType.ENTITY
 
 -- durrt
 mod:AddCallback(ModCallbacks.MC_POST_PROJECTILE_UPDATE, durrt.onProjectileUpdate, ProjectileVariant.PROJECTILE_ROCK)
-mod:AddCallback(ModCallbacks.MC_POST_NPC_DEATH, durrt.onNpcDeath, g.INVIS_STALKER)
-mod:AddCallback(ModCallbacks.MC_NPC_UPDATE,  durrt.onNpcUpdate, g.INVIS_STALKER)
+mod:AddCallback(ModCallbacks.MC_POST_NPC_DEATH, durrt.onNpcDeath, g.CUSTOM_DUNGEON_ENEMY_TYPE)
+mod:AddCallback(ModCallbacks.MC_NPC_UPDATE,  durrt.onNpcUpdate, g.CUSTOM_DUNGEON_ENEMY_TYPE)
+
+-- grell
+mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, grell.onNpcUpdate, g.CUSTOM_DUNGEON_ENEMY_TYPE)

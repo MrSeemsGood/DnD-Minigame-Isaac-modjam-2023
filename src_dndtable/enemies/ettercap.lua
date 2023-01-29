@@ -4,8 +4,7 @@ local vee = require('src_dndtable.veeHelper')
 
 --[[
     Ettercaps acts similarly to Bloaties, wandering around the room and occasionally stop to attack.
-    - their attack still spews green creep, but instead of normal tears,
-    they will shoot egg tears that spawn cobwebs and spiders when landing.
+    - they will shoot egg tears that spawn cobwebs, white slowing creep and spiders when landing.
 ]]
 
 local AnimToDirection = {
