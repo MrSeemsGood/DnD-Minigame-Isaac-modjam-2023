@@ -116,41 +116,142 @@ local function transitionText()
 	globalAlpha = 0
 end
 
+---@param stringTable table
+local function separateTextByHashtag(stringTable)
+	while string.find(stringTable[#stringTable], "#") ~= nil do
+		local curText = stringTable[#stringTable]
+		local line1, line2 = string.find(curText, "#")
+		local nextLine = string.sub(curText, line2 + 1, -1)
+		stringTable[#stringTable] = string.sub(curText, 1, line1 - 1)
+		stringTable.insert(stringTable, nextLine)
+	end
+	return stringTable
+end
+
 local function startNextPrompt()
-	state.PromptSelected = 1
-	--state.PromptSelected = VeeHelper.GetDifferentRandomNum(state.PromptsSeen, state.MaxPrompts, VeeHelper.RandomRNG)
+	transitionText()
+	local selectNextPrompt = true
+	local promptTypeToUse = dndText.Prompts
+
+	if state.PromptProgress > 0 then
+		local curPrompt = dndText:GetTableFromPromptType(state.PromptTypeSelected)
+		if curPrompt[state.PromptSelected] then
+			if curPrompt[state.PromptSelected].Effect[optionSelected] then
+				local effects = curPrompt[state.PromptSelected].Effect[optionSelected][state.OutcomeResult] or
+					curPrompt[state.PromptSelected].Effect[optionSelected]
+				if effects.Keys then
+					state.Inventory.Keys = state.Inventory.Keys + effects.Keys
+				end
+				if effects.Bombs then
+					state.Inventory.Bombs = state.Inventory.Bombs + effects.Bombs
+				end
+				if effects.Coins then
+					state.Inventory.Coins = state.Inventory.Coins + effects.Coins
+				end
+				if effects.Collectible then
+					
+				end
+				if effects.EntityFlagsOnRoomEnter then
+					state.EntityFlagsOnNextEncounter = effects.EntityFlagsOnRoomEnter
+				end
+				if effects.ForceNextPrompt then
+					selectNextPrompt = false
+					promptTypeToUse = effects.ForceNextPrompt.TableToUse
+					state.PromptSelected = effects.ForceNextPrompt.PromptNumber
+				end
+				if effects.StartEncounter then
+					Isaac.ExecuteCommand("goto s.default."..tostring(effects.StartEncounter))
+				end
+			end
+		end
+	end
 	state.PromptProgress = state.PromptProgress + 1
 	state.RollResult = 0
 	state.OutcomeResult = 0
 	state.HasSelected = false
 	state.NumAvailableRolls = 1
 	optionSelected = 1
-	local prompt = dndText.Prompts[state.PromptSelected]
+
+	if selectNextPrompt then
+		state.PromptSelected = 1
+		--state.PromptSelected = VeeHelper.GetDifferentRandomNum(state.PromptsSeen, state.MaxPrompts, VeeHelper.RandomRNG)
+		if state.PromptProgress == 3 then
+			promptTypeToUse = dndText.Encounters
+		elseif state.PromptProgress == state.MaxPrompts then
+			promptTypeToUse = dndText.BossEncounters
+		elseif VeeHelper.RandomNum(1, 50) == 50 then
+			promptTypeToUse = dndText.RarePrompts
+		end
+	end
+	local prompt = promptTypeToUse[state.PromptSelected]
+
 	renderPrompt.Options = {}
-	for i, option in ipairs(prompt.Options) do
+	for _, option in ipairs(prompt.Options) do
+		local optionRequirment = option[3]
 		local shouldCreate = true
-		--print(state.ActiveCharacters[1], state.ActiveCharacters[2], state.ActiveCharacters[3], state.ActiveCharacters[4])
-		if option[3]
-			and state.ActiveCharacters[option[3] + 1] == 0
-		then
-			shouldCreate = false
+
+		if optionRequirment then
+			if type(optionRequirment) == "number"
+				and state.ActiveCharacters[optionRequirment + 1] == 0
+			then
+				shouldCreate = false
+			elseif type(optionRequirment) == "string"
+				and (
+				(
+					string.sub(optionRequirment, 1, 3) ~= "Key"
+						and string.sub(optionRequirment, 1, 4) ~= "Bomb"
+						and string.sub(optionRequirment, 1, 4) ~= "Coin"
+					)
+					or (
+					string.sub(optionRequirment, 1, 3) == "Key"
+						and state.Inventory.Keys < tonumber(string.sub(optionRequirment, 4, -1))
+					)
+					or (
+					string.sub(optionRequirment, 1, 4) == "Bomb"
+						and state.Inventory.Bombs < tonumber(string.sub(optionRequirment, 5, -1))
+					)
+					or (
+					string.sub(optionRequirment, 1, 4) == "Coin"
+						and state.Inventory.Coins < tonumber(string.sub(optionRequirment, 5, -1))
+					)
+				)
+			then
+				shouldCreate = false
+			end
 		end
 		if shouldCreate then
-			renderPrompt.Options[i] = {}
-			renderPrompt.Options[i][1] = option[1]
-			renderPrompt.Options[i][2] = option[2]
-			renderPrompt.Options[i][3] = option[3]
+			local names = {
+				[PlayerType.PLAYER_ISAAC] = "Isaac",
+				[PlayerType.PLAYER_MAGDALENA] = "Maggy",
+				[PlayerType.PLAYER_CAIN] = "Cain",
+				[PlayerType.PLAYER_JUDAS] = "Judas",
+			}
+			local prefix = ""
+			if type(optionRequirment) == "number" then
+				prefix = names[optionRequirment]
+				prefix = "[" .. prefix .. "] "
+			elseif type(optionRequirment) == "string" then
+				local name = string.sub(optionRequirment, 1, 3) == "Key" and string.sub(optionRequirment, 1, 3) or
+					string.sub(optionRequirment, 1, 4)
+				local num = name == "Key" and string.sub(optionRequirment, 4, -1) or
+					string.sub(optionRequirment, 5, -1)
+				if name == "Key" then
+					prefix = "-" .. num .. " " .. name
+				elseif name == "Bomb" then
+					prefix = "-" .. num .. " " .. name
+				elseif name == "Coin" then
+					prefix = "-" .. num .. " " .. name
+				end
+				prefix = "[" .. prefix .. "] "
+			end
+			local prompt = {}
+			prompt[1] = option[1]
+			prompt[2] = prefix .. option[2]
+			prompt[3] = optionRequirment
+			table.insert(renderPrompt.Options, prompt)
 		end
 	end
-	local title = {prompt.Title}
-	local shit = 0
-	while string.find(title[#title], "#") ~= nil do
-		local curText = title[#title]
-		local line1, line2 = string.find(curText, "#")
-		local nextLine = string.sub(curText, line2 + 1, -1)
-		title[#title] = string.sub(curText, 1, line1 -1)
-		table.insert(title, nextLine)
-	end
+	local title = separateTextByHashtag({ prompt.Title })
 	renderPrompt.Title = title
 end
 
@@ -185,20 +286,23 @@ local function renderText(stringTable, startingPos, textType, scale)
 	local nextLineMult = 0.15
 	local posPerLineMult = (textType == "Title" and (#stringTable < 4 and 0.15 or #stringTable >= 4 and 0.1)) or 0.05
 	local lineSpacingMult = 125
-	
+
 	local posX = textType == "Title" and (center.X - 120) or 0
 	local boxLength = textType == "Title" and 235 or Isaac.GetScreenWidth()
 
 	for i = 1, #stringTable do
 		local mult = 0.2
 		local middleNum = (math.ceil(#stringTable / 2))
-		local numOffset = (#stringTable > 2 and #stringTable % 2 == 0) and 0 or 1
 
-		if (#stringTable % 2 == 0 and i <= middleNum) or i < middleNum then
-			mult = mult - (nextLineMult * ((#stringTable + numOffset) - i))
-		elseif (#stringTable % 2 == 0 and i > middleNum) or (i >= middleNum and #stringTable > 1) then
-			mult = (nextLineMult * (i - (middleNum))) - (mult / 2)
+		if #stringTable % 2 == 0 then
+			mult = 0.1
 		end
+		if i < middleNum then
+			mult = mult - (nextLineMult * (middleNum - i))
+		elseif i > middleNum then
+			mult = mult + (nextLineMult * (i - middleNum))
+		end
+
 		mult = mult + (posPerLineMult * #stringTable)
 		local posY = center.Y + startingPos + (lineSpacingMult * mult)
 		local text = textType == "Option" and stringTable[i][2] or stringTable[i]
@@ -352,17 +456,20 @@ function dnd:WriteText()
 				and not data.DNDKeyDelay
 			then
 				if not state.HasSelected then
+					local outcomeText = prompt.Outcome[optionSelected]
 					if renderPrompt.Options[optionSelected][1] == "Roll" then
 						rollDice()
-					end
-					local characterIndex = renderPrompt.Options[optionSelected][3] + 1
+						local characterIndex = renderPrompt.Options[optionSelected][3] + 1
 
-					if state.OutcomeResult < 3
-						and characterIndex ~= nil
-						and state.ActiveCharacters[characterIndex] > 1
-					then
-						state.NumAvailableRolls = state.ActiveCharacters[characterIndex] - 1
+						if state.OutcomeResult < 3
+							and characterIndex ~= nil
+							and state.ActiveCharacters[characterIndex] > 1
+						then
+							state.NumAvailableRolls = state.ActiveCharacters[characterIndex] - 1
+						end
+						outcomeText = outcomeText[state.OutcomeResult]
 					end
+					renderPrompt.Outcome = separateTextByHashtag({ outcomeText })
 					state.HasSelected = true
 				else
 					if renderPrompt.Options[optionSelected][1] == "Roll"
@@ -404,17 +511,17 @@ function dnd:WriteText()
 						print(optionSelected)
 					end
 				end
-				renderText(renderPrompt.Options, 25, "Option")
+				renderText(renderPrompt.Options, 0, "Option")
 			else
 				if renderPrompt.Options[optionSelected][1] == "Roll" then
 					renderText({ state.RollResult }, 0.2)
 					if state.NumAvailableRolls > 0 then
 						renderText({ "You have more players, roll again" }, 0)
 					else
-						renderText({ prompt.Outcome[optionSelected][state.OutcomeResult] }, 0)
+						renderText(renderPrompt.Outcome, 0)
 					end
 				else
-					renderText({ prompt.Outcome[optionSelected] }, 0)
+					renderText(renderPrompt.Outcome, 0)
 				end
 			end
 		end

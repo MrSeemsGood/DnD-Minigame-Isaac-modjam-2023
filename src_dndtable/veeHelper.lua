@@ -910,9 +910,7 @@ function VeeHelper.CopyOverTable(tableSubject, tableTarget)
 	for variableName, value in pairs(tableSubject) do
 		if type(value) == "table" then
 			tableTarget[variableName] = {}
-			if value[1] ~= nil then
-				VeeHelper.CopyOverTable(value, tableTarget[variableName])
-			end
+			VeeHelper.CopyOverTable(value, tableTarget[variableName])
 		else
 			tableTarget[variableName] = value
 		end
