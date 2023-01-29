@@ -1,10 +1,11 @@
 local dndText = {}
 
-dndText.CharacterSprites = {
-	"gfx/characters/costumes/character_001_isaac.png",
-	"gfx/characters/costumes/character_002_magdalene.png",
-	"gfx/characters/costumes/character_003_cain.png",
-	"gfx/characters/costumes/character_004_judas.png"
+---@class Enum
+dndText.PromptType = {
+	NORMAL = 0,
+	ENEMY = 1,
+	BOSS = 2,
+	RARE = 3
 }
 
 ---@class GameState
@@ -24,6 +25,7 @@ dndText.GameState = {
 	},
 	PromptProgress = 0,
 	PromptSelected = 1,
+	PromptTypeSelected = dndText.PromptType.NORMAL,
 	HasSelected = false,
 	RollResult = 0,
 	OutcomeResult = 0,
@@ -31,109 +33,104 @@ dndText.GameState = {
 	MaxPrompts = 3,
 	PromptsSeen = {},
 	EncountersSeen = {},
+	Inventory = {
+		Keys = 1,
+		Bombs = 1,
+		Coins = 0,
+	},
 	AdventureEnded = false,
+	EntityFlagsOnNextEncounter = {0, 0}
 }
 
----@class RewardType
-dndText.RewardType = {
-	HEAL = 0,
-	TRINKET = 1,
-	ITEM = 2,
-	KEY = 3,
-	BOMB = 4,
-	CONSUMABLE = 5,
-}
-
----@class AdvantageType
-dndText.AdvantageType = {
-	DODGE = 0,
-	BURN = 1,
-	WEAKNESS = 2,
-	SLOW = 3,
-	CHARM = 4,
-	CONFUSE = 5,
-	FREEZE = 6,
-	SKIP = 7,
-	DAMAGE = 8,
-}
+---@class OutcomeEffect
+---@field Collectible CollectibleType
+---@field Keys integer
+---@field Bombs integer
+---@field Coins integer
+---@field EntityFlagsOnRoomEnter {Flags: EntityFlag, Duration: integer}
+---@field StartEncounter integer
+---@field ForceNextPrompt {TableToUse: Prompt[], PromptNumber: integer}
 
 ---@class Prompt
 ---@field Title string
----@field Options table<string, string> | table<string, string, PlayerType>
+---@field Options {OptionType: string, Text: string} | {OptionType: string, Text: string, PlayerType: PlayerType} | {OptionType: string, Text: string, ConsumableNeeded: string}
 ---@field Outcome string[] | table<integer, table<integer, string>>
+---@field Effect OutcomeEffect[] | table<integer, table<integer, OutcomeEffect>>
+
+--Prompts are required to have the following:
+--Title
+--Options, with at least one option
+--Every option must have either "Select" or "Roll" as its first string in its table
+--One Outcome for every Option
+--If the Option associated with the Outcome is a "Roll", then you must include 3 possible outcomes
+--Outcome results for rolls are as follows: 1-5 is a 1, 6-15 is a 2, 16-20 is a 3
+
+--Prompts can optionally have the following:
+--Add a PlayerType as an extra entry in an option to require you play a character to select the option
+--Add a string named "Key", "Coin", or "Bomb" with a number next to it without spaces (e.g. "Key1") to require a consumable for the option to be selected
+--The Effect table, the list of variables for it described above. Setup the same as Options and Title, but only include the numbers you need (e.g. You only want an effect for Option 3, so only include a key with the number 3)
 
 ---@type Prompt[]
 dndText.Prompts = {
-	--[[ {
-		Title = "Yo mama approaches",
-		Options = {
-			[1] = { "Roll", "Fight her ass" },
-			[2] = { "Select", "Get yo ass outta there" },
-			[3] = { "Select", "Fucking stab her", PlayerType.PLAYER_JUDAS}
-		},
-		Outcome = {
-			[1] = {
-				[1] = "you're fucking dead bro",
-				[5] = "you're severely damaged'",
-				[10] = "You both barely manage to scrape one another, both of you part ways",
-				[15] = "You damage her",
-				[20] = "she dead as hell"
-			},
-			[2] = "You escape",
-			[3] = "she dead as hell"
-		},
-	}, ]]
---[[ 	{
-		Title = "Go forward or go backwards?",
-		Options = {
-			[1] = { "Select", "Forwards" },
-			[2] = { "Select", "Backwards" },
-			[3] = { "Select", "Upwards" },
-			[4] = { "Select", "Speen", PlayerType.PLAYER_ISAAC },
-		},
-		Outcome = {
-			[1] = "You do in fact, go forwards.",
-			[2] = "You go backwards before realizing you need to move forward to progress",
-			[3] = "You go up!",
-			[4] = "SPEEEEEEEEEN",
-		},
-	}, ]]
 	{
-		Title = "What if I told you#that you could be#a millionare#ogoogmogmog",
+		Title = "You come across a locked chest",
 		Options = {
-			[1] = { "Roll", "Roll the dice bitch" },
-			[2] = { "Roll", "Roll the dice but Isaac", PlayerType.PLAYER_ISAAC },
-			[3] = { "Roll", "Roll the dice again" },
-			[4] = { "Roll", "Roll the dice gaming" },
+			[1] = { "Select", "Dismiss it" },
+			[2] = { "Select", "Unlock it", "Key1" },
+			[3] = { "Select", "Throw a coin at it", "Coin1" },
+			[4] = { "Select", "Bomb it", "Bomb1"},
+			[5] = { "Roll", "Attempt to lock-pick", PlayerType.PLAYER_CAIN },
 		},
 		Outcome = {
-			[1] = {
-				[1] = "you're fucking dead bro",
-				[2] = "nothin hapen",
-				[3] = "you did it!!!!!!",
-			},
-			[2] = {
-				[1] = "you're fucking dead bro",
-				[2] = "nothin hapen",
-				[3] = "you did it!!!!!!",
-			},
+			[1] = "You leave the chest be",
+			[2] = "You unlock the chest and get nothing lmao",
 			[3] = "Hi",
 			[4] = "Hi",
+			[5] = {
+				[1] = "bich",
+				[2] = "bich",
+				[3] = "bich"
+			}
 		},
+		Effect = {
+			[5] = {
+				[1] = {
+					Keys = 1
+				},
+
+			}
+		}
 	},
 }
 
----@type Prompt
+---@type Prompt[]
 dndText.Encounters = {
 
 }
 
+---@type Prompt[]
 dndText.RarePrompts = {
 
 }
 
+---@type Prompt[]
 dndText.BossEncounters = {
 
 }
+
+---@param promptType integer
+---@return Prompt[]
+function dndText:GetTableFromPromptType(promptType)
+	if promptType == dndText.PromptType.NORMAL then
+		return dndText.Prompts
+	elseif promptType == dndText.PromptType.ENEMY then
+		return dndText.Encounters
+	elseif promptType == dndText.PromptType.BOSS then
+		return dndText.BossEncounters
+	elseif promptType == dndText.PromptType.RARE then
+		return dndText.RarePrompts
+	end
+	return dndText.Prompts
+end
 
 return dndText
