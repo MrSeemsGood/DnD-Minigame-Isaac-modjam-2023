@@ -54,6 +54,8 @@ local renderPrompt = {
 }
 local globalAlpha = 1
 local globalYOffset = 0
+local textAlpha = 1
+local textYOffset = 0
 
 local function getCenterScreen()
 	return Vector(Isaac.GetScreenWidth() / 2, Isaac.GetScreenHeight() / 2)
@@ -64,11 +66,6 @@ local function updateCharacterSprite(sprite, i)
 	sprite:ReplaceSpritesheet(12, dndText.CharacterSprites[i])
 	sprite:LoadGraphics()
 end
-
-local override = true
-local hasShitted = false
-local numPlayers = 1
-local newPlayers = {}
 
 local function initMinigame()
 	state.Active = true
@@ -108,12 +105,15 @@ local function resetMinigame()
 		false
 	}
 	print("minigame reset")
-	hasShitted = false
+end
+
+local function fadeScreen()
+
 end
 
 local function transitionText()
-	globalYOffset = 15
-	globalAlpha = 0
+	textYOffset = 15
+	textAlpha = 0
 end
 
 ---@param stringTable table
@@ -157,7 +157,9 @@ local function startNextPrompt()
 				if effects.ForceNextPrompt then
 					selectNextPrompt = false
 					promptTypeToUse = effects.ForceNextPrompt.TableToUse
-					state.PromptSelected = effects.ForceNextPrompt.PromptNumber
+					if effects.ForceNextPrompt.PromptNumber then
+						state.PromptSelected = effects.ForceNextPrompt.PromptNumber
+					end
 				end
 				if effects.StartEncounter then
 					Isaac.ExecuteCommand("goto s.default."..tostring(effects.StartEncounter))
@@ -263,11 +265,6 @@ local function initFirstPrompt(numPlayers)
 	player1:GetData().DNDKeyDelay = keyDelay
 end
 
-function ChangePlayerCount(i)
-	hasShitted = false
-	numPlayers = i
-end
-
 ---@param text string
 ---@param posY number
 local function renderCursor(text, posY)
@@ -334,7 +331,7 @@ end
 ---@param playerType PlayerType
 ---@param player EntityPlayer
 --Thank you tem
-local function spawnDNDPlayer(playerType, player)
+function dnd:spawnDNDPlayer(playerType, player)
 	playerType = playerType or 0
 	local controllerIndex = player or 0
 	local lastPlayerIndex = g.game:GetNumPlayers() - 1
@@ -357,16 +354,15 @@ function dnd:RenderCharacterSelect()
 	--renderText({ "Welcome to Caves n' Creatures!" }, -0.5, "Title", 1.5)
 	--renderText({ "Select your character" }, -0.3)
 
-	local players = newPlayers[1] ~= nil and newPlayers or VeeHelper.GetAllMainPlayers()
+	local players = VeeHelper.GetAllMainPlayers()
 	if #players > 4 then players = { players[1], players[2], players[3], players[4] } end
 
-	if override and not hasShitted then
-		newPlayers = {}
-		for _ = 1, numPlayers do
-			table.insert(newPlayers, player1)
+	--[[ if CNCDebug.Enabled then
+		players = {}
+		for _ = 1, CNCDebug.NumPlayers do
+			table.insert(players, player1)
 		end
-		hasShitted = true
-	end
+	end ]]
 	for i = 1, #players do
 		local player = players[i]
 		local data = player:GetData()

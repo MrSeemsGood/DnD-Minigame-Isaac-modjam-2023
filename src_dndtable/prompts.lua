@@ -56,7 +56,7 @@ dndText.GameState = {
 ---@field Coins integer
 ---@field EntityFlagsOnRoomEnter {Flags: EntityFlag, Duration: integer}
 ---@field StartEncounter integer
----@field ForceNextPrompt {PromptNumber: integer, TableToUse: Prompt[]}
+---@field ForceNextPrompt {TableToUse: Prompt[], PromptNumber: integer}
 
 ---@class Prompt
 ---@field Title string
