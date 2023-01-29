@@ -37,8 +37,6 @@ function ettercap:onNpcUpdate(npc)
     local s = npc:GetSprite()
 
     if s:IsEventTriggered('ShootAlt') then
-        print(s:GetAnimation() .. " " .. tostring(s.FlipX))
-
         local shootingDir = AnimToDirection[s:GetAnimation()][s.FlipX]
         local numProj = vee.RandomNum(4, 6)
 
@@ -57,7 +55,7 @@ function ettercap:onNpcUpdate(npc)
 
             proj:GetData().webTear = true
 
-            proj:GetSprite():Load('gfx/009.633_egg.anm2', true)
+            proj:GetSprite():Load('gfx/egg_projectile.anm2', true)
             proj:GetSprite():Play(vee.RandomNum() < 0.5 and 'Stone2Idle' or 'Stone3Idle')
         end
 
