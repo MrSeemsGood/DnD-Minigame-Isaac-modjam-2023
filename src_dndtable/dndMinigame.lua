@@ -27,16 +27,16 @@ local renderPrompt = {
 	Options = {},
 	Outcome = {}
 }
-local fadeType = "AllDown"
 local yTarget = 25
+local fadeType = "AllDown"
 local transitionY = {
-	Title = yTarget,
-	Prompt = yTarget,
+	Title = 0,
+	Prompt = 0,
 	Characters = 0
 }
 local transitionAlpha = {
-	Title = 0,
-	Prompt = 0,
+	Title = 1,
+	Prompt = 1,
 	Characters = 1
 }
 
@@ -90,7 +90,7 @@ local function resetMinigame()
 end
 
 function dnd:startNextPrompt()
-	fadeType = "PromptUp"
+	fadeType = "TitlePromptUp"
 	local selectNextPrompt = true
 	local promptTypeToUse = dndText.Prompts
 
@@ -147,7 +147,8 @@ function dnd:startNextPrompt()
 		end
 	end
 	local prompt = promptTypeToUse[state.PromptSelected]
-
+	local title = dnd:separateTextByHashtag({ prompt.Title })
+	renderPrompt.Title = title
 	renderPrompt.Options = {}
 	for _, option in ipairs(prompt.Options) do
 		local optionRequirment = option[3]
@@ -214,8 +215,6 @@ function dnd:startNextPrompt()
 			table.insert(renderPrompt.Options, prompt)
 		end
 	end
-	local title = dnd:separateTextByHashtag({ prompt.Title })
-	renderPrompt.Title = title
 end
 
 local function initFirstPrompt()
@@ -372,7 +371,7 @@ function dnd:CharacterSelect()
 		and not g.game:IsPaused()
 	then
 		background:Play("FadeOutTitle", true)
-		fadeType = "CharacterDown"
+		fadeType = "AllDown"
 	end
 end
 
@@ -390,8 +389,8 @@ function dnd:PlayMinigame()
 			characters:SetFrame("Title" .. tonumber(#players), 0)
 			fadeType = "CharacterUp"
 		elseif state.PromptProgress == 0
-		and string.sub(characters:GetAnimation(), 1, 5) == "Title"
-		and not background:IsPlaying("FadeOutTitle")
+			and string.sub(characters:GetAnimation(), 1, 5) == "Title"
+			and not background:IsPlaying("FadeOutTitle")
 		then
 			dnd:CharacterSelect()
 		elseif state.PromptProgress >= 1 then
@@ -417,7 +416,7 @@ function dnd:PlayMinigame()
 						outcomeText = outcomeText[state.OutcomeResult]
 					end
 					renderPrompt.Outcome = dnd:separateTextByHashtag({ outcomeText })
-					state.HasSelected = true
+					fadeType = "PromptDown"
 				else
 					if renderPrompt.Options[optionSelected][1] == "Roll"
 						and state.NumAvailableRolls > 0 then
@@ -433,8 +432,15 @@ function dnd:PlayMinigame()
 				dice:Render(getCenterScreen(), Vector.Zero, Vector.Zero)
 			end
 
+			renderText(renderPrompt.Title, -120, "Title")
+
 			if not state.HasSelected then
-				renderText(renderPrompt.Title, -120, "Title")
+				if fadeType == "PromptDown" and transitionY.Prompt == yTarget then
+					state.HasSelected = true
+					fadeType = "PromptUp"
+				end
+			elseif fadeType == "TitlePromptDown" and transitionY.Prompt == yTarget then
+				dnd:startNextPrompt()
 			end
 
 			if not state.HasSelected then
@@ -506,8 +512,8 @@ function dnd:KeyDelayHandle(player)
 	end
 end
 
-local alphaSpeed = 0.030
-local ySpeed = 0.5
+local alphaSpeed = 0.04
+local ySpeed = 0.75
 function dnd:HandleTransitions()
 	local alpha = {
 		p = transitionAlpha.Prompt,
@@ -614,16 +620,16 @@ function dnd:HandleTransitions()
 	end
 	for name, value in pairs(y) do
 		if value < 0 then
-			transitionY[name] = 0
+			y[name] = 0
 		elseif value > yTarget then
-			transitionY[name] = yTarget
+			y[name] = yTarget
 		end
 	end
 	for name, value in pairs(alpha) do
 		if value < 0 then
-			transitionY[name] = 0
+			alpha[name] = 0
 		elseif value > 1 then
-			transitionY[name] = 1
+			alpha[name] = 1
 		end
 	end
 	transitionAlpha.Prompt = alpha.p
@@ -637,6 +643,7 @@ end
 local headOffset = 0
 local headOffsetTimer = 30
 function dnd:AnimationTimer()
+	if g.game:IsPaused() then return end
 	if headOffsetTimer > 0 then
 		headOffsetTimer = headOffsetTimer - 1
 	else
