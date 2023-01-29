@@ -1,12 +1,5 @@
 local dndText = {}
 
-dndText.CharacterSprites = {
-	"gfx/characters/costumes/character_001_isaac.png",
-	"gfx/characters/costumes/character_002_magdalene.png",
-	"gfx/characters/costumes/character_003_cain.png",
-	"gfx/characters/costumes/character_004_judas.png"
-}
-
 ---@class Enum
 dndText.PromptType = {
 	NORMAL = 0,
