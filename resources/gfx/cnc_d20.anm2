@@ -1,8 +1,8 @@
 <AnimatedActor>
-	<Info CreatedBy="Unknown" CreatedOn="1/29/2023 7:55:12 AM" Version="9" Fps="30"/>
+	<Info CreatedBy="Unknown" CreatedOn="1/29/2023 10:14:09 PM" Version="10" Fps="30"/>
 	<Content>
 		<Spritesheets>
-			<Spritesheet Path="ui\dndminigame_d20.png" Id="0"/>
+			<Spritesheet Path="ui\cnc_d20.png" Id="0"/>
 		</Spritesheets>
 		<Layers>
 			<Layer Name="dice" Id="0" SpritesheetId="0"/>

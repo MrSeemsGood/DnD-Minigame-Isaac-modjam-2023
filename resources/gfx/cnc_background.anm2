@@ -1,11 +1,11 @@
 <AnimatedActor>
-	<Info CreatedBy="Unknown" CreatedOn="1/29/2023 2:26:14 PM" Version="36" Fps="30"/>
+	<Info CreatedBy="Unknown" CreatedOn="1/29/2023 10:13:21 PM" Version="37" Fps="30"/>
 	<Content>
 		<Spritesheets>
 			<Spritesheet Path="ui\bgblack.png" Id="0"/>
-			<Spritesheet Path="ui\debugframe.png" Id="1"/>
-			<Spritesheet Path="ui\heads.png" Id="2"/>
-			<Spritesheet Path="ui\test.png" Id="3"/>
+			<Spritesheet Path="ui\cnc_debugframe.png" Id="1"/>
+			<Spritesheet Path="ui\cnc_heads.png" Id="2"/>
+			<Spritesheet Path="ui\cnc_frame.png" Id="3"/>
 			<Spritesheet Path="ui\cnc_title.png" Id="4"/>
 			<Spritesheet Path="ui\fadein.png" Id="5"/>
 			<Spritesheet Path="ui\characterselect.png" Id="6"/>

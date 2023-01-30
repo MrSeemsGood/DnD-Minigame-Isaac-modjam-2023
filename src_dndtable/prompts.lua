@@ -1,7 +1,7 @@
-local dndText = {}
+local cncText = {}
 
 ---@class Enum
-dndText.PromptType = {
+cncText.PromptType = {
 	NORMAL = 0,
 	ENEMY = 1,
 	BOSS = 2,
@@ -9,37 +9,48 @@ dndText.PromptType = {
 }
 
 ---@class GameState
-dndText.GameState = {
+cncText.GameState = {
 	Active = false,
-	CharacterSelect = {
-		1,
-		2,
-		3,
-		4
+	Characters = {
+		Selected = {
+			1,
+			2,
+			3,
+			4
+		},
+		NumActive = {
+			0, --Isaac
+			0, --Maggy
+			0, --Cain
+			0, --Judas
+		},
+		Dead = {
+			false,
+			false,
+			false,
+			false
+		}
 	},
-	ActiveCharacters = { --Numbers represent how many of each character there is in the game
-		0, --Isaac
-		0, --Maggy
-		0, --Cain
-		0, --Judas
+	Inventory = {
+		Keys = 0,
+		Bombs = 0,
+		Coins = 0,
 	},
 	PromptProgress = 0,
 	PromptSelected = 1,
-	PromptTypeSelected = dndText.PromptType.NORMAL,
+	PromptTypeSelected = cncText.PromptType.NORMAL,
+	MaxPrompts = 3,
 	HasSelected = false,
 	RollResult = 0,
 	OutcomeResult = 0,
 	NumAvailableRolls = 1,
-	MaxPrompts = 3,
 	PromptsSeen = {},
 	EncountersSeen = {},
-	Inventory = {
-		Keys = 1,
-		Bombs = 1,
-		Coins = 0,
-	},
+	EntityFlagsOnNextEncounter = { 0, 0 },
+	ScreenShown = false,
+	RoomIndexStartedGameFrom = 84,
 	AdventureEnded = false,
-	EntityFlagsOnNextEncounter = {0, 0}
+	HudWasVisible = true,
 }
 
 ---@class OutcomeEffect
@@ -71,14 +82,14 @@ dndText.GameState = {
 --The Effect table, the list of variables for it described above. Setup the same as Options and Title, but only include the numbers you need (e.g. You only want an effect for Option 3, so only include a key with the number 3)
 
 ---@type Prompt[]
-dndText.Prompts = {
+cncText.Prompts = {
 	{
 		Title = "You come across a locked chest",
 		Options = {
 			[1] = { "Select", "Dismiss it" },
 			[2] = { "Select", "Unlock it", "Key1" },
 			[3] = { "Select", "Throw a coin at it", "Coin1" },
-			[4] = { "Select", "Bomb it", "Bomb1"},
+			[4] = { "Select", "Bomb it", "Bomb1" },
 			[5] = { "Roll", "Attempt to lock-pick", PlayerType.PLAYER_CAIN },
 		},
 		Outcome = {
@@ -104,33 +115,46 @@ dndText.Prompts = {
 }
 
 ---@type Prompt[]
-dndText.Encounters = {
+cncText.Encounters = {
+	{
+		Title = "It's a giant enemy spider",
+		Options = {
+			[1] = { "Select", "Fight the giant enemy spider" }
+		},
+		Outcome = {
+			[1] = "You fight the giant enemy spider"
+		},
+		Effect = {
+			[1] = {
+				StartEncounter = 1600
+			}
+		}
+	}
+}
+
+---@type Prompt[]
+cncText.RarePrompts = {
 
 }
 
 ---@type Prompt[]
-dndText.RarePrompts = {
-
-}
-
----@type Prompt[]
-dndText.BossEncounters = {
+cncText.BossEncounters = {
 
 }
 
 ---@param promptType integer
 ---@return Prompt[]
-function dndText:GetTableFromPromptType(promptType)
-	if promptType == dndText.PromptType.NORMAL then
-		return dndText.Prompts
-	elseif promptType == dndText.PromptType.ENEMY then
-		return dndText.Encounters
-	elseif promptType == dndText.PromptType.BOSS then
-		return dndText.BossEncounters
-	elseif promptType == dndText.PromptType.RARE then
-		return dndText.RarePrompts
+function cncText:GetTableFromPromptType(promptType)
+	if promptType == cncText.PromptType.NORMAL then
+		return cncText.Prompts
+	elseif promptType == cncText.PromptType.ENEMY then
+		return cncText.Encounters
+	elseif promptType == cncText.PromptType.BOSS then
+		return cncText.BossEncounters
+	elseif promptType == cncText.PromptType.RARE then
+		return cncText.RarePrompts
 	end
-	return dndText.Prompts
+	return cncText.Prompts
 end
 
-return dndText
+return cncText
