@@ -1,10 +1,10 @@
-local dnd = {}
+local cnc = {}
 local g = require("src_dndtable.globals")
 local VeeHelper = include("src_dndtable.veeHelper")
-local dndText = include("src_dndtable.prompts")
+local cncText = include("src_dndtable.prompts")
 ---@type GameState
 local state = {}
-VeeHelper.CopyOverTable(dndText.GameState, state)
+VeeHelper.CopyOverTable(cncText.GameState, state)
 local font = Font()
 local background = Sprite()
 local characters = Sprite()
@@ -28,6 +28,8 @@ local renderPrompt = {
 	Outcome = {}
 }
 local yTarget = 25
+local alphaSpeed = 0.04
+local ySpeed = 0.75
 local fadeType = "AllDown"
 local transitionY = {
 	Title = 0,
@@ -39,6 +41,18 @@ local transitionAlpha = {
 	Prompt = 1,
 	Characters = 1
 }
+local headOffset = 0
+local headOffsetTimer = 30
+local roomIndexOnMinigameClear = 0
+
+---@type EntityPlayer[]
+local dndPlayers = {
+
+}
+
+--------------------------
+--  BASIC HELPER STUFF  --
+--------------------------
 
 local function getCenterScreen()
 	return Vector(Isaac.GetScreenWidth() / 2, Isaac.GetScreenHeight() / 2)
@@ -50,25 +64,75 @@ local function getPlayers()
 	return players
 end
 
+---@param action ButtonAction
+---@param player EntityPlayer
+local function isTriggered(action, player)
+	return Input.IsActionTriggered(action, player.ControllerIndex)
+end
+
+---@param stringTable table
+function cnc:separateTextByHashtag(stringTable)
+	while string.find(stringTable[#stringTable], "#") ~= nil do
+		local curText = stringTable[#stringTable]
+		local line1, line2 = string.find(curText, "#")
+		local nextLine = string.sub(curText, line2 + 1, -1)
+		stringTable[#stringTable] = string.sub(curText, 1, line1 - 1)
+		stringTable.insert(stringTable, nextLine)
+	end
+	return stringTable
+end
+
+function cnc:RollDice()
+	local num = VeeHelper.RandomNum(1, 20)
+	state.RollResult = num
+	state.OutcomeResult = num < 6 and 1 or num < 16 and 2 or num <= 20 and 3 or 2
+	state.NumAvailableRolls = state.NumAvailableRolls - 1
+end
+
+function cnc:IsInDNDRoom()
+	local roomVariant = g.game:GetLevel():GetCurrentRoomDesc().Data.OriginalVariant
+	if roomVariant >= 1600 and roomVariant <= 1620 then
+		return true
+	else
+		return false
+	end
+end
+
+----------------------
+--  INITIATE STUFF  --
+----------------------
+
 local function initMinigame()
 	state.Active = true
-	background:Load("gfx/dndminigame_background.anm2", true)
+	state.ScreenShown = true
+	state.HudWasVisible = g.game:GetHUD():IsVisible()
+	state.RoomIndexStartedGameFrom = g.game:GetLevel():GetCurrentRoomIndex()
+	background:Load("gfx/cnc_background.anm2", true)
 	background:Play("Start", true)
 	background.PlaybackSpeed = 0.5
-	characters:Load("gfx/dndminigame_background.anm2", true)
+	characters:Load("gfx/cnc_background.anm2", true)
 	characters:Play("Start", true)
-	optionCursor:Load("gfx/dndminigame_cursor_option.anm2", true)
+	optionCursor:Load("gfx/cnc_cursor_option.anm2", true)
 	optionCursor:Play(optionCursor:GetDefaultAnimation(), true)
-	dice:Load("gfx/dndminigame_d20.anm2", true)
-	diceFlash:Load("gfx/dndminigame_d20.anm2", true)
+	dice:Load("gfx/cnc_d20.anm2", true)
+	diceFlash:Load("gfx/cnc_d20.anm2", true)
 	diceFlash:SetFrame("Result", 0)
 	font:Load("font/teammeatfont12.fnt")
 	Isaac.GetPlayer().ControlsEnabled = false
 	print("minigame init")
 end
 
+local function initCharacterSelect()
+	local players = getPlayers()
+	g.game:GetHUD():SetVisible(false)
+	state.RoomIndexStartedGameFrom = g.game:GetLevel():GetCurrentRoomIndex()
+	characters:SetFrame("Title" .. tonumber(#players), 0)
+	cnc:spawnDNDPlayers()
+	Isaac.ExecuteCommand("goto s.default.2")
+	fadeType = "CharacterUp"
+end
+
 local function resetMinigame()
-	VeeHelper.CopyOverTable(dndText.GameState, state)
 	renderPrompt = {
 		Title = {},
 		Options = {},
@@ -85,17 +149,33 @@ local function resetMinigame()
 		false,
 		false
 	}
+	for _, player in ipairs(dndPlayers) do
+		player.GridCollisionClass = GridCollisionClass.COLLISION_NONE
+		player.Position = Vector(1000, 1000)
+		player:Die()
+		player:GetSprite():Play("Death", true)
+		player:GetSprite():SetLastFrame()
+	end
+	for _, player in ipairs(VeeHelper.GetAllPlayers()) do
+		local data = player:GetData()
+		if data.CNC_PreviousCollisionClass then
+			player.GridCollisionClass = player:GetData().CNC_PreviousCollisionClass
+		end
+	end
+	g.game:GetHUD():SetVisible(state.HudWasVisible)
+	roomIndexOnMinigameClear = state.RoomIndexStartedGameFrom
+	VeeHelper.CopyOverTable(cncText.GameState, state)
 	print("minigame reset")
 	fadeType = "AllDown"
 end
 
-function dnd:startNextPrompt()
+function cnc:startNextPrompt()
 	fadeType = "TitlePromptUp"
 	local selectNextPrompt = true
-	local promptTypeToUse = dndText.Prompts
+	local promptTypeToUse = cncText.Prompts
 
 	if state.PromptProgress > 0 then
-		local curPrompt = dndText:GetTableFromPromptType(state.PromptTypeSelected)
+		local curPrompt = cncText:GetTableFromPromptType(state.PromptTypeSelected)
 		if curPrompt[state.PromptSelected] then
 			if curPrompt[state.PromptSelected].Effect[optionSelected] then
 				local effects = curPrompt[state.PromptSelected].Effect[optionSelected][state.OutcomeResult] or
@@ -139,15 +219,15 @@ function dnd:startNextPrompt()
 		state.PromptSelected = 1
 		--state.PromptSelected = VeeHelper.GetDifferentRandomNum(state.PromptsSeen, state.MaxPrompts, VeeHelper.RandomRNG)
 		if state.PromptProgress == 3 then
-			promptTypeToUse = dndText.Encounters
+			promptTypeToUse = cncText.Encounters
 		elseif state.PromptProgress == state.MaxPrompts then
-			promptTypeToUse = dndText.BossEncounters
+			promptTypeToUse = cncText.BossEncounters
 		elseif VeeHelper.RandomNum(1, 50) == 50 then
-			promptTypeToUse = dndText.RarePrompts
+			promptTypeToUse = cncText.RarePrompts
 		end
 	end
 	local prompt = promptTypeToUse[state.PromptSelected]
-	local title = dnd:separateTextByHashtag({ prompt.Title })
+	local title = cnc:separateTextByHashtag({ prompt.Title })
 	renderPrompt.Title = title
 	renderPrompt.Options = {}
 	for _, option in ipairs(prompt.Options) do
@@ -156,7 +236,7 @@ function dnd:startNextPrompt()
 
 		if optionRequirment then
 			if type(optionRequirment) == "number"
-				and state.ActiveCharacters[optionRequirment + 1] == 0
+				and state.Characters.NumActive[optionRequirment + 1] == 0
 			then
 				shouldCreate = false
 			elseif type(optionRequirment) == "string"
@@ -221,10 +301,14 @@ local function initFirstPrompt()
 	local player1 = Isaac.GetPlayer()
 	background:Play("Frame", true)
 	characters:SetFrame(tostring(#getPlayers()), 0)
-	dnd:startNextPrompt()
+	cnc:startNextPrompt()
 	player1:GetData().DNDKeyDelay = keyDelay
 	fadeType = "AllUp"
 end
+
+-----------------
+--  RUN STUFF  --
+-----------------
 
 ---@param text string
 ---@param posY number
@@ -277,39 +361,7 @@ local function renderText(stringTable, startingPos, textType, scale)
 	end
 end
 
----@param action ButtonAction
----@param player EntityPlayer
-local function isTriggered(action, player)
-	return Input.IsActionTriggered(action, player.ControllerIndex)
-end
-
-function dnd:rollDice()
-	local num = VeeHelper.RandomNum(1, 20)
-	state.RollResult = num
-	state.OutcomeResult = num < 6 and 1 or num < 16 and 2 or num <= 20 and 3 or 2
-	state.NumAvailableRolls = state.NumAvailableRolls - 1
-end
-
----@param playerType PlayerType
----@param player EntityPlayer
---Thank you tem
-function dnd:spawnDNDPlayer(playerType, player)
-	playerType = playerType or 0
-	local controllerIndex = player or 0
-	local lastPlayerIndex = g.game:GetNumPlayers() - 1
-
-	if lastPlayerIndex >= 63 then
-		return nil
-	else
-		Isaac.ExecuteCommand('addplayer ' .. playerType .. ' ' .. controllerIndex)
-		local strawman = Isaac.GetPlayer(lastPlayerIndex + 1)
-		strawman.Parent = player
-		Game():GetHUD():AssignPlayerHUDs()
-		return strawman
-	end
-end
-
-function dnd:CharacterSelect()
+function cnc:CharacterSelect()
 	local player1 = Isaac.GetPlayer()
 	local players = getPlayers()
 
@@ -319,8 +371,7 @@ function dnd:CharacterSelect()
 			table.insert(players, player1)
 		end
 	end ]]
-	for i = 1, #players do
-		local player = players[i]
+	for i, player in ipairs(players) do
 		local data = player:GetData()
 		if (
 			isTriggered(ButtonAction.ACTION_MENULEFT, player)
@@ -340,9 +391,9 @@ function dnd:CharacterSelect()
 				local num = isTriggered(ButtonAction.ACTION_MENULEFT, player) and -1 or 1
 				local soundToPlay = isTriggered(ButtonAction.ACTION_MENULEFT, player) and
 					SoundEffect.SOUND_CHARACTER_SELECT_LEFT or SoundEffect.SOUND_CHARACTER_SELECT_RIGHT
-				state.CharacterSelect[i] = state.CharacterSelect[i] + num
-				state.CharacterSelect[i] = state.CharacterSelect[i] > 4 and 1 or state.CharacterSelect[i] < 1 and 4 or
-					state.CharacterSelect[i]
+				state.Characters.Selected[i] = state.Characters.Selected[i] + num
+				state.Characters.Selected[i] = state.Characters.Selected[i] > 4 and 1 or state.Characters.Selected[i] < 1 and 4 or
+					state.Characters.Selected[i]
 				g.sfx:Play(soundToPlay)
 				data.DNDKeyDelay = keyDelay
 			end
@@ -350,7 +401,8 @@ function dnd:CharacterSelect()
 			if isTriggered(ButtonAction.ACTION_MENUCONFIRM, player)
 				and charactersConfirmed[i] == false
 			then
-				state.ActiveCharacters[state.CharacterSelect[i]] = state.ActiveCharacters[state.CharacterSelect[i]] + 1
+				state.Characters.NumActive[state.Characters.Selected[i]] = state.Characters.NumActive[state.Characters.Selected[i]] +
+					1
 				charactersConfirmed[i] = true
 				g.sfx:Play(SoundEffect.SOUND_THUMBSUP)
 				numConfirmed = numConfirmed + 1
@@ -359,7 +411,8 @@ function dnd:CharacterSelect()
 				and charactersConfirmed[i] == true
 			then
 				charactersConfirmed[i] = false
-				state.ActiveCharacters[state.CharacterSelect[i]] = state.ActiveCharacters[state.CharacterSelect[i]] - 1
+				state.Characters.NumActive[state.Characters.Selected[i]] = state.Characters.NumActive[state.Characters.Selected[i]] -
+					1
 				numConfirmed = numConfirmed - 1
 				data.DNDKeyDelay = keyDelay
 			end
@@ -375,7 +428,7 @@ function dnd:CharacterSelect()
 	end
 end
 
-function dnd:PlayMinigame()
+function cnc:MinigameLogic()
 	local player1 = Isaac.GetPlayer()
 
 	if Input.IsButtonTriggered(testStartPrompt, player1.ControllerIndex)
@@ -385,16 +438,14 @@ function dnd:PlayMinigame()
 		initMinigame()
 	elseif state.Active then
 		if state.PromptProgress == 0 and background:IsFinished("Start") and characters:GetAnimation() == "Start" then
-			local players = getPlayers()
-			characters:SetFrame("Title" .. tonumber(#players), 0)
-			fadeType = "CharacterUp"
+			initCharacterSelect()
 		elseif state.PromptProgress == 0
 			and string.sub(characters:GetAnimation(), 1, 5) == "Title"
 			and not background:IsPlaying("FadeOutTitle")
 		then
-			dnd:CharacterSelect()
+			cnc:CharacterSelect()
 		elseif state.PromptProgress >= 1 then
-			local prompt = dndText.Prompts[state.PromptSelected]
+			local prompt = cncText.Prompts[state.PromptSelected]
 			local data = player1:GetData()
 
 			if isTriggered(ButtonAction.ACTION_MENUCONFIRM, player1)
@@ -404,23 +455,23 @@ function dnd:PlayMinigame()
 				if not state.HasSelected then
 					local outcomeText = prompt.Outcome[optionSelected]
 					if renderPrompt.Options[optionSelected][1] == "Roll" then
-						dnd:rollDice()
+						cnc:RollDice()
 						local characterIndex = renderPrompt.Options[optionSelected][3] + 1
 
 						if state.OutcomeResult < 3
 							and characterIndex ~= nil
-							and state.ActiveCharacters[characterIndex] > 1
+							and state.Characters.NumActive[characterIndex] > 1
 						then
-							state.NumAvailableRolls = state.ActiveCharacters[characterIndex] - 1
+							state.NumAvailableRolls = state.Characters.NumActive[characterIndex] - 1
 						end
 						outcomeText = outcomeText[state.OutcomeResult]
 					end
-					renderPrompt.Outcome = dnd:separateTextByHashtag({ outcomeText })
+					renderPrompt.Outcome = cnc:separateTextByHashtag({ outcomeText })
 					fadeType = "PromptDown"
 				else
 					if renderPrompt.Options[optionSelected][1] == "Roll"
 						and state.NumAvailableRolls > 0 then
-						dnd:rollDice()
+						cnc:RollDice()
 					else
 						fadeType = "TitlePromptDown"
 					end
@@ -439,8 +490,12 @@ function dnd:PlayMinigame()
 					state.HasSelected = true
 					fadeType = "PromptUp"
 				end
-			elseif fadeType == "TitlePromptDown" and transitionY.Prompt == yTarget then
-				dnd:startNextPrompt()
+			else
+				if fadeType == "AllDown" and state.PromptTypeSelected == cncText.PromptType.ENEMY then
+
+				elseif fadeType == "TitlePromptDown" and transitionY.Prompt == yTarget then
+					cnc:startNextPrompt()
+				end
 			end
 
 			if not state.HasSelected then
@@ -488,20 +543,138 @@ function dnd:PlayMinigame()
 	end
 end
 
----@param stringTable table
-function dnd:separateTextByHashtag(stringTable)
-	while string.find(stringTable[#stringTable], "#") ~= nil do
-		local curText = stringTable[#stringTable]
-		local line1, line2 = string.find(curText, "#")
-		local nextLine = string.sub(curText, line2 + 1, -1)
-		stringTable[#stringTable] = string.sub(curText, 1, line1 - 1)
-		stringTable.insert(stringTable, nextLine)
+function cnc:RenderScreen()
+	if state.Active then
+		local center = getCenterScreen()
+		local transitionPos = Vector(center.X, center.Y + transitionY.Characters)
+		if background:IsFinished("FadeOutTitle") then
+			initFirstPrompt()
+		end
+		if state.PromptProgress == 0 then
+			cnc:AnimationTimer()
+			if string.sub(characters:GetAnimation(), 1, 5) == "Title" then
+				--background:RenderLayer(0, center, Vector.Zero, Vector.Zero) --Black background
+				background:RenderLayer(1, center, Vector.Zero, Vector.Zero) --Frame
+				background:RenderLayer(7, center, Vector.Zero, Vector.Zero) --Debug frame
+				background:RenderLayer(8, center, Vector.Zero, Vector.Zero) -- Title
+
+				for i = 1, tonumber(string.sub(characters:GetAnimation(), 6, -1)) do
+					local startingFrame = (i * 2) - 2
+					local selectFrame = (i * 3) - 1
+					local frameToUse = charactersConfirmed[i] and selectFrame or (startingFrame + headOffset)
+					local characterLayer = state.Characters.Selected[i] + 10
+					characters:RenderLayer(characterLayer, transitionPos, Vector.Zero, Vector.Zero) --Characters
+					characters:SetLayerFrame(characterLayer, frameToUse)
+					characters:RenderLayer(10, transitionPos, Vector.Zero, Vector.Zero) --Character Circle
+					characters:SetLayerFrame(10, frameToUse)
+					characters:RenderLayer(15, transitionPos, Vector.Zero, Vector.Zero) --Character Arrows
+					characters:SetLayerFrame(15, frameToUse)
+				end
+			else
+				background:Render(center, Vector.Zero, Vector.Zero)
+			end
+		elseif state.PromptProgress > 0 then
+			cnc:AnimationTimer()
+			if characters:GetAnimation() == "1"
+				or characters:GetAnimation() == "2"
+				or characters:GetAnimation() == "3"
+				or characters:GetAnimation() == "4"
+			then
+				--background:RenderLayer(0, center, Vector.Zero, Vector.Zero)
+				background:RenderLayer(1, center, Vector.Zero, Vector.Zero)
+				background:RenderLayer(7, center, Vector.Zero, Vector.Zero)
+				for i = 1, tonumber(characters:GetAnimation()) do
+					local startingFrame = (i * 2) - 2
+					local characterLayer = state.Characters.Selected[i] + 2
+					characters:RenderLayer(characterLayer, transitionPos, Vector.Zero, Vector.Zero)
+					characters:SetLayerFrame(characterLayer, startingFrame + headOffset)
+				end
+				characters:RenderLayer(2, transitionPos, Vector.Zero, Vector.Zero)
+				characters:SetLayerFrame(2, 0 + headOffset)
+			end
+		end
+		characters.Color = Color(1, 1, 1, transitionAlpha.Characters)
+		characters:Update()
+		background:Update()
 	end
-	return stringTable
+end
+
+--------------------------
+-- PLAYER/ROOM HANDLING --
+--------------------------
+
+--Thank you tem
+function cnc:spawnDNDPlayers()
+	for i, player in ipairs(getPlayers()) do
+		local playerType = state.Characters.Selected[i] - 1
+		local lastPlayerIndex = g.game:GetNumPlayers() - 1
+
+		if lastPlayerIndex >= 63 then
+			return
+		else
+			Isaac.ExecuteCommand('addplayer ' .. playerType .. ' ' .. player.ControllerIndex)
+			local strawman = Isaac.GetPlayer(lastPlayerIndex + 1)
+			strawman.Parent = player
+			strawman:AddCollectible(g.DND_PLAYER_TECHNICAL)
+			strawman.ControlsEnabled = false
+			table.insert(dndPlayers, strawman)
+			Game():GetHUD():AssignPlayerHUDs()
+		end
+	end
+end
+
+function cnc:OnNewRoom()
+	local players = VeeHelper.GetAllPlayers()
+	for i, player in ipairs(players) do
+		if state.Active and player.ControlsEnabled == true then
+			if not player:HasCollectible(g.DND_PLAYER_TECHNICAL)
+				or (player:HasCollectible(g.DND_PLAYER_TECHNICAL) and not cnc:IsInDNDRoom()) then
+				player.ControlsEnabled = false
+			end
+		end
+		if cnc:IsInDNDRoom() and not player:HasCollectible(g.DND_PLAYER_TECHNICAL) then
+			player:GetData().CNC_PreviousCollisionClass = player.GridCollisionClass
+			player.GridCollisionClass = GridCollisionClass.COLLISION_NONE
+			player.Position = Vector(-1000, -1000)
+		end
+	end
+end
+
+function cnc:OnPostUpdate()
+	local allDead = true
+	for i, player in ipairs(dndPlayers) do
+		if not player:IsDead() then
+			allDead = false
+		elseif not state.Characters.Dead[i] and state.Active then
+			state.Characters.Dead[i] = true
+			if state.Characters.NumActive[i] > 0 then
+				state.Characters.NumActive[i] = state.Characters.NumActive[i] - 1
+			end
+			characters:ReplaceSpritesheet(i + 2, "gfx/ui/cnc_heads_dead.png")
+		end
+	end
+	if state.Active == false
+		and roomIndexOnMinigameClear ~= 0
+		and allDead
+	then
+		g.sfx:Stop(SoundEffect.SOUND_ISAACDIES)
+		g.sfx:Stop(SoundEffect.SOUND_DEATH_BURST_SMALL)
+		g.game:StartRoomTransition(roomIndexOnMinigameClear, Direction.NO_DIRECTION, RoomTransitionAnim.FADE)
+		roomIndexOnMinigameClear = 0
+	end
 end
 
 ---@param player EntityPlayer
-function dnd:KeyDelayHandle(player)
+function cnc:OnPlayerUpdate(player)
+
+end
+
+---------------------
+--  TIMER HANDLES  --
+---------------------
+
+---@param player EntityPlayer
+function cnc:KeyDelayHandle(player)
 	local data = player:GetData()
 	if data.DNDKeyDelay then
 		if data.DNDKeyDelay > 0 then
@@ -512,9 +685,7 @@ function dnd:KeyDelayHandle(player)
 	end
 end
 
-local alphaSpeed = 0.04
-local ySpeed = 0.75
-function dnd:HandleTransitions()
+function cnc:HandleTransitions()
 	local alpha = {
 		p = transitionAlpha.Prompt,
 		t = transitionAlpha.Title,
@@ -640,9 +811,7 @@ function dnd:HandleTransitions()
 	transitionY.Characters = y.c
 end
 
-local headOffset = 0
-local headOffsetTimer = 30
-function dnd:AnimationTimer()
+function cnc:AnimationTimer()
 	if g.game:IsPaused() then return end
 	if headOffsetTimer > 0 then
 		headOffsetTimer = headOffsetTimer - 1
@@ -652,76 +821,24 @@ function dnd:AnimationTimer()
 	end
 end
 
-function dnd:ScreenBackground()
-	if state.Active then
-		local center = getCenterScreen()
-		local transitionPos = Vector(center.X, center.Y + transitionY.Characters)
-		if background:IsFinished("FadeOutTitle") then
-			initFirstPrompt()
-		end
-		if state.PromptProgress == 0 then
-			dnd:AnimationTimer()
-			if string.sub(characters:GetAnimation(), 1, 5) == "Title" then
-				background:RenderLayer(0, center, Vector.Zero, Vector.Zero) --Black background
-				background:RenderLayer(1, center, Vector.Zero, Vector.Zero) --Frame
-				background:RenderLayer(7, center, Vector.Zero, Vector.Zero) --Debug frame
-				background:RenderLayer(8, center, Vector.Zero, Vector.Zero) -- Title
+------------
+--  MISC  --
+------------
 
-				for i = 1, tonumber(string.sub(characters:GetAnimation(), 6, -1)) do
-					local startingFrame = (i * 2) - 2
-					local selectFrame = (i * 3) - 1
-					local frameToUse = charactersConfirmed[i] and selectFrame or (startingFrame + headOffset)
-					local characterLayer = state.CharacterSelect[i] + 10
-					characters:RenderLayer(characterLayer, transitionPos, Vector.Zero, Vector.Zero) --Characters
-					characters:SetLayerFrame(characterLayer, frameToUse)
-					characters:RenderLayer(10, transitionPos, Vector.Zero, Vector.Zero) --Character Circle
-					characters:SetLayerFrame(10, frameToUse)
-					characters:RenderLayer(15, transitionPos, Vector.Zero, Vector.Zero) --Character Arrows
-					characters:SetLayerFrame(15, frameToUse)
-				end
-			else
-				background:Render(center, Vector.Zero, Vector.Zero)
-			end
-		elseif state.PromptProgress > 0 then
-			dnd:AnimationTimer()
-			if characters:GetAnimation() == "1"
-				or characters:GetAnimation() == "2"
-				or characters:GetAnimation() == "3"
-				or characters:GetAnimation() == "4"
-			then
-				background:RenderLayer(0, center, Vector.Zero, Vector.Zero)
-				background:RenderLayer(1, center, Vector.Zero, Vector.Zero)
-				background:RenderLayer(7, center, Vector.Zero, Vector.Zero)
-				for i = 1, tonumber(characters:GetAnimation()) do
-					local startingFrame = (i * 2) - 2
-					local characterLayer = state.CharacterSelect[i] + 2
-					characters:RenderLayer(characterLayer, transitionPos, Vector.Zero, Vector.Zero)
-					characters:SetLayerFrame(characterLayer, startingFrame + headOffset)
-				end
-				characters:RenderLayer(2, transitionPos, Vector.Zero, Vector.Zero)
-				characters:SetLayerFrame(2, 0 + headOffset)
-			end
-		end
-		characters.Color = Color(1, 1, 1, transitionAlpha.Characters)
-		characters:Update()
-		background:Update()
-	end
-end
-
-function dnd:OnPreGameExit()
-	resetMinigame()
-end
-
-function dnd:OnRender()
+function cnc:OnRender()
 	local renderMode = g.game:GetRoom():GetRenderMode()
 	if renderMode == RenderMode.RENDER_NULL
 		or renderMode == RenderMode.RENDER_NORMAL
 		or renderMode == RenderMode.RENDER_WATER_ABOVE
 	then
-		dnd:ScreenBackground()
-		dnd:PlayMinigame()
-		dnd:HandleTransitions()
+		cnc:RenderScreen()
+		cnc:MinigameLogic()
+		cnc:HandleTransitions()
 	end
 end
 
-return dnd
+function cnc:OnPreGameExit()
+	resetMinigame()
+end
+
+return cnc

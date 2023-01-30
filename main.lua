@@ -1,14 +1,13 @@
 local mod = RegisterMod("DND", 1)
 DnDMod = mod
 local g = require("src_dndtable.globals")
-local dnd = include("src_dndtable.dndMinigame")
+local cnc = include("src_dndtable.cncMinigame")
 local ettercap = include("src_dndtable.enemies.ettercap")
 local invisStalker = include("src_dndtable.enemies.invisible_stalker")
 local yochlol = include("src_dndtable.enemies.yochlol")
 local bodak = include("src_dndtable.enemies.bodak")
 local durrt = include("src_dndtable.enemies.durrt")
 local grell = include("src_dndtable.enemies.grell")
-
 
 -- Sanio, you forgor something :skull:
 function mod:OnGameStart(isContinued)
@@ -21,7 +20,7 @@ function mod:OnGetShaderParams(shaderName)
 	if shaderName == "DnDMinigame-RenderAboveHUD"
 		and not g.game:IsPaused()
 	then
-		dnd:OnRender()
+		cnc:OnRender()
 	end
 end
 
@@ -29,26 +28,24 @@ mod:AddCallback(ModCallbacks.MC_GET_SHADER_PARAMS, mod.OnGetShaderParams)
 
 function mod:OnPostRender()
 	if g.game:IsPaused() then
-		dnd:OnRender()
+		cnc:OnRender()
 	end
 end
 
 mod:AddCallback(ModCallbacks.MC_POST_RENDER, mod.OnPostRender)
 
-function mod:OnPostUpdate()
-
-end
-
-mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.OnPostUpdate)
+mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, cnc.OnNewRoom)
+mod:AddCallback(ModCallbacks.MC_POST_UPDATE, cnc.OnPostUpdate)
 
 ---@param player EntityPlayer
 function mod:OnPostPlayerUpdate(player)
-	dnd:KeyDelayHandle(player)
+	cnc:KeyDelayHandle(player)
+	cnc:OnPlayerUpdate(player)
 end
 
 mod:AddCallback(ModCallbacks.MC_POST_PLAYER_UPDATE, mod.OnPostPlayerUpdate)
 
-mod:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, dnd.OnPreGameExit)
+mod:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, cnc.OnPreGameExit)
 
 -- invisible stalker
 mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, invisStalker.onNpcUpdate, g.CUSTOM_DUNGEON_ENEMY_TYPE)
