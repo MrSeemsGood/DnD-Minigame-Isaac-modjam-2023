@@ -48,7 +48,7 @@ cncText.GameState = {
 	EncountersSeen = {},
 	EntityFlagsOnNextEncounter = { 0, 0 },
 	ScreenShown = false,
-	RoomIndexStartedGameFrom = 0,
+	RoomIndexStartedGameFrom = 84,
 	AdventureEnded = false,
 	HudWasVisible = true,
 }
