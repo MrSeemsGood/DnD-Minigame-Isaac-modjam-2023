@@ -125,10 +125,7 @@ end
 local function initCharacterSelect()
 	local players = getPlayers()
 	g.game:GetHUD():SetVisible(false)
-	state.RoomIndexStartedGameFrom = g.game:GetLevel():GetCurrentRoomIndex()
 	characters:SetFrame("Title" .. tonumber(#players), 0)
-	cnc:spawnDNDPlayers()
-	Isaac.ExecuteCommand("goto s.default.2")
 	fadeType = "CharacterUp"
 end
 
@@ -304,6 +301,9 @@ local function initFirstPrompt()
 	cnc:startNextPrompt()
 	player1:GetData().DNDKeyDelay = keyDelay
 	fadeType = "AllUp"
+	state.RoomIndexStartedGameFrom = g.game:GetLevel():GetCurrentRoomIndex()
+	cnc:spawnDNDPlayers()
+	Isaac.ExecuteCommand("goto s.default.2")
 end
 
 -----------------
@@ -626,12 +626,6 @@ end
 function cnc:OnNewRoom()
 	local players = VeeHelper.GetAllPlayers()
 	for i, player in ipairs(players) do
-		if state.Active and player.ControlsEnabled == true then
-			if not player:HasCollectible(g.DND_PLAYER_TECHNICAL)
-				or (player:HasCollectible(g.DND_PLAYER_TECHNICAL) and not cnc:IsInDNDRoom()) then
-				player.ControlsEnabled = false
-			end
-		end
 		if cnc:IsInDNDRoom() and not player:HasCollectible(g.DND_PLAYER_TECHNICAL) then
 			player:GetData().CNC_PreviousCollisionClass = player.GridCollisionClass
 			player.GridCollisionClass = GridCollisionClass.COLLISION_NONE
@@ -651,6 +645,7 @@ function cnc:OnPostUpdate()
 				state.Characters.NumActive[i] = state.Characters.NumActive[i] - 1
 			end
 			characters:ReplaceSpritesheet(i + 2, "gfx/ui/cnc_heads_dead.png")
+			characters:LoadGraphics()
 		end
 	end
 	if state.Active == false
@@ -666,7 +661,12 @@ end
 
 ---@param player EntityPlayer
 function cnc:OnPlayerUpdate(player)
-
+	if state.Active and player.ControlsEnabled == true then
+		if not player:HasCollectible(g.DND_PLAYER_TECHNICAL)
+			or (player:HasCollectible(g.DND_PLAYER_TECHNICAL) and not cnc:IsInDNDRoom()) then
+			player.ControlsEnabled = false
+		end
+	end
 end
 
 ---------------------
