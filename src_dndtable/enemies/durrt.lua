@@ -8,9 +8,6 @@ local vee = require('src_dndtable.veeHelper')
     - they can occasionally pick up and throw nearby rocks.
 ]]
 
---TODO projectiles spawned by durrt error out if they exist and their durrt doesn't
---TODO2 make the projectile have the actual rock sprite?
-
 local DURRT_MOVESPEED_NORMAL = 2
 local DURRT_MOVESPEED_ROLLING = 10
 local DURRT_ATTACK_DISTANCE = 200
@@ -118,25 +115,41 @@ function durrt:onNpcUpdate(npc)
         if s:IsPlaying('WalkUp')
         and (math.abs(playerAngle + 135) < 10 or math.abs(playerAngle + 45) < 10) then
             s:Play('RollStart')
-            npc:GetData().rollAnim = {'RollUp', playerAngle}
+            -- {animation to play, angle to roll, whether to flip X the animation or not}
+            npc:GetData().rollAnim = {
+                'RollUp',
+                playerAngle,
+                math.abs(playerAngle + 135) < 10
+            }
         elseif s:IsPlaying('WalkDown')
         and (math.abs(playerAngle - 135) < 10 or math.abs(playerAngle - 45) < 10) then
             s:Play('RollStart')
-            npc:GetData().rollAnim = {'RollDown', playerAngle}
+            npc:GetData().rollAnim = {
+                'RollDown',
+                playerAngle,
+                math.abs(playerAngle - 135) < 10
+            }
         elseif s:IsPlaying('WalkRight')
         and (math.abs(playerAngle + 45) < 10 or math.abs(playerAngle - 45) < 10) then
             s:Play('RollStart')
-            npc:GetData().rollAnim = {math.abs(playerAngle + 45) < 10 and 'RollUp' or 'RollDown', playerAngle}
+            npc:GetData().rollAnim = {
+                math.abs(playerAngle + 45) < 10 and 'RollUp' or 'RollDown',
+                playerAngle,
+                false
+            }
         elseif s:IsPlaying('WalkLeft')
         and (math.abs(playerAngle + 135) < 10 or math.abs(playerAngle - 135) < 10) then
             s:Play('RollStart')
-            npc:GetData().rollAnim = {math.abs(playerAngle + 135) < 10 and 'RollUp' or 'RollDown', playerAngle}
+            npc:GetData().rollAnim = {
+                math.abs(playerAngle + 135) < 10 and 'RollUp' or 'RollDown',
+                playerAngle,
+                true
+            }
         end
     end
 
     if s:IsPlaying('Pick')
     and s:IsEventTriggered('PickRock') then
-        npc:GetData().rockToPickup:Destroy()
         -- spawn projectile
         local p = Isaac.Spawn(
             EntityType.ENTITY_PROJECTILE,
@@ -147,9 +160,16 @@ function durrt:onNpcUpdate(npc)
             npc
         ):ToProjectile()
         p.Height = -90
+
         --? maybe it's needed?
         --p:AddProjectileFlags(ProjectileFlags.GHOST)
 
+        ---@type Sprite
+        local rockSprite = npc:GetData().rockToPickup:GetSprite()
+        p:GetSprite():Load(rockSprite:GetFilename(), true)
+        p:GetSprite():SetFrame(rockSprite:GetAnimation(), rockSprite:GetFrame())
+
+        npc:GetData().rockToPickup:Destroy()
 
     elseif s:IsFinished('Pick') then
         s:Play('Throw')
@@ -161,6 +181,7 @@ function durrt:onNpcUpdate(npc)
     if s:IsFinished('RollStart') then
         npc.CollisionDamage = 2
         s:Play(npc:GetData().rollAnim[1])
+        s.FlipX = npc:GetData().rollAnim[3]
         npc.Velocity = Vector.FromAngle(npc:GetData().rollAnim[2]) * DURRT_MOVESPEED_ROLLING
     end
 
@@ -171,6 +192,9 @@ function durrt:onNpcUpdate(npc)
             npc:GetData().rollCooldown = DURRT_ROLLING_COOLDOWN
             s:Play('RollEnd', true)
             npc.CollisionDamage = 1
+            if npc:GetData().rollAnim[3] then
+                s.FlipX = true
+            end
         end
     elseif npc:GetData().rollCooldown then
         npc:GetData().rollCooldown = npc:GetData().rollCooldown - 1
@@ -181,20 +205,18 @@ end
 function durrt:onProjectileUpdate(proj)
     if proj.SpawnerType ~= g.CUSTOM_DUNGEON_ENEMY_TYPE or proj.SpawnerVariant ~= 3 then return end
 
-    if proj.FrameCount == 1 then
-        proj:GetSprite():SetFrame('Rotate6', 0)
-    end
-
-    local dur = proj.SpawnerEntity:ToNPC()
-    if dur:GetSprite():IsEventTriggered('ThrowRock') then
-        local dir = dur:GetPlayerTarget().Position - dur.Position
-        proj:GetData().launched = true
-        proj.Velocity = dir:Normalized() * 7.5
-        proj.FallingSpeed = -5
-        proj.FallingAccel = 0.75
-    elseif not proj:GetData().launched then
-        proj.FallingSpeed = 0
-        proj.FallingAccel = 0
+    if proj.SpawnerEntity then
+        local dur = proj.SpawnerEntity:ToNPC()
+        if dur:GetSprite():IsEventTriggered('ThrowRock') then
+            local dir = dur:GetPlayerTarget().Position - dur.Position
+            proj:GetData().launched = true
+            proj.Velocity = dir:Normalized() * 7.5
+            proj.FallingSpeed = -5
+            proj.FallingAccel = 0.75
+        elseif not proj:GetData().launched then
+            proj.FallingSpeed = 0
+            proj.FallingAccel = 0
+        end
     end
 end
 

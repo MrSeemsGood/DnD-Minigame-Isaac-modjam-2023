@@ -1,5 +1,5 @@
 <AnimatedActor>
-	<Info CreatedBy="Unknown" CreatedOn="30.01.2023 0:53:12" Version="5" Fps="30"/>
+	<Info CreatedBy="Unknown" CreatedOn="30.01.2023 14:11:12" Version="8" Fps="30"/>
 	<Content>
 		<Spritesheets>
 			<Spritesheet Path="enemies\grell.png" Id="0"/>
@@ -10,7 +10,9 @@
 			<Layer Name="whip" Id="2" SpritesheetId="0"/>
 		</Layers>
 		<Nulls/>
-		<Events/>
+		<Events>
+			<Event Name="Whip" Id="0"/>
+		</Events>
 	</Content>
 	<Animations DefaultAnimation="Idle">
 		<Animation Name="Idle" FrameNum="1" Loop="false">
@@ -69,7 +71,7 @@
 			<NullAnimations/>
 			<Triggers/>
 		</Animation>
-		<Animation Name="AttackRight" FrameNum="17" Loop="false">
+		<Animation Name="Attack" FrameNum="17" Loop="false">
 			<RootAnimation>
 				<Frame XPosition="0" YPosition="0" XScale="100" YScale="100" Delay="1" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="false"/>
 			</RootAnimation>
@@ -112,7 +114,9 @@
 				</LayerAnimation>
 			</LayerAnimations>
 			<NullAnimations/>
-			<Triggers/>
+			<Triggers>
+				<Trigger EventId="0" AtFrame="10"/>
+			</Triggers>
 		</Animation>
 	</Animations>
 </AnimatedActor>
