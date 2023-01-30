@@ -1,4 +1,6 @@
 <data>
+    <entity Group='Bums' ID="6" Image="dnd/cnctable.png" Kind="Global" Name="Dungeon Master" Subtype="0" Variant="88" />
+
     <entity Group="DnD Enemies" ID="898" Image="dnd/invisible stalker.png" Kind="Floors" Name="Invisible Stalker" Subtype="0" Variant="1" />
     <entity Group="DnD Enemies" ID="898" Image="dnd/yochlol.png" Kind="Floors" Name="Yochlol" Subtype="0" Variant="2" />
     <entity Group="DnD Enemies" ID="898" Image="dnd/durrt.png" Kind="Floors" Name="Durrt" Subtype="0" Variant="3" />

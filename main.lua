@@ -2,8 +2,10 @@ local mod = RegisterMod("DND", 1)
 DnDMod = mod
 local g = require("src_dndtable.globals")
 local cnc = include("src_dndtable.cncMinigame")
+local cncTable = include('src_dndtable.cncTable')
+
 local ettercap = include("src_dndtable.enemies.ettercap")
-local invisStalker = include("src_dndtable.enemies.invisible_stalker")
+local invisStalker = include("src_dndtable.enemies.invisibleStalker")
 local yochlol = include("src_dndtable.enemies.yochlol")
 local bodak = include("src_dndtable.enemies.bodak")
 local durrt = include("src_dndtable.enemies.durrt")
@@ -36,6 +38,9 @@ mod:AddCallback(ModCallbacks.MC_POST_RENDER, mod.OnPostRender)
 
 mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, cnc.OnNewRoom)
 mod:AddCallback(ModCallbacks.MC_POST_UPDATE, cnc.OnPostUpdate)
+mod:AddCallback(ModCallbacks.MC_POST_UPDATE, cncTable.slotUpdate)
+
+mod:AddCallback(ModCallbacks.MC_PRE_PLAYER_COLLISION, cncTable.onPlayerCollision, 0)
 
 ---@param player EntityPlayer
 function mod:OnPostPlayerUpdate(player)
@@ -47,6 +52,7 @@ mod:AddCallback(ModCallbacks.MC_POST_PLAYER_UPDATE, mod.OnPostPlayerUpdate)
 
 mod:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, cnc.OnPreGameExit)
 
+-- ENEMIES --
 -- invisible stalker
 mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, invisStalker.onNpcUpdate, g.CUSTOM_DUNGEON_ENEMY_TYPE)
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, invisStalker.onEntityTakeDmg, g.CUSTOM_DUNGEON_ENEMY_TYPE)

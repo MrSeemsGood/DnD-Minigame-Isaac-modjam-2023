@@ -1,5 +1,20 @@
 <?xml version="1.0" ?>
 <rooms>
+	<room variant="0" name="New Room!" type="9" subtype="0" shape="1" width="13" height="7" difficulty="1" weight="1.0">
+		<door exists="True" x="-1" y="3"/>
+		<door exists="False" x="6" y="-1"/>
+		<door exists="True" x="6" y="7"/>
+		<door exists="True" x="13" y="3"/>
+		<spawn x="4" y="1">
+			<entity type="6" variant="88" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="8" y="1">
+			<entity type="6" variant="2" subtype="0" weight="1.0"/>
+			<entity type="6" variant="3" subtype="0" weight="1.0"/>
+			<entity type="6" variant="1" subtype="0" weight="1.0"/>
+			<entity type="6" variant="16" subtype="0" weight="1.0"/>
+		</spawn>
+	</room>
 	<room variant="1600" name="[D&amp;D] stalkers 1" type="1" subtype="0" shape="1" width="13" height="7" difficulty="1" weight="0.0">
 		<door exists="True" x="-1" y="3"/>
 		<door exists="True" x="6" y="-1"/>
@@ -1389,7 +1404,7 @@
 			<entity type="898" variant="4" subtype="2" weight="1.0"/>
 		</spawn>
 	</room>
-	<room variant="1618" name="[D&amp;D] grell 3 - distant bodyparts moving synchronized (1000 points if you know what song this line is from)" type="1" subtype="0" shape="1" width="13" height="7" difficulty="1" weight="0.0">
+	<room variant="1618" name="[D&amp;D] grell 3 - distant bodyparts moving synchronized" type="1" subtype="0" shape="1" width="13" height="7" difficulty="1" weight="0.0">
 		<door exists="True" x="-1" y="3"/>
 		<door exists="True" x="6" y="-1"/>
 		<door exists="True" x="6" y="7"/>
