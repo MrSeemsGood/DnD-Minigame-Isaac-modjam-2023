@@ -2,9 +2,61 @@ local cnc = {}
 local g = require("src_dndtable.globals")
 local VeeHelper = include("src_dndtable.veeHelper")
 local cncText = include("src_dndtable.prompts")
+
+---@class GameState
+local gameState = {
+	Active = false,
+	Characters = {
+		Selected = {
+			1,
+			2,
+			3,
+			4
+		},
+		NumActive = {
+			0, --Isaac
+			0, --Maggy
+			0, --Cain
+			0, --Judas
+		},
+		Dead = {
+			false,
+			false,
+			false,
+			false
+		}
+	},
+	Inventory = {
+		Keys = 0,
+		Bombs = 0,
+		Coins = 0,
+	},
+	PromptProgress = 0,
+	PromptSelected = 1,
+	PromptTypeSelected = cncText.PromptType.NORMAL,
+	MaxPrompts = 3,
+	HasSelected = false,
+	HasRolled = false,
+	RollResult = 0,
+	OutcomeResult = 0,
+	NumAvailableRolls = 1,
+	PromptsSeen = {},
+	EncountersSeen = {},
+	EncounterStarted = false,
+	EncounterCleared = false,
+	ScreenShown = false,
+	RoomIndexStartedGameFrom = 0,
+	AdventureEnded = false,
+	HudWasVisible = true,
+	NumConfirmed = 0,
+	OptionSelected = 0,
+}
+
+local shouldTeleportPlayer = false --here you go mrseemsgood
+
 ---@type GameState
 local state = {}
-VeeHelper.CopyOverTable(cncText.GameState, state)
+VeeHelper.CopyOverTable(gameState, state)
 local font = Font()
 local background = Sprite()
 local characters = Sprite()
@@ -20,8 +72,6 @@ local charactersConfirmed = {
 local testStartPrompt = Keyboard.KEY_J
 local testEndPrompt = Keyboard.KEY_K
 local keyDelay = 10
-local numConfirmed = 0
-local optionSelected = 1
 local renderPrompt = {
 	Title = {},
 	Options = {},
@@ -89,13 +139,35 @@ function cnc:RollDice()
 	state.NumAvailableRolls = state.NumAvailableRolls - 1
 end
 
-function cnc:IsInDNDRoom()
+function cnc:IsInCNCRoom()
 	local roomVariant = g.game:GetLevel():GetCurrentRoomDesc().Data.OriginalVariant
 	if roomVariant >= 1600 and roomVariant <= 1620 then
 		return true
 	else
 		return false
 	end
+end
+
+---@return OutcomeEffect | nil
+function cnc:GetPromptEffects()
+	local curPrompt = cncText:GetTableFromPromptType(state.PromptTypeSelected)
+	if curPrompt[state.PromptSelected] then
+		if curPrompt[state.PromptSelected].Effect[state.OptionSelected] then
+			local effects = curPrompt[state.PromptSelected].Effect[state.OptionSelected][state.OutcomeResult] or
+				curPrompt[state.PromptSelected].Effect[state.OptionSelected]
+			return effects
+		end
+	end
+	return
+end
+
+function cnc:IsRollOption()
+	if renderPrompt.Options[state.OptionSelected]
+		and renderPrompt.Options[state.OptionSelected][1]
+	then
+		return renderPrompt.Options[state.OptionSelected][1] == "Roll"
+	end
+	return
 end
 
 ----------------------
@@ -106,7 +178,6 @@ local function initMinigame()
 	state.Active = true
 	state.ScreenShown = true
 	state.HudWasVisible = g.game:GetHUD():IsVisible()
-	state.RoomIndexStartedGameFrom = g.game:GetLevel():GetCurrentRoomIndex()
 	background:Load("gfx/cnc_background.anm2", true)
 	background:Play("Start", true)
 	background.PlaybackSpeed = 0.5
@@ -126,6 +197,7 @@ local function initCharacterSelect()
 	local players = getPlayers()
 	g.game:GetHUD():SetVisible(false)
 	characters:SetFrame("Title" .. tonumber(#players), 0)
+	state.RoomIndexStartedGameFrom = g.game:GetLevel():GetCurrentRoomIndex()
 	fadeType = "CharacterUp"
 end
 
@@ -138,8 +210,6 @@ local function resetMinigame()
 	background:Reset()
 	characters:Reset()
 	Isaac.GetPlayer().ControlsEnabled = true
-	numConfirmed = 0
-	optionSelected = 1
 	charactersConfirmed = {
 		false,
 		false,
@@ -161,69 +231,91 @@ local function resetMinigame()
 	end
 	g.game:GetHUD():SetVisible(state.HudWasVisible)
 	roomIndexOnMinigameClear = state.RoomIndexStartedGameFrom
-	VeeHelper.CopyOverTable(cncText.GameState, state)
+	VeeHelper.CopyOverTable(gameState, state)
 	print("minigame reset")
 	fadeType = "AllDown"
+end
+
+function cnc:tryStartRoomEncounter()
+	local effects = cnc:GetPromptEffects()
+	if effects then
+		if effects.StartEncounter then
+			if not state.EncounterStarted then
+				Isaac.ExecuteCommand("goto s.default." .. tostring(effects.StartEncounter))
+				state.EncounterStarted = true
+			end
+		end
+	end
 end
 
 function cnc:startNextPrompt()
 	fadeType = "TitlePromptUp"
 	local selectNextPrompt = true
-	local promptTypeToUse = cncText.Prompts
 
 	if state.PromptProgress > 0 then
 		local curPrompt = cncText:GetTableFromPromptType(state.PromptTypeSelected)
-		if curPrompt[state.PromptSelected] then
-			if curPrompt[state.PromptSelected].Effect[optionSelected] then
-				local effects = curPrompt[state.PromptSelected].Effect[optionSelected][state.OutcomeResult] or
-					curPrompt[state.PromptSelected].Effect[optionSelected]
-				if effects.Keys then
-					state.Inventory.Keys = state.Inventory.Keys + effects.Keys
-				end
-				if effects.Bombs then
-					state.Inventory.Bombs = state.Inventory.Bombs + effects.Bombs
-				end
-				if effects.Coins then
-					state.Inventory.Coins = state.Inventory.Coins + effects.Coins
-				end
-				if effects.Collectible then
-
-				end
-				if effects.EntityFlagsOnRoomEnter then
-					state.EntityFlagsOnNextEncounter = effects.EntityFlagsOnRoomEnter
-				end
+		if curPrompt[state.PromptSelected] and curPrompt[state.PromptSelected].Effect then
+			if curPrompt[state.PromptSelected].Effect[state.OptionSelected] then
+				local effects = curPrompt[state.PromptSelected].Effect[state.OptionSelected][state.OutcomeResult] or
+					curPrompt[state.PromptSelected].Effect[state.OptionSelected]
 				if effects.ForceNextPrompt then
 					selectNextPrompt = false
-					promptTypeToUse = effects.ForceNextPrompt.TableToUse
+					state.PromptTypeSelected = effects.ForceNextPrompt.PromptType
 					if effects.ForceNextPrompt.PromptNumber then
 						state.PromptSelected = effects.ForceNextPrompt.PromptNumber
 					end
 				end
-				if effects.StartEncounter then
-					Isaac.ExecuteCommand("goto s.default." .. tostring(effects.StartEncounter))
+				if not effects.StartEncounter then
+					if effects.Keys then
+						state.Inventory.Keys = state.Inventory.Keys + effects.Keys
+					end
+					if effects.Bombs then
+						state.Inventory.Bombs = state.Inventory.Bombs + effects.Bombs
+					end
+					if effects.Coins then
+						state.Inventory.Coins = state.Inventory.Coins + effects.Coins
+					end
+					if effects.Collectible then
+						for _, player in ipairs(dndPlayers) do
+							player:AddCollectible(effects.Collectible)
+						end
+					end
 				end
 			end
 		end
 	end
+
+	dice:Play("Idle", true)
 	state.PromptProgress = state.PromptProgress + 1
 	state.RollResult = 0
 	state.OutcomeResult = 0
 	state.HasSelected = false
+	state.HasRolled = false
 	state.NumAvailableRolls = 1
-	optionSelected = 1
+	state.EncounterCleared = false
+	state.EncounterStarted = false
+	state.OptionSelected = 1
+	local promptTable = cncText:GetTableFromPromptType(state.PromptTypeSelected)
 
 	if selectNextPrompt then
-		state.PromptSelected = 1
-		--state.PromptSelected = VeeHelper.GetDifferentRandomNum(state.PromptsSeen, state.MaxPrompts, VeeHelper.RandomRNG)
 		if state.PromptProgress == 3 then
-			promptTypeToUse = cncText.Encounters
+			state.PromptTypeSelected = cncText.PromptType.ENEMY
 		elseif state.PromptProgress == state.MaxPrompts then
-			promptTypeToUse = cncText.BossEncounters
+			state.PromptTypeSelected = cncText.PromptType.ENEMY
 		elseif VeeHelper.RandomNum(1, 50) == 50 then
-			promptTypeToUse = cncText.RarePrompts
+			state.PromptTypeSelected = cncText.PromptType.RARE
+		else
+			state.PromptTypeSelected = cncText.PromptType.NORMAL
+		end
+		promptTable = cncText:GetTableFromPromptType(state.PromptTypeSelected)
+		if state.PromptTypeSelected == cncText.PromptType.NORMAL or state.PromptTypeSelected == cncText.PromptType.ENEMY then
+			local tableToUse = state.PromptTypeSelected == cncText.PromptType.ENEMY and state.EncountersSeen or state.PromptsSeen
+			state.PromptSelected = VeeHelper.GetDifferentRandomNum(tableToUse, #promptTable, VeeHelper.RandomRNG)
+		else
+			state.PromptSelected = VeeHelper.RandomNum(1, #promptTable)
 		end
 	end
-	local prompt = promptTypeToUse[state.PromptSelected]
+	local prompt = promptTable[state.PromptSelected]
 	local title = cnc:separateTextByHashtag({ prompt.Title })
 	renderPrompt.Title = title
 	renderPrompt.Options = {}
@@ -322,8 +414,7 @@ end
 ---@param stringTable table
 ---@param startingPos number
 ---@param textType? string
----@param scale? number
-local function renderText(stringTable, startingPos, textType, scale)
+local function renderText(stringTable, startingPos, textType)
 	local center = getCenterScreen()
 	local nextLineMult = 0.15
 	local posPerLineMult = (textType == "Title" and (#stringTable < 4 and 0.15 or #stringTable >= 4 and 0.1)) or 0.05
@@ -350,7 +441,7 @@ local function renderText(stringTable, startingPos, textType, scale)
 		local text = textType == "Option" and stringTable[i][2] or stringTable[i]
 
 		if textType == "Option"
-			and #stringTable > 1 and i == optionSelected
+			and #stringTable > 1 and i == state.OptionSelected
 			and transitionY.Prompt == 0
 		then
 			renderCursor(text, posY + 8)
@@ -365,12 +456,6 @@ function cnc:CharacterSelect()
 	local player1 = Isaac.GetPlayer()
 	local players = getPlayers()
 
-	--[[ if CNCDebug.Enabled then
-		players = {}
-		for _ = 1, CNCDebug.NumPlayers do
-			table.insert(players, player1)
-		end
-	end ]]
 	for i, player in ipairs(players) do
 		local data = player:GetData()
 		if (
@@ -381,6 +466,7 @@ function cnc:CharacterSelect()
 			)
 			and not player:GetData().DNDKeyDelay
 			and not g.game:IsPaused()
+			and transitionY.Characters == 0
 		then
 			if (
 				isTriggered(ButtonAction.ACTION_MENULEFT, player)
@@ -405,7 +491,7 @@ function cnc:CharacterSelect()
 					1
 				charactersConfirmed[i] = true
 				g.sfx:Play(SoundEffect.SOUND_THUMBSUP)
-				numConfirmed = numConfirmed + 1
+				state.NumConfirmed = state.NumConfirmed + 1
 				data.DNDKeyDelay = keyDelay
 			elseif isTriggered(ButtonAction.ACTION_BOMB, player)
 				and charactersConfirmed[i] == true
@@ -413,18 +499,79 @@ function cnc:CharacterSelect()
 				charactersConfirmed[i] = false
 				state.Characters.NumActive[state.Characters.Selected[i]] = state.Characters.NumActive[state.Characters.Selected[i]] -
 					1
-				numConfirmed = numConfirmed - 1
+				state.NumConfirmed = state.NumConfirmed - 1
 				data.DNDKeyDelay = keyDelay
 			end
 		end
 	end
-	if numConfirmed >= #players
+	if state.NumConfirmed >= #players
 		and isTriggered(ButtonAction.ACTION_MENUCONFIRM, player1)
 		and not player1:GetData().DNDKeyDelay
 		and not g.game:IsPaused()
 	then
 		background:Play("FadeOutTitle", true)
 		fadeType = "AllDown"
+	end
+end
+
+function cnc:OnPromptTransition()
+	if not state.HasSelected then
+		if fadeType == "PromptDown" and transitionY.Prompt == yTarget then
+			if cnc:IsRollOption() then
+				if dice:GetAnimation() ~= "Roll" and dice:GetAnimation() ~= "Result" then
+					dice:Play("Roll", true)
+				end
+				if state.NumAvailableRolls == 0 then
+					state.HasSelected = true
+				end
+			else
+				state.HasSelected = true
+				fadeType = "PromptUp"
+			end
+		end
+	else
+		if state.EncounterCleared then
+			if background:IsFinished("FadeIn") then
+				renderPrompt.Title = { "Room Cleared!" }
+				renderPrompt.Outcome = cnc:separateTextByHashtag({ "You defeat the creatures,", "moving onto the next room..." })
+				fadeType = "AllUp"
+				Isaac.ExecuteCommand("goto s.default.2")
+				background:Play("Frame", true)
+			end
+		elseif background:IsPlaying("FadeIn") and background:GetFrame() == 40 then
+			background:Stop()
+			resetMinigame()
+		elseif fadeType == "AllDown" and transitionY.Prompt == yTarget then
+			if (
+				state.PromptTypeSelected == cncText.PromptType.ENEMY
+					or state.PromptTypeSelected == cncText.PromptType.BOSS
+				)
+			then
+				cnc:tryStartRoomEncounter()
+			elseif state.PromptTypeSelected == cncText.PromptType.BOSS then
+				resetMinigame()
+			end
+		end
+		if fadeType == "TitlePromptDown" and transitionY.Prompt == yTarget then
+			cnc:startNextPrompt()
+		end
+	end
+end
+
+local diceFlashAlpha = 0
+function cnc:DiceAnimation()
+	if dice:GetAnimation() ~= "Idle" then
+		dice:Render(Vector(getCenterScreen().X + 50, getCenterScreen().Y + 50), Vector.Zero, Vector.Zero)
+		if dice:IsFinished("Roll") then
+			dice:SetFrame("Result", state.RollResult)
+			diceFlashAlpha = 1
+		end
+		if diceFlashAlpha > 0 then
+			diceFlash:Render(Vector(getCenterScreen().X + 50, getCenterScreen().Y + 50), Vector.Zero, Vector.Zero)
+			diceFlashAlpha = diceFlashAlpha - 0.1
+		elseif fadeType == "PromptDown" then
+			fadeType = "PromptUp"
+		end
 	end
 end
 
@@ -445,58 +592,55 @@ function cnc:MinigameLogic()
 		then
 			cnc:CharacterSelect()
 		elseif state.PromptProgress >= 1 then
-			local prompt = cncText.Prompts[state.PromptSelected]
 			local data = player1:GetData()
 
 			if isTriggered(ButtonAction.ACTION_MENUCONFIRM, player1)
 				and not g.game:IsPaused()
 				and not data.DNDKeyDelay
+				and transitionY.Prompt == 0
+				and state.ScreenShown
 			then
 				if not state.HasSelected then
-					local outcomeText = prompt.Outcome[optionSelected]
-					if renderPrompt.Options[optionSelected][1] == "Roll" then
+					local prompt = cncText:GetTableFromPromptType(state.PromptTypeSelected)
+					local outcomeText = prompt[state.PromptSelected].Outcome[state.OptionSelected]
+					if cnc:IsRollOption() and not state.HasRolled then
 						cnc:RollDice()
-						local characterIndex = renderPrompt.Options[optionSelected][3] + 1
+						local characterIndex = renderPrompt.Options[state.OptionSelected][3] + 1
 
-						if state.OutcomeResult < 3
-							and characterIndex ~= nil
+						if characterIndex ~= nil
 							and state.Characters.NumActive[characterIndex] > 1
 						then
 							state.NumAvailableRolls = state.Characters.NumActive[characterIndex] - 1
 						end
 						outcomeText = outcomeText[state.OutcomeResult]
+						state.HasRolled = true
 					end
 					renderPrompt.Outcome = cnc:separateTextByHashtag({ outcomeText })
 					fadeType = "PromptDown"
 				else
-					if renderPrompt.Options[optionSelected][1] == "Roll"
-						and state.NumAvailableRolls > 0 then
+					if cnc:IsRollOption()
+						and state.NumAvailableRolls > 0
+					then
 						cnc:RollDice()
 					else
-						fadeType = "TitlePromptDown"
+						if (state.PromptTypeSelected == cncText.PromptType.ENEMY
+							or state.PromptTypeSelected == cncText.PromptType.BOSS
+							)
+							and not state.EncounterCleared
+						then
+							fadeType = "AllDown"
+						else
+							fadeType = "TitlePromptDown"
+						end
 					end
 				end
 				data.DNDKeyDelay = keyDelay
 			end
 
-			if dice:GetAnimation() ~= "Idle" then
-				dice:Render(getCenterScreen(), Vector.Zero, Vector.Zero)
-			end
+			cnc:OnPromptTransition()
+			cnc:DiceAnimation()
 
 			renderText(renderPrompt.Title, -120, "Title")
-
-			if not state.HasSelected then
-				if fadeType == "PromptDown" and transitionY.Prompt == yTarget then
-					state.HasSelected = true
-					fadeType = "PromptUp"
-				end
-			else
-				if fadeType == "AllDown" and state.PromptTypeSelected == cncText.PromptType.ENEMY then
-
-				elseif fadeType == "TitlePromptDown" and transitionY.Prompt == yTarget then
-					cnc:startNextPrompt()
-				end
-			end
 
 			if not state.HasSelected then
 				if renderPrompt.Options[2] ~= nil then
@@ -507,30 +651,26 @@ function cnc:MinigameLogic()
 						and not data.DNDKeyDelay
 						and not g.game:IsPaused()
 					then
-						optionSelected = isTriggered(ButtonAction.ACTION_MENUUP, player1) and
-							optionSelected - 1
-							or optionSelected + 1
-						optionSelected = optionSelected < 1 and #renderPrompt.Options or optionSelected > #renderPrompt.Options and 1
-							or optionSelected
+						state.OptionSelected = isTriggered(ButtonAction.ACTION_MENUUP, player1) and
+							state.OptionSelected - 1
+							or state.OptionSelected + 1
+						state.OptionSelected = state.OptionSelected < 1 and #renderPrompt.Options or
+							state.OptionSelected > #renderPrompt.Options and 1
+							or state.OptionSelected
 						local soundToPlay = isTriggered(ButtonAction.ACTION_MENUUP, player1) and
 							SoundEffect.SOUND_CHARACTER_SELECT_LEFT or SoundEffect.SOUND_CHARACTER_SELECT_RIGHT
 						g.sfx:Play(soundToPlay)
 						data.DNDKeyDelay = keyDelay
-						print(optionSelected)
 					end
 				end
-				renderText(renderPrompt.Options, 0, "Option")
+				if not cnc:IsRollOption() or (cnc:IsRollOption() and not state.HasRolled) then
+					renderText(renderPrompt.Options, 0, "Option")
+				elseif cnc:IsRollOption() and state.HasRolled then
+					renderText({ "You have additional characters who can roll", "Roll again?" }, -50)
+					renderText({ "Roll again", "Use this roll" }, 0, "Option")
+				end
 			else
-				if renderPrompt.Options[optionSelected][1] == "Roll" then
-					renderText({ state.RollResult }, 0.2)
-					if state.NumAvailableRolls > 0 then
-						renderText({ "You have more players, roll again" }, 0)
-					else
-						renderText(renderPrompt.Outcome, 0)
-					end
-				else
-					renderText(renderPrompt.Outcome, 0)
-				end
+				renderText(renderPrompt.Outcome, 0)
 			end
 		end
 	end
@@ -544,16 +684,17 @@ function cnc:MinigameLogic()
 end
 
 function cnc:RenderScreen()
-	if state.Active then
+	if state.Active and state.ScreenShown then
 		local center = getCenterScreen()
 		local transitionPos = Vector(center.X, center.Y + transitionY.Characters)
+
 		if background:IsFinished("FadeOutTitle") then
 			initFirstPrompt()
 		end
 		if state.PromptProgress == 0 then
 			cnc:AnimationTimer()
 			if string.sub(characters:GetAnimation(), 1, 5) == "Title" then
-				--background:RenderLayer(0, center, Vector.Zero, Vector.Zero) --Black background
+				background:RenderLayer(0, center, Vector.Zero, Vector.Zero) --Black background
 				background:RenderLayer(1, center, Vector.Zero, Vector.Zero) --Frame
 				background:RenderLayer(7, center, Vector.Zero, Vector.Zero) --Debug frame
 				background:RenderLayer(8, center, Vector.Zero, Vector.Zero) -- Title
@@ -580,7 +721,7 @@ function cnc:RenderScreen()
 				or characters:GetAnimation() == "3"
 				or characters:GetAnimation() == "4"
 			then
-				--background:RenderLayer(0, center, Vector.Zero, Vector.Zero)
+				background:RenderLayer(0, center, Vector.Zero, Vector.Zero)
 				background:RenderLayer(1, center, Vector.Zero, Vector.Zero)
 				background:RenderLayer(7, center, Vector.Zero, Vector.Zero)
 				for i = 1, tonumber(characters:GetAnimation()) do
@@ -625,8 +766,14 @@ end
 
 function cnc:OnNewRoom()
 	local players = VeeHelper.GetAllPlayers()
-	for i, player in ipairs(players) do
-		if cnc:IsInDNDRoom() and not player:HasCollectible(g.DND_PLAYER_TECHNICAL) then
+	if cnc:IsInCNCRoom() and state.ScreenShown then
+		state.ScreenShown = false
+	end
+	for _, player in ipairs(players) do
+		if cnc:IsInCNCRoom()
+		and not player:HasCollectible(g.DND_PLAYER_TECHNICAL)
+		and shouldTeleportPlayer
+		then
 			player:GetData().CNC_PreviousCollisionClass = player.GridCollisionClass
 			player.GridCollisionClass = GridCollisionClass.COLLISION_NONE
 			player.Position = Vector(-1000, -1000)
@@ -634,11 +781,104 @@ function cnc:OnNewRoom()
 	end
 end
 
+---@param pickup EntityPickup
+---@param collider Entity
+---@param low boolean
+function cnc:GivePickupsToMinigameState(pickup, collider, low)
+	if collider.Type == EntityType.ENTITY_PLAYER then
+		local sprite = pickup:GetSprite()
+
+		if cnc:IsInCNCRoom()
+			and (
+			pickup.Variant == PickupVariant.PICKUP_COIN
+				or pickup.Variant == PickupVariant.PICKUP_KEY
+				or pickup.Variant == PickupVariant.PICKUP_BOMB
+			)
+		then
+			if not pickup:IsDead() then
+				print("shapow")
+				if pickup.Variant == PickupVariant.PICKUP_COIN then
+					state.Inventory.Coins = state.Inventory.Coins + pickup:GetCoinValue()
+				elseif pickup.Variant == PickupVariant.PICKUP_KEY then
+					local value = pickup.SubType == KeySubType.KEY_DOUBLEPACK and 2 or 1
+					state.Inventory.Keys = state.Inventory.Keys + value
+				elseif pickup.Variant == PickupVariant.PICKUP_BOMB then
+					local value = pickup.SubType == BombSubType.BOMB_DOUBLEPACK and 2 or 1
+					state.Inventory.Bombs = state.Inventory.Bombs + value
+				end
+				sprite:Play("Collect", true)
+				pickup:Die()
+				--pickup.Touched = true
+				pickup:PlayPickupSound()
+			end
+			return true
+		end
+	end
+end
+
+---@param rng RNG
+---@param spawnPos Vector
+function cnc:OnCNCRoomClear(rng, spawnPos)
+	if cnc:IsInCNCRoom() then
+		local effects = cnc:GetPromptEffects()
+		local vel = Vector.Zero
+
+		if effects then
+			if effects.Collectible then
+				for _ = 1, #dndPlayers do
+					local pos = g.game:GetRoom():FindFreePickupSpawnPosition(spawnPos)
+					local seed = rng:GetSeed()
+					g.game:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COLLECTIBLE, pos, vel, nil, effects.Collectible, seed)
+				end
+			end
+			if effects.Coins then
+				local coinsToSpawn = effects.Coins
+				while coinsToSpawn >= 10 do
+					local pos = g.game:GetRoom():FindFreePickupSpawnPosition(spawnPos)
+					local seed = rng:GetSeed()
+					g.game:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COIN, pos, vel, nil, CoinSubType.COIN_DIME, seed)
+					coinsToSpawn = coinsToSpawn - 10
+				end
+				if coinsToSpawn >= 5 then
+					local pos = g.game:GetRoom():FindFreePickupSpawnPosition(spawnPos)
+					local seed = rng:GetSeed()
+					g.game:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COIN, pos, vel, nil, CoinSubType.COIN_NICKEL, seed)
+					coinsToSpawn = coinsToSpawn - 5
+				end
+				for _ = 1, coinsToSpawn do
+					local pos = g.game:GetRoom():FindFreePickupSpawnPosition(spawnPos)
+					local seed = rng:GetSeed()
+					g.game:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COIN, pos, vel, nil, CoinSubType.COIN_PENNY, seed)
+				end
+			end
+			if effects.Keys then
+				for _ = 1, effects.Keys do
+					local pos = g.game:GetRoom():FindFreePickupSpawnPosition(spawnPos)
+					local seed = rng:GetSeed()
+					g.game:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, pos, vel, nil, KeySubType.KEY_NORMAL, seed)
+				end
+			end
+			if effects.Bombs then
+				for _ = 1, effects.Bombs do
+					local pos = g.game:GetRoom():FindFreePickupSpawnPosition(spawnPos)
+					local seed = rng:GetSeed()
+					g.game:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_BOMB, pos, vel, nil, BombSubType.BOMB_NORMAL, seed)
+				end
+			end
+		end
+		return true
+	end
+end
+
 function cnc:OnPostUpdate()
-	local allDead = true
+	local allDead = #dndPlayers > 0 and true or false
+	local hasPickup = false
 	for i, player in ipairs(dndPlayers) do
 		if not player:IsDead() then
 			allDead = false
+			if player:IsHoldingItem() then
+				hasPickup = true
+			end
 		elseif not state.Characters.Dead[i] and state.Active then
 			state.Characters.Dead[i] = true
 			if state.Characters.NumActive[i] > 0 then
@@ -646,6 +886,34 @@ function cnc:OnPostUpdate()
 			end
 			characters:ReplaceSpritesheet(i + 2, "gfx/ui/cnc_heads_dead.png")
 			characters:LoadGraphics()
+		end
+	end
+	if state.Active then
+		if allDead
+			and not background:GetAnimation() ~= "FadeIn"
+		then
+			background:Play("FadeIn", true)
+			state.ScreenShown = true
+		end
+		if state.EncounterStarted
+			and g.game:GetRoom():IsClear()
+			and not state.EncounterCleared
+		then
+			local noPickups = false
+			if #Isaac.FindByType(EntityType.ENTITY_PICKUP) == 0 then
+				noPickups = true
+			else
+				for _, pedestal in ipairs(Isaac.FindByType(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COLLECTIBLE)) do
+					if pedestal.SubType == 0 and not hasPickup then
+						noPickups = true
+					end
+				end
+			end
+			if noPickups then
+				state.EncounterCleared = true
+				background:Play("FadeIn", true)
+				state.ScreenShown = true
+			end
 		end
 	end
 	if state.Active == false
@@ -656,6 +924,7 @@ function cnc:OnPostUpdate()
 		g.sfx:Stop(SoundEffect.SOUND_DEATH_BURST_SMALL)
 		g.game:StartRoomTransition(roomIndexOnMinigameClear, Direction.NO_DIRECTION, RoomTransitionAnim.FADE)
 		roomIndexOnMinigameClear = 0
+		dndPlayers = {}
 	end
 end
 
@@ -663,7 +932,7 @@ end
 function cnc:OnPlayerUpdate(player)
 	if state.Active and player.ControlsEnabled == true then
 		if not player:HasCollectible(g.DND_PLAYER_TECHNICAL)
-			or (player:HasCollectible(g.DND_PLAYER_TECHNICAL) and not cnc:IsInDNDRoom()) then
+			or (player:HasCollectible(g.DND_PLAYER_TECHNICAL) and not cnc:IsInCNCRoom()) then
 			player.ControlsEnabled = false
 		end
 	end

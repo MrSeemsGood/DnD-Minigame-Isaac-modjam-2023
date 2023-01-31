@@ -8,51 +8,6 @@ cncText.PromptType = {
 	RARE = 3
 }
 
----@class GameState
-cncText.GameState = {
-	Active = false,
-	Characters = {
-		Selected = {
-			1,
-			2,
-			3,
-			4
-		},
-		NumActive = {
-			0, --Isaac
-			0, --Maggy
-			0, --Cain
-			0, --Judas
-		},
-		Dead = {
-			false,
-			false,
-			false,
-			false
-		}
-	},
-	Inventory = {
-		Keys = 0,
-		Bombs = 0,
-		Coins = 0,
-	},
-	PromptProgress = 0,
-	PromptSelected = 1,
-	PromptTypeSelected = cncText.PromptType.NORMAL,
-	MaxPrompts = 3,
-	HasSelected = false,
-	RollResult = 0,
-	OutcomeResult = 0,
-	NumAvailableRolls = 1,
-	PromptsSeen = {},
-	EncountersSeen = {},
-	EntityFlagsOnNextEncounter = { 0, 0 },
-	ScreenShown = false,
-	RoomIndexStartedGameFrom = 0,
-	AdventureEnded = false,
-	HudWasVisible = true,
-}
-
 ---@class OutcomeEffect
 ---@field Collectible CollectibleType
 ---@field Keys integer
@@ -60,7 +15,7 @@ cncText.GameState = {
 ---@field Coins integer
 ---@field EntityFlagsOnRoomEnter {Flags: EntityFlag, Duration: integer}
 ---@field StartEncounter integer
----@field ForceNextPrompt {TableToUse: Prompt[], PromptNumber: integer}
+---@field ForceNextPrompt {PromptType: integer, PromptNumber: integer}
 
 ---@class Prompt
 ---@field Title string
@@ -84,32 +39,12 @@ cncText.GameState = {
 ---@type Prompt[]
 cncText.Prompts = {
 	{
-		Title = "You come across a locked chest",
+		Title = "Hey",
 		Options = {
-			[1] = { "Select", "Dismiss it" },
-			[2] = { "Select", "Unlock it", "Key1" },
-			[3] = { "Select", "Throw a coin at it", "Coin1" },
-			[4] = { "Select", "Bomb it", "Bomb1" },
-			[5] = { "Roll", "Attempt to lock-pick", PlayerType.PLAYER_CAIN },
+			[1] = {"Select", "Do it"}
 		},
 		Outcome = {
-			[1] = "You leave the chest be",
-			[2] = "You unlock the chest and get nothing lmao",
-			[3] = "Hi",
-			[4] = "Hi",
-			[5] = {
-				[1] = "bich",
-				[2] = "bich",
-				[3] = "bich"
-			}
-		},
-		Effect = {
-			[5] = {
-				[1] = {
-					Keys = 1
-				},
-
-			}
+			[1] = "Don't mind me"
 		}
 	},
 }
@@ -126,7 +61,11 @@ cncText.Encounters = {
 		},
 		Effect = {
 			[1] = {
-				StartEncounter = 1600
+				StartEncounter = 1600,
+				Keys = 1,
+				Coins = 1,
+				Bombs = 1,
+				Collectible = CollectibleType.COLLECTIBLE_SAD_ONION
 			}
 		}
 	}

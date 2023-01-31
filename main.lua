@@ -25,7 +25,6 @@ function mod:OnGetShaderParams(shaderName)
 		cnc:OnRender()
 	end
 end
-
 mod:AddCallback(ModCallbacks.MC_GET_SHADER_PARAMS, mod.OnGetShaderParams)
 
 function mod:OnPostRender()
@@ -33,12 +32,17 @@ function mod:OnPostRender()
 		cnc:OnRender()
 	end
 end
-
 mod:AddCallback(ModCallbacks.MC_POST_RENDER, mod.OnPostRender)
 
+function mod:OnPostUpdate()
+	cncTable:slotUpdate()
+	cnc:OnPostUpdate()
+end
+mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.OnPostUpdate)
+
 mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, cnc.OnNewRoom)
-mod:AddCallback(ModCallbacks.MC_POST_UPDATE, cnc.OnPostUpdate)
-mod:AddCallback(ModCallbacks.MC_POST_UPDATE, cncTable.slotUpdate)
+mod:AddCallback(ModCallbacks.MC_PRE_PICKUP_COLLISION, cnc.GivePickupsToMinigameState)
+mod:AddCallback(ModCallbacks.MC_PRE_SPAWN_CLEAN_AWARD, cnc.OnCNCRoomClear)
 
 mod:AddCallback(ModCallbacks.MC_PRE_PLAYER_COLLISION, cncTable.onPlayerCollision, 0)
 
