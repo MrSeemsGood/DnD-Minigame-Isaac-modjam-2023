@@ -4,8 +4,9 @@ local vee = require('src_dndtable.veeHelper')
 
 --[[
     Durrts wander around the room very slowly, not attempting to follow Isaac.
-    - if Isaac stays diagonal to them in their line of sight, they roll towards them with an increased speed.
-    - they can occasionally pick up and throw nearby rocks.
+    - if Isaac stays diagonal to them and is in their line of sight, they roll towards him with an increased speed.
+    they deal full heart of contact damage while rolling.
+    - they can occasionally pick up nearby rocks and throw them at Isaac.
 ]]
 
 local DURRT_MOVESPEED_NORMAL = 2
@@ -96,6 +97,7 @@ function durrt:onNpcUpdate(npc)
             local nextDirectionAnim = availableDirectionAnims[vee.RandomNum(#availableDirectionAnims)]
             nextDirectionAnim = nextDirectionAnim or 'WalkDown'
 
+            s.FlipX = false
             s:Play(nextDirectionAnim, true)
             npc.Velocity = AnimToDirection[nextDirectionAnim] * DURRT_MOVESPEED_NORMAL
         end

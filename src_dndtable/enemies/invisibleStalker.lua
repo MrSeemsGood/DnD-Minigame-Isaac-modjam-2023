@@ -2,7 +2,8 @@ local invisStalker = {}
 local g = require("src_dndtable.globals")
 
 --[[
-    Invisible Stalkers start stationary. On a room start, they wake up and start chasing Isaac,
+    Invisible Stalkers start stationary.
+    - on a room start, they wake up and start chasing Isaac,
     becoming more transparent the closer they are to him. Once hit, they become fully opaque
     and return to their starting position, where they remain idle for a while before starting the next approach. 
 ]]

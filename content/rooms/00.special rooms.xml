@@ -1,10 +1,16 @@
 <?xml version="1.0" ?>
 <rooms>
-	<room variant="0" name="New Room!" type="9" subtype="0" shape="1" width="13" height="7" difficulty="1" weight="1.0">
+	<room variant="0" name="[C&amp;C] custom arcade" type="9" subtype="0" shape="1" width="13" height="7" difficulty="1" weight="1.0">
 		<door exists="True" x="-1" y="3"/>
 		<door exists="False" x="6" y="-1"/>
 		<door exists="True" x="6" y="7"/>
 		<door exists="True" x="13" y="3"/>
+		<spawn x="0" y="0">
+			<entity type="5" variant="20" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="12" y="0">
+			<entity type="5" variant="20" subtype="0" weight="1.0"/>
+		</spawn>
 		<spawn x="4" y="1">
 			<entity type="6" variant="88" subtype="0" weight="1.0"/>
 		</spawn>
@@ -15,7 +21,127 @@
 			<entity type="6" variant="16" subtype="0" weight="1.0"/>
 		</spawn>
 	</room>
-	<room variant="1600" name="[D&amp;D] stalkers 1" type="1" subtype="0" shape="1" width="13" height="7" difficulty="1" weight="0.0">
+	<room variant="1" name="[C&amp;C] custom arcade (copy)" type="9" subtype="0" shape="3" width="13" height="7" difficulty="1" weight="1.0">
+		<door exists="False" x="6" y="-1"/>
+		<door exists="True" x="6" y="7"/>
+		<spawn x="4" y="0">
+			<entity type="1900" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="5" y="0">
+			<entity type="1900" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="6" y="0">
+			<entity type="1900" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="7" y="0">
+			<entity type="1900" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="8" y="0">
+			<entity type="1900" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="5" y="2">
+			<entity type="6" variant="88" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="7" y="4">
+			<entity type="6" variant="18" subtype="0" weight="1.0"/>
+			<entity type="6" variant="5" subtype="0" weight="1.0"/>
+			<entity type="6" variant="13" subtype="0" weight="1.0"/>
+			<entity type="6" variant="7" subtype="0" weight="1.0"/>
+			<entity type="6" variant="4" subtype="0" weight="1.0"/>
+			<entity type="6" variant="9" subtype="0" weight="1.0"/>
+		</spawn>
+	</room>
+	<room variant="2" name="[C&amp;C] custom arcade (copy) (1)" type="9" subtype="0" shape="1" width="13" height="7" difficulty="1" weight="1.0">
+		<door exists="True" x="-1" y="3"/>
+		<door exists="True" x="6" y="-1"/>
+		<door exists="True" x="6" y="7"/>
+		<door exists="True" x="13" y="3"/>
+		<spawn x="3" y="2">
+			<entity type="6" variant="88" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="6" y="2">
+			<entity type="6" variant="13" subtype="0" weight="1.0"/>
+			<entity type="6" variant="4" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="9" y="2">
+			<entity type="6" variant="2" subtype="0" weight="1.0"/>
+			<entity type="6" variant="5" subtype="0" weight="1.0"/>
+		</spawn>
+	</room>
+	<room variant="3" name="[C&amp;C] custom arcade (copy) (2)" type="9" subtype="0" shape="1" width="13" height="7" difficulty="1" weight="1.0">
+		<door exists="True" x="-1" y="3"/>
+		<door exists="True" x="6" y="-1"/>
+		<door exists="True" x="6" y="7"/>
+		<door exists="False" x="13" y="3"/>
+		<spawn x="1" y="1">
+			<entity type="6" variant="88" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="4" y="1">
+			<entity type="6" variant="6" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="12" y="3">
+			<entity type="1930" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="11" y="4">
+			<entity type="1930" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="12" y="4">
+			<entity type="1930" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="10" y="5">
+			<entity type="1930" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="11" y="5">
+			<entity type="1930" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="12" y="5">
+			<entity type="1930" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="9" y="6">
+			<entity type="1930" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="10" y="6">
+			<entity type="1930" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="11" y="6">
+			<entity type="1930" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="12" y="6">
+			<entity type="5" variant="20" subtype="3" weight="1.0"/>
+		</spawn>
+	</room>
+	<room variant="0" name="[C&amp;C] custom secret room" type="7" subtype="0" shape="1" width="13" height="7" difficulty="1" weight="1.0">
+		<door exists="True" x="-1" y="3"/>
+		<door exists="True" x="6" y="-1"/>
+		<door exists="True" x="6" y="7"/>
+		<door exists="True" x="13" y="3"/>
+		<spawn x="3" y="1">
+			<entity type="17" variant="3" subtype="0" weight="1.0"/>
+			<entity type="17" variant="4" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="8" y="1">
+			<entity type="1940" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="2" y="2">
+			<entity type="1940" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="4" y="2">
+			<entity type="1940" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="9" y="2">
+			<entity type="5" variant="60" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="6" y="3">
+			<entity type="6" variant="88" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="6" y="4">
+			<entity type="1940" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="3" y="5">
+			<entity type="1940" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
+	</room>
+	<room variant="1600" name="[C&amp;C] stalkers 1" type="1" subtype="0" shape="1" width="13" height="7" difficulty="1" weight="0.0">
 		<door exists="True" x="-1" y="3"/>
 		<door exists="True" x="6" y="-1"/>
 		<door exists="True" x="6" y="7"/>
@@ -48,7 +174,7 @@
 			<entity type="1901" variant="0" subtype="0" weight="1.0"/>
 		</spawn>
 	</room>
-	<room variant="1601" name="[D&amp;D] stalkers 2 - :skull_emoji:" type="1" subtype="0" shape="1" width="13" height="7" difficulty="1" weight="0.0">
+	<room variant="1601" name="[C&amp;C] stalkers 2 - :skull_emoji:" type="1" subtype="0" shape="1" width="13" height="7" difficulty="1" weight="0.0">
 		<door exists="True" x="-1" y="3"/>
 		<door exists="True" x="6" y="-1"/>
 		<door exists="True" x="6" y="7"/>
@@ -96,7 +222,7 @@
 			<entity type="1901" variant="0" subtype="0" weight="1.0"/>
 		</spawn>
 	</room>
-	<room variant="1602" name="[D&amp;D] stalkers 3" type="1" subtype="0" shape="1" width="13" height="7" difficulty="1" weight="0.0">
+	<room variant="1602" name="[C&amp;C] stalkers 3" type="1" subtype="0" shape="1" width="13" height="7" difficulty="1" weight="0.0">
 		<door exists="False" x="-1" y="3"/>
 		<door exists="True" x="6" y="-1"/>
 		<door exists="True" x="6" y="7"/>
@@ -153,7 +279,7 @@
 			<entity type="3000" variant="0" subtype="0" weight="1.0"/>
 		</spawn>
 	</room>
-	<room variant="1604" name="[D&amp;D] bodaks 1" type="1" subtype="0" shape="1" width="13" height="7" difficulty="1" weight="0.0">
+	<room variant="1604" name="[C&amp;C] bodaks 1" type="1" subtype="0" shape="1" width="13" height="7" difficulty="1" weight="0.0">
 		<door exists="False" x="-1" y="3"/>
 		<door exists="True" x="6" y="-1"/>
 		<door exists="True" x="6" y="7"/>
@@ -258,7 +384,7 @@
 			<entity type="33" variant="3" subtype="0" weight="1.0"/>
 		</spawn>
 	</room>
-	<room variant="1606" name="[D&amp;D] bodaks 2" type="1" subtype="0" shape="1" width="13" height="7" difficulty="1" weight="0.0">
+	<room variant="1606" name="[C&amp;C] bodaks 2" type="1" subtype="0" shape="1" width="13" height="7" difficulty="1" weight="0.0">
 		<door exists="True" x="-1" y="3"/>
 		<door exists="True" x="6" y="-1"/>
 		<door exists="True" x="6" y="7"/>
@@ -303,7 +429,7 @@
 			<entity type="39" variant="0" subtype="3" weight="1.0"/>
 		</spawn>
 	</room>
-	<room variant="1608" name="[D&amp;D] bodaks 3 (2x1)" type="1" subtype="0" shape="6" width="26" height="7" difficulty="1" weight="0.0">
+	<room variant="1608" name="[C&amp;C] bodaks 3 (2x1)" type="1" subtype="0" shape="6" width="26" height="7" difficulty="1" weight="0.0">
 		<door exists="False" x="-1" y="3"/>
 		<door exists="False" x="6" y="-1"/>
 		<door exists="True" x="6" y="7"/>
@@ -413,7 +539,7 @@
 			<entity type="1900" variant="0" subtype="0" weight="1.0"/>
 		</spawn>
 	</room>
-	<room variant="1603" name="[D&amp;D] yochlol 1 - tight squeeze" type="1" subtype="4" shape="7" width="26" height="7" difficulty="1" weight="0.0">
+	<room variant="1603" name="[C&amp;C] yochlol 1 - tight squeeze" type="1" subtype="4" shape="7" width="26" height="7" difficulty="1" weight="0.0">
 		<door exists="True" x="-1" y="3"/>
 		<door exists="True" x="26" y="3"/>
 		<spawn x="2" y="3">
@@ -477,7 +603,7 @@
 			<entity type="3000" variant="0" subtype="0" weight="1.0"/>
 		</spawn>
 	</room>
-	<room variant="1605" name="[D&amp;D] yochlol 2" type="1" subtype="4" shape="1" width="13" height="7" difficulty="1" weight="0.0">
+	<room variant="1605" name="[C&amp;C] yochlol 2" type="1" subtype="4" shape="1" width="13" height="7" difficulty="1" weight="0.0">
 		<door exists="True" x="-1" y="3"/>
 		<door exists="True" x="6" y="-1"/>
 		<door exists="True" x="6" y="7"/>
@@ -504,7 +630,7 @@
 			<entity type="1500" variant="0" subtype="1" weight="1.0"/>
 		</spawn>
 	</room>
-	<room variant="1607" name="[D&amp;D] yochlol 3 (closet)" type="1" subtype="0" shape="3" width="13" height="7" difficulty="1" weight="0.0">
+	<room variant="1607" name="[C&amp;C] yochlol 3 (closet)" type="1" subtype="0" shape="3" width="13" height="7" difficulty="1" weight="0.0">
 		<door exists="False" x="6" y="-1"/>
 		<door exists="True" x="6" y="7"/>
 		<spawn x="6" y="0">
@@ -518,7 +644,7 @@
 			<entity type="1500" variant="0" subtype="1" weight="1.0"/>
 		</spawn>
 	</room>
-	<room variant="1609" name="[D&amp;D] ettercaps' lair 1 (L)" type="1" subtype="0" shape="9" width="26" height="14" difficulty="1" weight="0.0">
+	<room variant="1609" name="[C&amp;C] ettercaps' lair 1 (L)" type="1" subtype="0" shape="9" width="26" height="14" difficulty="1" weight="0.0">
 		<door exists="True" x="-1" y="10"/>
 		<door exists="True" x="6" y="6"/>
 		<door exists="True" x="6" y="14"/>
@@ -535,12 +661,6 @@
 		</spawn>
 		<spawn x="19" y="2">
 			<entity type="1940" variant="0" subtype="0" weight="1.0"/>
-		</spawn>
-		<spawn x="15" y="3">
-			<entity type="1940" variant="0" subtype="0" weight="1.0"/>
-		</spawn>
-		<spawn x="16" y="3">
-			<entity type="85" variant="0" subtype="0" weight="1.0"/>
 		</spawn>
 		<spawn x="21" y="3">
 			<entity type="1940" variant="0" subtype="0" weight="1.0"/>
@@ -566,12 +686,8 @@
 		<spawn x="19" y="6">
 			<entity type="1940" variant="0" subtype="0" weight="1.0"/>
 		</spawn>
-		<spawn x="21" y="6">
-			<entity type="85" variant="0" subtype="0" weight="1.0"/>
+		<spawn x="20" y="6">
 			<entity type="94" variant="0" subtype="0" weight="1.0"/>
-		</spawn>
-		<spawn x="22" y="6">
-			<entity type="1940" variant="0" subtype="0" weight="1.0"/>
 		</spawn>
 		<spawn x="23" y="6">
 			<entity type="1940" variant="0" subtype="0" weight="1.0"/>
@@ -597,16 +713,10 @@
 		<spawn x="20" y="7">
 			<entity type="1940" variant="0" subtype="0" weight="1.0"/>
 		</spawn>
-		<spawn x="7" y="8">
-			<entity type="1940" variant="0" subtype="0" weight="1.0"/>
-		</spawn>
 		<spawn x="8" y="8">
 			<entity type="1940" variant="0" subtype="0" weight="1.0"/>
 		</spawn>
 		<spawn x="12" y="8">
-			<entity type="1940" variant="0" subtype="0" weight="1.0"/>
-		</spawn>
-		<spawn x="15" y="8">
 			<entity type="1940" variant="0" subtype="0" weight="1.0"/>
 		</spawn>
 		<spawn x="16" y="8">
@@ -660,16 +770,10 @@
 		<spawn x="21" y="11">
 			<entity type="1940" variant="0" subtype="0" weight="1.0"/>
 		</spawn>
-		<spawn x="23" y="11">
-			<entity type="1940" variant="0" subtype="0" weight="1.0"/>
-		</spawn>
 		<spawn x="9" y="12">
 			<entity type="1940" variant="0" subtype="0" weight="1.0"/>
 		</spawn>
 		<spawn x="12" y="12">
-			<entity type="1940" variant="0" subtype="0" weight="1.0"/>
-		</spawn>
-		<spawn x="14" y="12">
 			<entity type="1940" variant="0" subtype="0" weight="1.0"/>
 		</spawn>
 		<spawn x="15" y="12">
@@ -688,7 +792,7 @@
 			<entity type="1940" variant="0" subtype="0" weight="1.0"/>
 		</spawn>
 	</room>
-	<room variant="1610" name="[D&amp;D] ettercaps' lair 2 (1x2)" type="1" subtype="0" shape="4" width="13" height="14" difficulty="1" weight="1.0">
+	<room variant="1610" name="[C&amp;C] ettercaps' lair 2 (1x2)" type="1" subtype="0" shape="4" width="13" height="14" difficulty="1" weight="1.0">
 		<door exists="True" x="-1" y="3"/>
 		<door exists="True" x="-1" y="10"/>
 		<door exists="True" x="6" y="-1"/>
@@ -701,6 +805,12 @@
 		</spawn>
 		<spawn x="5" y="0">
 			<entity type="3000" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="10" y="0">
+			<entity type="1010" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="11" y="0">
+			<entity type="1010" variant="0" subtype="0" weight="1.0"/>
 		</spawn>
 		<spawn x="12" y="0">
 			<entity type="1010" variant="0" subtype="0" weight="1.0"/>
@@ -726,6 +836,9 @@
 		<spawn x="9" y="1">
 			<entity type="1940" variant="0" subtype="0" weight="1.0"/>
 		</spawn>
+		<spawn x="12" y="1">
+			<entity type="1010" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
 		<spawn x="5" y="2">
 			<entity type="1940" variant="0" subtype="0" weight="1.0"/>
 		</spawn>
@@ -739,6 +852,9 @@
 			<entity type="1940" variant="0" subtype="0" weight="1.0"/>
 		</spawn>
 		<spawn x="1" y="5">
+			<entity type="1940" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="6" y="5">
 			<entity type="1940" variant="0" subtype="0" weight="1.0"/>
 		</spawn>
 		<spawn x="9" y="5">
@@ -755,9 +871,6 @@
 		</spawn>
 		<spawn x="5" y="7">
 			<entity type="879" variant="3" subtype="0" weight="1.0"/>
-		</spawn>
-		<spawn x="11" y="7">
-			<entity type="1940" variant="0" subtype="0" weight="1.0"/>
 		</spawn>
 		<spawn x="3" y="8">
 			<entity type="1940" variant="0" subtype="0" weight="1.0"/>
@@ -779,6 +892,9 @@
 		</spawn>
 		<spawn x="5" y="11">
 			<entity type="1940" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="0" y="12">
+			<entity type="1010" variant="0" subtype="0" weight="1.0"/>
 		</spawn>
 		<spawn x="1" y="12">
 			<entity type="1940" variant="0" subtype="0" weight="1.0"/>
@@ -804,6 +920,12 @@
 		<spawn x="0" y="13">
 			<entity type="1010" variant="0" subtype="0" weight="1.0"/>
 		</spawn>
+		<spawn x="1" y="13">
+			<entity type="1010" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="2" y="13">
+			<entity type="1010" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
 		<spawn x="3" y="13">
 			<entity type="1940" variant="0" subtype="0" weight="1.0"/>
 		</spawn>
@@ -815,7 +937,7 @@
 			<entity type="242" variant="0" subtype="0" weight="1.0"/>
 		</spawn>
 	</room>
-	<room variant="1611" name="[D&amp;D] ettercaps' lair 3" type="1" subtype="0" shape="1" width="13" height="7" difficulty="1" weight="1.0">
+	<room variant="1611" name="[C&amp;C] ettercaps' lair 3" type="1" subtype="0" shape="1" width="13" height="7" difficulty="1" weight="1.0">
 		<door exists="True" x="-1" y="3"/>
 		<door exists="True" x="6" y="-1"/>
 		<door exists="True" x="6" y="7"/>
@@ -865,14 +987,11 @@
 		<spawn x="10" y="4">
 			<entity type="1940" variant="0" subtype="0" weight="1.0"/>
 		</spawn>
-		<spawn x="7" y="5">
-			<entity type="1940" variant="0" subtype="0" weight="1.0"/>
-		</spawn>
 		<spawn x="8" y="5">
 			<entity type="1940" variant="0" subtype="0" weight="1.0"/>
 		</spawn>
 	</room>
-	<room variant="1612" name="[D&amp;D] durrt 1 - mini-excavation" type="1" subtype="0" shape="1" width="13" height="7" difficulty="1" weight="0.0">
+	<room variant="1612" name="[C&amp;C] durrt 1 - mini-excavation" type="1" subtype="0" shape="1" width="13" height="7" difficulty="1" weight="0.0">
 		<door exists="True" x="-1" y="3"/>
 		<door exists="True" x="6" y="-1"/>
 		<door exists="True" x="6" y="7"/>
@@ -961,17 +1080,14 @@
 		<spawn x="11" y="5">
 			<entity type="1000" variant="0" subtype="1" weight="1.0"/>
 		</spawn>
-		<spawn x="10" y="6">
-			<entity type="1000" variant="0" subtype="1" weight="1.0"/>
-		</spawn>
 	</room>
-	<room variant="1613" name="[D&amp;D] durrt 2 - excavation" type="1" subtype="0" shape="6" width="26" height="7" difficulty="1" weight="0.0">
-		<door exists="True" x="-1" y="3"/>
+	<room variant="1613" name="[C&amp;C] durrt 2 - excavation" type="1" subtype="0" shape="6" width="26" height="7" difficulty="1" weight="0.0">
+		<door exists="False" x="-1" y="3"/>
 		<door exists="True" x="6" y="-1"/>
 		<door exists="True" x="6" y="7"/>
 		<door exists="True" x="19" y="-1"/>
 		<door exists="True" x="19" y="7"/>
-		<door exists="True" x="26" y="3"/>
+		<door exists="False" x="26" y="3"/>
 		<spawn x="13" y="1">
 			<entity type="898" variant="3" subtype="0" weight="1.0"/>
 		</spawn>
@@ -1090,14 +1206,11 @@
 			<entity type="1000" variant="0" subtype="1" weight="1.0"/>
 		</spawn>
 	</room>
-	<room variant="1614" name="[D&amp;D] durrt 3 - ***E***" type="1" subtype="0" shape="1" width="13" height="7" difficulty="1" weight="0.0">
+	<room variant="1614" name="[C&amp;C] durrt 3 - ***E***" type="1" subtype="0" shape="1" width="13" height="7" difficulty="1" weight="0.0">
 		<door exists="False" x="-1" y="3"/>
-		<door exists="True" x="6" y="-1"/>
-		<door exists="True" x="6" y="7"/>
+		<door exists="False" x="6" y="-1"/>
+		<door exists="False" x="6" y="7"/>
 		<door exists="True" x="13" y="3"/>
-		<spawn x="3" y="0">
-			<entity type="1931" variant="0" subtype="0" weight="1.0"/>
-		</spawn>
 		<spawn x="1" y="1">
 			<entity type="3000" variant="0" subtype="0" weight="1.0"/>
 		</spawn>
@@ -1107,8 +1220,8 @@
 		<spawn x="3" y="1">
 			<entity type="1000" variant="0" subtype="1" weight="1.0"/>
 		</spawn>
-		<spawn x="4" y="1">
-			<entity type="1000" variant="0" subtype="1" weight="1.0"/>
+		<spawn x="0" y="2">
+			<entity type="1495" variant="0" subtype="1" weight="1.0"/>
 		</spawn>
 		<spawn x="1" y="2">
 			<entity type="3000" variant="0" subtype="0" weight="1.0"/>
@@ -1116,14 +1229,11 @@
 		<spawn x="2" y="2">
 			<entity type="1000" variant="0" subtype="1" weight="1.0"/>
 		</spawn>
-		<spawn x="3" y="2">
-			<entity type="1000" variant="0" subtype="1" weight="1.0"/>
-		</spawn>
 		<spawn x="4" y="2">
 			<entity type="898" variant="3" subtype="0" weight="1.0"/>
 		</spawn>
 		<spawn x="0" y="3">
-			<entity type="1931" variant="0" subtype="0" weight="1.0"/>
+			<entity type="1495" variant="0" subtype="1" weight="1.0"/>
 		</spawn>
 		<spawn x="1" y="3">
 			<entity type="3000" variant="0" subtype="0" weight="1.0"/>
@@ -1134,16 +1244,13 @@
 		<spawn x="3" y="3">
 			<entity type="1000" variant="0" subtype="1" weight="1.0"/>
 		</spawn>
-		<spawn x="4" y="3">
-			<entity type="1000" variant="0" subtype="1" weight="1.0"/>
+		<spawn x="0" y="4">
+			<entity type="1495" variant="0" subtype="1" weight="1.0"/>
 		</spawn>
 		<spawn x="1" y="4">
 			<entity type="3000" variant="0" subtype="0" weight="1.0"/>
 		</spawn>
 		<spawn x="2" y="4">
-			<entity type="1000" variant="0" subtype="1" weight="1.0"/>
-		</spawn>
-		<spawn x="3" y="4">
 			<entity type="1000" variant="0" subtype="1" weight="1.0"/>
 		</spawn>
 		<spawn x="4" y="4">
@@ -1158,14 +1265,8 @@
 		<spawn x="3" y="5">
 			<entity type="1000" variant="0" subtype="1" weight="1.0"/>
 		</spawn>
-		<spawn x="4" y="5">
-			<entity type="1000" variant="0" subtype="1" weight="1.0"/>
-		</spawn>
-		<spawn x="3" y="6">
-			<entity type="1931" variant="0" subtype="0" weight="1.0"/>
-		</spawn>
 	</room>
-	<room variant="1615" name="[D&amp;D] durrt 4 - excavation 2 bc I like this concept lol" type="1" subtype="0" shape="4" width="13" height="14" difficulty="1" weight="0.0" lastTestTime="2023-01-29T19:13+00:00">
+	<room variant="1615" name="[C&amp;C] durrt 4 - excavation 2 bc I like this concept lol" type="1" subtype="0" shape="4" width="13" height="14" difficulty="1" weight="0.0" lastTestTime="2023-01-29T19:13+00:00">
 		<door exists="False" x="-1" y="3"/>
 		<door exists="True" x="-1" y="10"/>
 		<door exists="False" x="6" y="-1"/>
@@ -1344,7 +1445,7 @@
 			<entity type="1000" variant="0" subtype="1" weight="1.0"/>
 		</spawn>
 	</room>
-	<room variant="1616" name="[D&amp;D] grell 1" type="1" subtype="0" shape="1" width="13" height="7" difficulty="1" weight="0.0">
+	<room variant="1616" name="[C&amp;C] grell 1" type="1" subtype="0" shape="1" width="13" height="7" difficulty="1" weight="0.0">
 		<door exists="False" x="-1" y="3"/>
 		<door exists="True" x="6" y="-1"/>
 		<door exists="True" x="6" y="7"/>
@@ -1361,6 +1462,12 @@
 		<spawn x="0" y="2">
 			<entity type="1900" variant="0" subtype="0" weight="1.0"/>
 		</spawn>
+		<spawn x="1" y="2">
+			<entity type="1900" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="2" y="2">
+			<entity type="44" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
 		<spawn x="0" y="3">
 			<entity type="1900" variant="0" subtype="0" weight="1.0"/>
 		</spawn>
@@ -1368,10 +1475,19 @@
 			<entity type="1900" variant="0" subtype="0" weight="1.0"/>
 		</spawn>
 		<spawn x="2" y="3">
-			<entity type="44" variant="0" subtype="0" weight="1.0"/>
+			<entity type="1900" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="3" y="3">
+			<entity type="1900" variant="0" subtype="0" weight="1.0"/>
 		</spawn>
 		<spawn x="0" y="4">
 			<entity type="1900" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="1" y="4">
+			<entity type="1900" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="2" y="4">
+			<entity type="44" variant="0" subtype="0" weight="1.0"/>
 		</spawn>
 		<spawn x="0" y="5">
 			<entity type="1900" variant="0" subtype="0" weight="1.0"/>
@@ -1383,7 +1499,7 @@
 			<entity type="1900" variant="0" subtype="0" weight="1.0"/>
 		</spawn>
 	</room>
-	<room variant="1617" name="[D&amp;D] grell 2" type="1" subtype="0" shape="1" width="13" height="7" difficulty="1" weight="0.0">
+	<room variant="1617" name="[C&amp;C] grell 2" type="1" subtype="0" shape="1" width="13" height="7" difficulty="1" weight="0.0">
 		<door exists="True" x="-1" y="3"/>
 		<door exists="True" x="6" y="-1"/>
 		<door exists="True" x="6" y="7"/>
@@ -1404,11 +1520,23 @@
 			<entity type="898" variant="4" subtype="2" weight="1.0"/>
 		</spawn>
 	</room>
-	<room variant="1618" name="[D&amp;D] grell 3 - distant bodyparts moving synchronized" type="1" subtype="0" shape="1" width="13" height="7" difficulty="1" weight="0.0">
+	<room variant="1618" name="[C&amp;C] grell 3 - distant bodyparts moving synchronized" type="1" subtype="0" shape="1" width="13" height="7" difficulty="1" weight="0.0">
 		<door exists="True" x="-1" y="3"/>
 		<door exists="True" x="6" y="-1"/>
 		<door exists="True" x="6" y="7"/>
 		<door exists="True" x="13" y="3"/>
+		<spawn x="5" y="2">
+			<entity type="3000" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="6" y="2">
+			<entity type="3000" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="7" y="2">
+			<entity type="3000" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="4" y="3">
+			<entity type="3000" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
 		<spawn x="5" y="3">
 			<entity type="898" variant="4" subtype="0" weight="1.0"/>
 		</spawn>
@@ -1417,6 +1545,18 @@
 		</spawn>
 		<spawn x="7" y="3">
 			<entity type="898" variant="4" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="8" y="3">
+			<entity type="3000" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="5" y="4">
+			<entity type="3000" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="6" y="4">
+			<entity type="3000" variant="0" subtype="0" weight="1.0"/>
+		</spawn>
+		<spawn x="7" y="4">
+			<entity type="3000" variant="0" subtype="0" weight="1.0"/>
 		</spawn>
 	</room>
 </rooms>

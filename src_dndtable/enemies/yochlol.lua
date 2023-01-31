@@ -12,8 +12,8 @@ local YOCHLOL_GAS_DURATION = 120
 
 --[[
     Yochlols slowly walk towards Isaac. They can perform two attacks:
-    - do an AoE slam if Isaac is nearby, spawning creep puddle and a small maggot
-    - turn into a poisonous gas cloud, gaining temporary invincibility and increased movement speed
+    - do an AoE slam if Isaac is nearby, spawning green creep puddle and a small maggot.
+    - turn into a poisonous gas cloud if Isaac is far away, gaining temporary invincibility and increased movement speed.
 ]]
 
 ---@param npc EntityNPC

@@ -3,12 +3,17 @@ local g = require('src_dndtable.globals')
 local vee = require('src_dndtable.veeHelper')
 
 --[[
-    
+    Grells fly digonally around the room, bouncing off of walls.
+    - when Isaac lines up with them horizontally and is in their line of sight,
+    they will whip him. the whip deals damage and paralyzes Isaac for 1.5 seconds, disabling his movement.
 ]]
 
 local GRELL_MOVESPEED = 4
 local GRELL_WHIP_COOLDOWN = 60
 local GRELL_WHIP_LENGTH = 170
+local WHIP_PARALYSIS_DURATION = 45
+local PLAYER_PARALYSIS_COLOR = Color(1, 1, 1, 1)
+PLAYER_PARALYSIS_COLOR:SetColorize(1, 1, 1, 1)
 
 local GrellSubtype = {
     START_RANDOM = 0,
@@ -28,6 +33,28 @@ local GrellMovement = {
 local function isGridToTurn(room, pos)
     return room:GetGridEntityFromPos(pos)
     and (room:GetGridEntityFromPos(pos):GetType() == GridEntityType.GRID_WALL or room:GetGridEntityFromPos(pos):GetType() == GridEntityType.GRID_DOOR)
+end
+
+local function isPlayerInWhipRange(npc, checkCooldown, player)
+    player = player or npc:GetPlayerTarget()
+    if checkCooldown and npc:GetData().whipCooldown > 0 then return false end
+
+    local sprite = npc:GetSprite()
+
+    if not player
+    or not g.game:GetRoom():CheckLine(player.Position, npc.Position, 0) then
+        return false
+    end
+
+    local v = player.Position - npc.Position
+    local angle = math.abs(v:GetAngleDegrees())
+
+    if v:Length() > GRELL_WHIP_LENGTH or
+    (sprite.FlipX and math.abs(angle - 180) > 7.5) or (not sprite.FlipX and angle > 7.5) then
+        return false
+    end
+
+    return true
 end
 
 ---@param npc EntityNPC
@@ -87,24 +114,35 @@ function grell:onNpcUpdate(npc)
 
         npc:GetData().whipCooldown = npc:GetData().whipCooldown - 1
 
-        local player = npc:GetPlayerTarget()
-        if player and room:CheckLine(player.Position, npc.Position, 0)
-        and npc:GetData().whipCooldown <= 0 then
-            local v = player.Position - npc.Position
-            local angle = math.abs(v:GetAngleDegrees())
-
-            if v:Length() < GRELL_WHIP_LENGTH and
-            ((s.FlipX and math.abs(angle - 180) < 5) or (not s.FlipX and angle < 5)) then
-                s:Play('Attack')
-                npc.Velocity = Vector.Zero
-            end
+        if isPlayerInWhipRange(npc, true) then
+            s:Play('Attack')
+            npc.Velocity = Vector.Zero
         end
     end
 
     if s:IsEventTriggered('Whip') then
         npc:GetData().whipCooldown = GRELL_WHIP_COOLDOWN
         g.sfx:Play(SoundEffect.SOUND_WHIP)
-        --
+        for i = 0, g.game:GetNumPlayers() - 1 do
+            local player = Isaac.GetPlayer(i)
+            if isPlayerInWhipRange(npc, false, player) then
+                player:TakeDamage(1, 0, EntityRef(npc), 0)
+                player:GetData().paralysisData = {duration = WHIP_PARALYSIS_DURATION, startingPos = player.Position}
+                player:SetColor(PLAYER_PARALYSIS_COLOR, WHIP_PARALYSIS_DURATION, 1, true, false)
+            end
+        end
+    end
+end
+
+---@param player EntityPlayer
+function grell:onPlayerUpdate(player)
+    if player:GetData().paralysisData then
+        player:GetData().paralysisData.duration = player:GetData().paralysisData.duration - 1
+
+        if player:GetData().paralysisData.duration > 0 then
+            player.Velocity = Vector.Zero
+            player.Position = player:GetData().paralysisData.startingPos
+        end
     end
 end
 

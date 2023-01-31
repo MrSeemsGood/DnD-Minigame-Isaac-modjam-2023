@@ -78,3 +78,4 @@ mod:AddCallback(ModCallbacks.MC_NPC_UPDATE,  durrt.onNpcUpdate, g.CUSTOM_DUNGEON
 
 -- grell
 mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, grell.onNpcUpdate, g.CUSTOM_DUNGEON_ENEMY_TYPE)
+mod:AddCallback(ModCallbacks.MC_POST_PEFFECT_UPDATE, grell.onPlayerUpdate)

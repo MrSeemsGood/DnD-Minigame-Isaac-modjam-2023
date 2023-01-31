@@ -3,8 +3,8 @@ local g = require('src_dndtable.globals')
 
 --[[
     Bodaks act similarly to the Vis enemy, with two corrections:
-    - their lasers are white
-    - they can't be pushed around when they are attacking
+    - their lasers are white.
+    - they can't be pushed around when they are attacking.
 ]]
 
 ---@param npc EntityNPC
