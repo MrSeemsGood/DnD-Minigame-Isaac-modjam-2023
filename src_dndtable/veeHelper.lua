@@ -904,15 +904,15 @@ function VeeHelper.IsBrimLaser(laser)
 	return brimVariants[laser.Variant]
 end
 
----@param tableSubject table
----@param tableTarget table
-function VeeHelper.CopyOverTable(tableSubject, tableTarget)
-	for variableName, value in pairs(tableSubject) do
+---@param tableCopyFrom table
+---@param tableCopyTo table
+function VeeHelper.CopyOverTable(tableCopyFrom, tableCopyTo)
+	for variableName, value in pairs(tableCopyFrom) do
 		if type(value) == "table" then
-			tableTarget[variableName] = {}
-			VeeHelper.CopyOverTable(value, tableTarget[variableName])
+			tableCopyTo[variableName] = {}
+			VeeHelper.CopyOverTable(value, tableCopyTo[variableName])
 		else
-			tableTarget[variableName] = value
+			tableCopyTo[variableName] = value
 		end
 	end
 end

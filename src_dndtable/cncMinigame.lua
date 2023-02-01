@@ -15,12 +15,12 @@ local gameState = {
 		},
 		Confirmed = {
 			false,
-			true,
+			false,
 			false,
 			false
 		},
 		NumActive = {
-			1, --Isaac
+			0, --Isaac
 			0, --Maggy
 			0, --Cain
 			0, --Judas
@@ -37,7 +37,7 @@ local gameState = {
 		Bombs = 0,
 		Coins = 0,
 	},
-	NumConfirmed = 1,
+	NumConfirmed = 0,
 	OptionSelected = 0,
 	OptionSelectedSaved = 0,
 	ScreenShown = false,
@@ -64,6 +64,7 @@ local gameState = {
 local state = {}
 VeeHelper.CopyOverTable(gameState, state)
 local font = Font()
+local timerFont = Font()
 local background = Sprite()
 local characters = Sprite()
 local optionCursor = Sprite()
@@ -95,6 +96,16 @@ local headOffset = 0
 local headOffsetTimer = 30
 local roomIndexOnMinigameClear = 0
 
+---@type Stats
+local statsTable = {
+	DamageFlat = 0,
+	DamageMult = 1,
+	TearsFlat = 0,
+	TearsMult = 1,
+	Luck = 0,
+	Range = 0,
+	ShotSpeed = 0
+}
 ---@type EntityPlayer[]
 local dndPlayers = {
 
@@ -123,6 +134,7 @@ end
 
 ---@param stringTable table
 function cnc:separateTextByHashtag(stringTable)
+	if type(stringTable) ~= "table" then return stringTable end
 	while string.find(stringTable[#stringTable], "#") ~= nil do
 		local curText = stringTable[#stringTable]
 		local line1, line2 = string.find(curText, "#")
@@ -170,6 +182,16 @@ function cnc:IsRollOption()
 	return
 end
 
+function cnc:AreAllPlayersDead()
+	local allDead = true
+	for _, player in ipairs(dndPlayers) do
+		if not player:IsDead() or player:Exists() then
+			allDead = false
+		end
+	end
+	return allDead
+end
+
 ----------------------
 --  INITIATE STUFF  --
 ----------------------
@@ -191,6 +213,7 @@ local function initMinigame()
 	diceFlash:SetFrame("Idle", 0)
 	diceFlash.Scale = Vector(0.5, 0.5)
 	font:Load("font/teammeatfont12.fnt")
+	timerFont:Load("font/pftempestasevencondensed.fnt")
 	Isaac.GetPlayer().ControlsEnabled = false
 	g.music:Fadeout(0.03)
 	print("minigame init")
@@ -200,7 +223,6 @@ local function initCharacterSelect()
 	local players = getPlayers()
 	g.game:GetHUD():SetVisible(false)
 	characters:SetFrame("Title" .. tonumber(#players), 0)
-	state.RoomIndexStartedGameFrom = g.game:GetLevel():GetCurrentRoomIndex()
 	fadeType = "CharacterUp"
 	g.music:Fadein(Music.MUSIC_BOSS_OVER, Options.MusicVolume, 0.03)
 end
@@ -229,8 +251,13 @@ local function resetMinigame()
 			player.GridCollisionClass = player:GetData().CNC_PreviousCollisionClass
 			data.CNC_PreviousCollisionClass = nil
 		end
+		if data.CNC_CouldBeTargeted then
+			player:ClearEntityFlags(EntityFlag.FLAG_NO_TARGET)
+			data.CNC_CouldBeTargeted = nil
+		end
 	end
 	g.game:GetHUD():SetVisible(state.HudWasVisible)
+	print(state.RoomIndexStartedGameFrom)
 	roomIndexOnMinigameClear = state.RoomIndexStartedGameFrom
 	VeeHelper.CopyOverTable(gameState, state)
 	print("minigame reset")
@@ -285,22 +312,54 @@ end
 local function applyEffectsOnRoomEnter()
 	local effects = cnc:GetPromptEffects()
 
-	if effects and (effects.ApplyStatus or effects.ApplyStatusPlayer) then
-		for _, ent in ipairs(Isaac.GetRoomEntities()) do
-			if ent:ToNPC() and ent:IsActiveEnemy(false) then
-				if effects.ApplyStatus then
-					cncText:ApplyStatusEffect(ent:ToNPC(), effects.ApplyStatus[1], effects.ApplyStatus[2])
+	if effects then
+		if (effects.ApplyStatus or effects.ApplyStatusPlayer) then
+			for _, ent in ipairs(Isaac.GetRoomEntities()) do
+				if ent:ToNPC() and ent:IsActiveEnemy(false) then
+					if effects.ApplyStatus then
+						cncText:ApplyStatusEffect(ent:ToNPC(), effects.ApplyStatus[1], effects.ApplyStatus[2])
+					end
+					if effects.DamageEnemies then
+						ent:AddEntityFlags(EntityFlag.FLAG_NO_FLASH_ON_DAMAGE)
+						ent:TakeDamage(effects.DamageEnemies, 0, EntityRef(ent), 0)
+						ent:ClearEntityFlags(EntityFlag.FLAG_NO_FLASH_ON_DAMAGE)
+					end
 				end
-				if effects.DamageEnemies then
-					ent:AddEntityFlags(EntityFlag.FLAG_NO_FLASH_ON_DAMAGE)
-					ent:TakeDamage(effects.DamageEnemies, 0, EntityRef(ent), 0)
-					ent:ClearEntityFlags(EntityFlag.FLAG_NO_FLASH_ON_DAMAGE)
+				if ent:ToPlayer() then
+					if effects.ApplyStatusPlayer then
+						cncText:ApplyStatusEffect(ent:ToPlayer(), effects.ApplyStatus[1], effects.ApplyStatus[2])
+					end
 				end
 			end
-			if ent:ToPlayer() then
-				if effects.ApplyStatusPlayer then
-					cncText:ApplyStatusEffect(ent:ToPlayer(), effects.ApplyStatus[1], effects.ApplyStatus[2])
+		end
+		for _, player in ipairs(dndPlayers) do
+			if effects.Stats or effects.StatsTemp then
+				if effects.Stats then
+					local data = player:GetData()
+
+					if not data.CNC_MinigameStats then
+						data.CNC_MinigameStats = {}
+						VeeHelper.CopyOverTable(statsTable, data.CNC_MinigameStats)
+					else
+						for stat, num in pairs(effects.Stats) do
+							data.CNC_MinigameStats[stat] = data.CNC_MinigameStats[stat] + num
+						end
+					end
 				end
+				if effects.StatsTemp then
+					local data = player:GetData()
+
+					if not data.CNC_MinigameStatsTemp then
+						data.CNC_MinigameStatsTemp = {}
+						VeeHelper.CopyOverTable(statsTable, data.CNC_MinigameStatsTemp)
+					else
+						for stat, num in pairs(effects.Stats) do
+							data.CNC_MinigameStatsTemp[stat] = num
+						end
+					end
+				end
+				player:AddCacheFlags(CacheFlag.CACHE_ALL)
+				player:EvaluateItems()
 			end
 		end
 	end
@@ -310,58 +369,50 @@ local function applyEffectsOnOutcome()
 	local effects = cnc:GetPromptEffects()
 
 	if effects then
-		if effects.DamagePlayers then
-			for _, player in ipairs(dndPlayers) do
+		for _, player in ipairs(dndPlayers) do
+			if effects.DamagePlayers then
 				player:TakeDamage(effects.DamagePlayers, DamageFlag.DAMAGE_NO_PENALTIES, EntityRef(player), 0)
 			end
-		end
-		if not effects.StartEncounter then
-			if effects.AddMaxHearts then
-				for _, player in ipairs(dndPlayers) do
-					if not player:IsDead() then
-						player:AddMaxHearts(effects.AddMaxHearts)
-					end
+			if not effects.StartEncounter then
+				if effects.AddMaxHearts then
+					player:AddMaxHearts(effects.AddMaxHearts)
 				end
-			end
-			if effects.AddHearts and effects.AddHearts[1] then
-				for _, player in ipairs(dndPlayers) do
-					if not player:IsDead() then
-						for subType, num in pairs(effects.AddHearts) do
-							local num = num * 2
-							if subType == HeartSubType.HEART_HALF or subType == HeartSubType.HEART_HALF_SOUL then
-								num = num / 2
+				if effects.AddHearts and effects.AddHearts[1] then
+					for subType, num in pairs(effects.AddHearts) do
+						local num = num * 2
+						if subType == HeartSubType.HEART_HALF or subType == HeartSubType.HEART_HALF_SOUL then
+							num = num / 2
+						end
+						if subType == HeartSubType.HEART_HALF or subType == HeartSubType.HEART_FULL or
+							subType == HeartSubType.HEART_SCARED then
+							player:AddHearts(num)
+						elseif subType == HeartSubType.HEART_HALF_SOUL or subType == HeartSubType.HEART_SOUL then
+							player:AddSoulHearts(num)
+						elseif subType == HeartSubType.HEART_ETERNAL then
+							player:AddEternalHearts(num)
+						elseif subType == HeartSubType.HEART_DOUBLEPACK then
+							player:AddHearts(num * 2)
+						elseif subType == HeartSubType.HEART_BLACK then
+							player:AddBlackHearts(num)
+						elseif subType == HeartSubType.HEART_GOLDEN then
+							player:AddGoldenHearts(num)
+						elseif subType == HeartSubType.HEART_BLENDED then
+							while player:GetHearts() < player:GetMaxHearts() and num >= 0.5 do
+								player:AddHearts(1)
+								num = num - 0.5
 							end
-							if subType == HeartSubType.HEART_HALF or subType == HeartSubType.HEART_FULL or
-								subType == HeartSubType.HEART_SCARED then
-								player:AddHearts(num)
-							elseif subType == HeartSubType.HEART_HALF_SOUL or subType == HeartSubType.HEART_SOUL then
-								player:AddSoulHearts(num)
-							elseif subType == HeartSubType.HEART_ETERNAL then
-								player:AddEternalHearts(num)
-							elseif subType == HeartSubType.HEART_DOUBLEPACK then
-								player:AddHearts(num * 2)
-							elseif subType == HeartSubType.HEART_BLACK then
-								player:AddBlackHearts(num)
-							elseif subType == HeartSubType.HEART_GOLDEN then
-								player:AddGoldenHearts(num)
-							elseif subType == HeartSubType.HEART_BLENDED then
-								while player:GetHearts() < player:GetMaxHearts() and num >= 0.5 do
-									player:AddHearts(1)
-									num = num - 0.5
+							if num >= 0.5 then
+								local amount = math.floor(num)
+								player:AddSoulHearts(amount)
+								num = num - amount
+								if num == 0.5 then
+									player:AddSoulHearts(1)
 								end
-								if num >= 0.5 then
-									local amount = math.floor(num)
-									player:AddSoulHearts(amount)
-									num = num - amount
-									if num == 0.5 then
-										player:AddSoulHearts(1)
-									end
-								end
-							elseif subType == HeartSubType.HEART_BONE then
-								player:AddBoneHearts(num)
-							elseif subType == HeartSubType.HEART_ROTTEN then
-								player:AddRottenHearts(num)
 							end
+						elseif subType == HeartSubType.HEART_BONE then
+							player:AddBoneHearts(num)
+						elseif subType == HeartSubType.HEART_ROTTEN then
+							player:AddRottenHearts(num)
 						end
 					end
 				end
@@ -683,6 +734,8 @@ function cnc:OnPromptTransition()
 				state.HasSelected = true
 				applyEffectsOnOutcome()
 				fadeType = "PromptUp"
+				local data = Isaac.GetPlayer():GetData()
+				data.DNDKEY_DELAY = KEY_DELAY + 120
 			end
 		end
 	else
@@ -698,14 +751,16 @@ function cnc:OnPromptTransition()
 			background:Stop()
 			resetMinigame()
 		elseif fadeType == "AllDown" and transitionY.Prompt == TRANSITION_Y_TARGET then
-			if (
-				state.PromptTypeSelected == cncText.PromptType.ENEMY
-					or state.PromptTypeSelected == cncText.PromptType.BOSS
-				)
-			then
-				cnc:tryStartRoomEncounter()
-			elseif state.PromptTypeSelected == cncText.PromptType.BOSS then
+			if cnc:AreAllPlayersDead() and not state.EncounterStarted then
 				resetMinigame()
+			else
+				if (
+					state.PromptTypeSelected == cncText.PromptType.ENEMY
+						or state.PromptTypeSelected == cncText.PromptType.BOSS
+					)
+				then
+					cnc:tryStartRoomEncounter()
+				end
 			end
 		end
 		if fadeType == "TitlePromptDown" and transitionY.Prompt == TRANSITION_Y_TARGET then
@@ -802,10 +857,14 @@ function cnc:MinigameLogic()
 					then
 						cnc:RollDice()
 					else
-						if (state.PromptTypeSelected == cncText.PromptType.ENEMY
-							or state.PromptTypeSelected == cncText.PromptType.BOSS
+						if (
+							cnc:AreAllPlayersDead()
+								or (
+								state.PromptTypeSelected == cncText.PromptType.ENEMY
+									or state.PromptTypeSelected == cncText.PromptType.BOSS
+								)
+								and not state.EncounterCleared
 							)
-							and not state.EncounterCleared
 						then
 							fadeType = "AllDown"
 						else
@@ -976,6 +1035,7 @@ function cnc:OnNewRoom()
 			end
 		end
 		applyEffectsOnRoomEnter()
+		g.game:GetRoom():KeepDoorsClosed()
 	end
 	if state.Active and roomVariant == 2 then
 		for doorSlot = 0, DoorSlot.NUM_DOOR_SLOTS do
@@ -989,9 +1049,14 @@ function cnc:OnNewRoom()
 		if cnc:IsInCNCRoom()
 			and not player:HasCollectible(g.DND_PLAYER_TECHNICAL)
 		then
-			if not player:GetData().CNC_PreviousCollisionClass then
-				player:GetData().CNC_PreviousCollisionClass = player.GridCollisionClass
+			local data = player:GetData()
+			if not data.CNC_PreviousCollisionClass then
+				data.CNC_PreviousCollisionClass = player.GridCollisionClass
 				player.GridCollisionClass = GridCollisionClass.COLLISION_NONE
+			end
+			if not data.CNC_CouldBeTargeted and not player:HasEntityFlags(EntityFlag.FLAG_NO_TARGET) then
+				player:AddEntityFlags(EntityFlag.FLAG_NO_TARGET)
+				data.CNC_CouldBeTargeted = true
 			end
 			player.Position = Vector(-1000, -1000)
 		end
@@ -1036,12 +1101,27 @@ end
 function cnc:OnCNCRoomClear(rng, spawnPos)
 	if cnc:IsInCNCRoom() then
 		spawnRewardsOnRoomClear(rng, spawnPos)
+		for _, player in ipairs(dndPlayers) do
+			local data = player:GetData()
+			if data.CNC_MinigameStatsTemp then
+				VeeHelper.CopyOverTable(statsTable, data.CNC_MinigameStatsTemp)
+			end
+			player:AddCacheFlags(CacheFlag.CACHE_ALL)
+			player:EvaluateItems()
+		end
+		for doorSlot = 1, DoorSlot.NUM_DOOR_SLOTS do
+			local door = g.game:GetRoom():GetDoor(doorSlot)
+			if door then
+				door:GetSprite():Stop()
+				door:GetSprite():SetFrame(door.OpenAnimation, 0)
+			end
+		end
 		return true
 	end
 end
 
 function cnc:OnPostUpdate()
-	local allDead = #dndPlayers > 0 and true or false
+	local allDead = #dndPlayers > 0 and cnc:AreAllPlayersDead() or false
 	local hasPickup = false
 
 	if playCavesMusic then
@@ -1052,25 +1132,33 @@ function cnc:OnPostUpdate()
 
 	for i, player in ipairs(dndPlayers) do
 		if not player:IsDead() then
-			allDead = false
 			if player:IsHoldingItem() then
 				hasPickup = true
 			end
 		elseif not state.Characters.Dead[i] and state.Active then
+			local characterLayer = state.Characters.Selected[i] + 2
 			state.Characters.Dead[i] = true
 			if state.Characters.NumActive[i] > 0 then
 				state.Characters.NumActive[i] = state.Characters.NumActive[i] - 1
 			end
-			characters:ReplaceSpritesheet(i + 2, "gfx/ui/cnc_heads_dead.png")
+			characters:ReplaceSpritesheet(characterLayer, "gfx/ui/cnc_heads_dead.png")
 			characters:LoadGraphics()
 		end
 	end
 	if state.Active then
 		if allDead
-			and not background:GetAnimation() ~= "FadeIn"
+			and background:GetAnimation() ~= "FadeIn"
+			and cnc:IsInCNCRoom()
 		then
 			background:Play("FadeIn", true)
 			state.ScreenShown = true
+		end
+		if cnc:IsInCNCRoom() then
+			local effects = cnc:GetPromptEffects()
+
+			if effects and effects.ApplyDarkness then
+				g.game:Darken(1, 30)
+			end
 		end
 		if state.EncounterStarted
 			and g.game:GetRoom():IsClear()
@@ -1118,12 +1206,46 @@ function cnc:OnPlayerUpdate(player)
 	end
 end
 
+---@param player EntityPlayer
+---@param cacheFlag CacheFlag
+function cnc:OnCNCPlayerCache(player, cacheFlag)
+	if player:HasCollectible(g.DND_PLAYER_TECHNICAL) then
+		local data = player:GetData()
+		local stats = {}
+		VeeHelper.CopyOverTable(statsTable, stats)
+		---@cast stats Stats
+
+		if data.CNC_MinigameStats then
+			for stat, num in pairs(data.CNC_MinigameStats) do
+				stats[stat] = num
+			end
+		end
+		if data.CNC_MinigameStatsTemp then
+			for stat, num in pairs(data.CNC_MinigameStatsTemp) do
+				stats[stat] = stats[stat] + num
+			end
+		end
+
+		if cacheFlag == CacheFlag.CACHE_DAMAGE then
+			player.Damage = (player.Damage * stats.DamageMult) + stats.DamageFlat
+		elseif cacheFlag == CacheFlag.CACHE_FIREDELAY then
+			player.MaxFireDelay = (player.MaxFireDelay * stats.TearsMult) + stats.TearsMult
+		elseif cacheFlag == CacheFlag.CACHE_RANGE then
+			player.TearRange = player.TearRange + stats.Range
+		elseif cacheFlag == CacheFlag.CACHE_SHOTSPEED then
+			player.ShotSpeed = player.ShotSpeed + stats.ShotSpeed
+		elseif cacheFlag == CacheFlag.CACHE_LUCK then
+			player.Luck = player.Luck + stats.Luck
+		end
+	end
+end
+
 ---------------------
 --  TIMER HANDLES  --
 ---------------------
 
 ---@param player EntityPlayer
-function cnc:KEY_DELAYHandle(player)
+function cnc:KeyDelayHandle(player)
 	local data = player:GetData()
 	if data.DNDKEY_DELAY then
 		if data.DNDKEY_DELAY > 0 then
@@ -1270,6 +1392,62 @@ function cnc:AnimationTimer()
 	end
 end
 
+local timer = -1
+local timerMillisecond = 0
+function cnc:RoomTimer()
+	if cnc:IsInCNCRoom() then
+		local effects = cnc:GetPromptEffects()
+
+		if effects and effects.TimeLimit and not state.ScreenShown then
+			if not g.game:GetRoom():IsClear() then
+				local timerColor = KColor(1, 1, 1, 1)
+				if timer == -1 then
+					timer = effects.TimeLimit
+				elseif not g.game:IsPaused() then
+					if timerMillisecond > 0 then
+						timerMillisecond = timerMillisecond - 1
+					else
+						if timer > 0 then
+							timer = timer - 1
+							timerMillisecond = 60
+						end
+					end
+					if timer <= 10 and timer > 0 then
+						timerColor = KColor(1, 0.5, 0.5, 1)
+					elseif timer <= 0 then
+						timerColor = KColor(1, 0, 0, 1)
+						if timerMillisecond == 0 then
+							for _, player in ipairs(dndPlayers) do
+								if not player:IsDead() then
+									player:Die()
+								end
+							end
+						end
+					end
+				end
+				local center = getCenterScreen()
+				local timerText = tostring(timer)
+				local timerTextMillisecond = tostring(timerMillisecond)
+				if timer < 10 then
+					timerText = "0" .. timerText
+				end
+				if timerMillisecond < 10 then
+					timerTextMillisecond = "0" .. timerTextMillisecond
+				end
+
+				timerFont:DrawString(timerText .. ":" .. timerTextMillisecond, 0, center.Y - 150, timerColor, Isaac.GetScreenWidth()
+					, true)
+			elseif timer ~= -1 then
+				timer = -1
+				timerMillisecond = 0
+			end
+		elseif timer ~= -1 then
+			timer = -1
+			timerMillisecond = 0
+		end
+	end
+end
+
 ------------
 --  MISC  --
 ------------
@@ -1283,6 +1461,7 @@ function cnc:OnRender()
 		cnc:RenderScreen()
 		cnc:MinigameLogic()
 		cnc:HandleTransitions()
+		cnc:RoomTimer()
 	end
 end
 

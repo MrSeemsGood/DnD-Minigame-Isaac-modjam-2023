@@ -27,6 +27,15 @@ cncText.StatusEffect = {
 	BLEED = 9
 }
 
+---@class Stats
+---@field DamageFlat number
+---@field DamageMult number
+---@field TearsFlat number
+---@field TearsMult number
+---@field Luck number
+---@field Range number
+---@field ShotSpeed number
+
 ---@class OutcomeEffect
 ---@field Collectible CollectibleType
 ---@field Keys integer
@@ -42,6 +51,8 @@ cncText.StatusEffect = {
 ---@field DamageEnemies number
 ---@field ApplyDarkness boolean
 ---@field TimeLimit integer --Time limit is in seconds. All players die if the room is not cleared within the set time limit
+---@field Stats Stats
+---@field StatsTemp Stats
 
 ---@class Prompt
 ---@field Title string
@@ -68,20 +79,15 @@ cncText.Prompts = {
 		Title = "Hey",
 		Options = {
 			[1] = { "Select", "Do it" },
-			[2] = { "Roll", "Roll it" },
-			[3] = { "Roll", "Roll it but Isaac", PlayerType.PLAYER_ISAAC },
+			[2] = { "Select", "You should kill yourself NOW" }
 		},
 		Outcome = {
 			[1] = "Don't mind me",
+			[2] = "You obey LowTierGod",
+		},
+		Effect = {
 			[2] = {
-				[1] = "You failure",
-				[2] = "it alright",
-				[3] = ":)"
-			},
-			[3] = {
-				[1] = "You failure",
-				[2] = "it alright",
-				[3] = ":)"
+				DamagePlayers = 10
 			}
 		}
 	},
@@ -90,7 +96,7 @@ cncText.Prompts = {
 ---@type Prompt[]
 cncText.Encounters = {
 	--The following prompt has everything possible so you know how its setup
---[[ 	{
+	--[[ 	{
 		Title = "Wow that's a lot of options#This hashtag makes another line",
 		Options = {
 			[1] = {"Select", "Basic Select Option"},
@@ -125,14 +131,22 @@ cncText.Encounters = {
 					DamagePlayers = 1 -- Damages all players for half a heart. Please don't give these a negative number.
 				},
 				[2] = {
-					AddHearts = {
+					AddHearts = { --All hearts available listed in the HeartSubType table in the luadocs
 						[HeartSubType.HEART_SOUL] = 1, --gives every player 1 full soul heart. Please don't give these a negative number.
-						[HeartSubType.HEART_HALF] = 2, --heals every player 1 full red heart. Also, there are more HeartSubTypes than shown here.
+						[HeartSubType.HEART_HALF] = 2, --heals every player 1 full red heart.
 						[HeartSubType.HEART_FULL] = 1 -- heals every player 1 full red heart, again! 
 					}
 				},
 				[3] = {
-					Collectible = CollectibleType.COLLECTIBLE_SAD_ONION --All players get a Sad Onion
+					Collectible = CollectibleType.COLLECTIBLE_SAD_ONION, --All players get a Sad Onion
+					Stats = { --All stats available listed above in the "Stats" class. Stats lasts the minigame
+						DamageFlat = 1, --You get +1 damage
+						DamageMult = 2, --You get x2 damage
+						Luck = -2 --minus 2 luck for the rest of the run oh shit!
+					},
+					StatsTemp = { --Only relevant in enemy encounters, lasting the encounter until the room is cleared. As such, Luck is not useful unless you have an item that uses the luck stat.
+						TearsFlat = 3 --You get a -3 tears delay for the room. Remember that these do NOT equate to the HUD stat!
+					}
 				},
 			},
 			[7] = {

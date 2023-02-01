@@ -46,6 +46,7 @@ mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.OnPostUpdate)
 mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, cnc.OnNewRoom)
 mod:AddCallback(ModCallbacks.MC_PRE_PICKUP_COLLISION, cnc.GivePickupsToMinigameState)
 mod:AddCallback(ModCallbacks.MC_PRE_SPAWN_CLEAN_AWARD, cnc.OnCNCRoomClear)
+mod:AddCallback(ModCallbacks.MC_EVALUATE_CACHE, cnc.OnCNCPlayerCache)
 
 mod:AddCallback(ModCallbacks.MC_PRE_PLAYER_COLLISION, cncTable.onPlayerCollision, 0)
 
