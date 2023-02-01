@@ -11,6 +11,9 @@ local bodak = include("src_dndtable.enemies.bodak")
 local durrt = include("src_dndtable.enemies.durrt")
 local grell = include("src_dndtable.enemies.grell")
 
+--![Look at this dog under Visual Studio Code's preview](https://cdn.discordapp.com/attachments/305511626277126144/1070385115496194088/IMG_4569.PNG)
+local thisDogLovesYou
+
 -- Sanio, you forgor something :skull:
 function mod:OnGameStart(isContinued)
 	Isaac.ExecuteCommand('reloadshaders')
