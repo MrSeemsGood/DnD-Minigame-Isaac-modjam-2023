@@ -41,10 +41,22 @@ cncText.Prompts = {
 	{
 		Title = "Hey",
 		Options = {
-			[1] = {"Select", "Do it"}
+			[1] = {"Select", "Do it"},
+			[2] = {"Roll", "Roll it"},
+			[3] = {"Roll", "Roll it but Isaac", PlayerType.PLAYER_ISAAC},
 		},
 		Outcome = {
-			[1] = "Don't mind me"
+			[1] = "Don't mind me",
+			[2] = {
+				[1] = "You failure",
+				[2] = "it alright",
+				[3] = ":)"
+			},
+			[3] = {
+				[1] = "You failure",
+				[2] = "it alright",
+				[3] = ":)"
+			}
 		}
 	},
 }
@@ -73,7 +85,21 @@ cncText.Encounters = {
 
 ---@type Prompt[]
 cncText.RarePrompts = {
-
+	{
+		Title = "Holy crap luis#its a rare prompt",
+		Options = {
+			[1] = {"Select", "Do it"},
+			[2] = {"Roll", "Roll it"}
+		},
+		Outcome = {
+			[1] = "Don't mind me",
+			[2] = {
+				[1] = "You failure",
+				[2] = "it alright",
+				[3] = ":)"
+			}
+		}
+	},
 }
 
 ---@type Prompt[]
