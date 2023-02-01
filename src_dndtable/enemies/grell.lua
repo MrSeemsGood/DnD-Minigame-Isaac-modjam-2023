@@ -11,7 +11,7 @@ local vee = require('src_dndtable.veeHelper')
 local GRELL_MOVESPEED = 4
 local GRELL_WHIP_COOLDOWN = 60
 local GRELL_WHIP_LENGTH = 170
-local WHIP_PARALYSIS_DURATION = 45
+local WHIP_PARALYSIS_DURATION = 40
 local PLAYER_PARALYSIS_COLOR = Color(1, 1, 1, 1)
 PLAYER_PARALYSIS_COLOR:SetColorize(1, 1, 1, 1)
 

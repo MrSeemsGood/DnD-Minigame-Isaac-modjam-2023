@@ -163,24 +163,261 @@ cncText.Encounters = {
 			}
 		}
 	}, ]]
+
+	--[[
+		ENEMY ENCOUNTERS
+	--]]
+
+	-- INVISIBLE STALKERS
 	{
-		Title = "It's a giant enemy spider",
+		Title = "You enter a mysterious haunted hallway...",
 		Options = {
-			[1] = { "Select", "Fight the giant enemy spider" }
+			[1] = {"Roll", "How quiet of a prey are you?"},
+			[2] = {"Select", "Show its inhabitants your devilish powers.", PlayerType.PLAYER_JUDAS}
 		},
 		Outcome = {
-			[1] = "You fight the giant enemy spider"
+			[1] = {
+				[1] = "You are very clumsy and attract a big pack of Invisible Stalkers.",
+				[2] = "Only the most sensitive Stalkers notice your presence.",
+				[3] = "You are extremely cautious and remain almost unnoticed by the Stalkers."
+			},
+			[2] = "The power of Belial helps you scare off the weakened creatures."
 		},
 		Effect = {
 			[1] = {
-				StartEncounter = 1600,
+				[1] = {
+					StartEncounter = 1602,
+					Coins = 2,
+					Collectible = CollectibleType.COLLECTIBLE_OUIJA_BOARD
+				},
+				[2] = {
+					StartEncounter = 1600,
+					Coins = 3,
+					Bombs = 1,
+					Collectible = CollectibleType.COLLECTIBLE_OUIJA_BOARD
+				},
+				[3] = {
+					StartEncounter = 1601,
+					Keys = 1,
+					Coins = 3,
+					Bombs = 1,
+					Collectible = CollectibleType.COLLECTIBLE_OUIJA_BOARD
+				}
+			},
+			[2] = {
+				StartEncounter = 1601,
+				Coins = 2,
 				Keys = 1,
-				Coins = 1,
 				Bombs = 1,
-				Collectible = CollectibleType.COLLECTIBLE_SAD_ONION
+				Collectible = CollectibleType.COLLECTIBLE_OUIJA_BOARD
 			}
 		}
-	}
+	},
+	-- BODAKS
+	{
+		Title = "You see strange creatures. Their skin is deathly pale and white...",
+		Options = {
+			[1] = {"Roll", "Are the undead craving for flesh?"},
+			[2] = {"Select", "You decide to distract their attention with shiny metal.", "Coin3"}
+		},
+		Outcome = {
+			[1] = {
+				[1] = "You encounter Bodaks and their lesser undead friends.",
+				[2] = "You encounter 2 Bodaks. However, the room is a bit too tight...",
+				[3] = "You encounter 4 Bodaks. They don't seem too interested in you.",
+			},
+			[2] = "The creatures seem very excited with the coins you threw."
+		},
+		Effect = {
+			[1] = {
+				[1] = {
+					StartEncounter = 1608,
+					Keys = 1,
+					Coins = 2,
+				},
+				[2] = {
+					StartEncounter = 1604,
+					Keys = 2,
+					Bombs = 1,
+				},
+				[3] = {
+					StartEncounter = 1606,
+					Keys = 2,
+					Coins = 1,
+					Bombs = 2,
+				}
+			},
+			[2] = {
+				StartEncounter = 1608,
+				Keys = 1,
+				Bombs = 1,
+				ApplyStatus = {StatusEffect = cncText.StatusEffect.CONFUSION, Duration = 60}
+			}
+		}
+	},
+	-- YOCHLOLS
+	{
+		Title = "You encounter weird oozy creatures.#Their flesh melts off of them and piles back together.",
+		Options = {
+			[1] = {"Roll", "These creatures emit deadly gases,#so you try to lure them out into the open"}
+		},
+		Outcome = {
+			[1] = {
+				[1] = "One of them has you trapped in a dead-end!",
+				[2] = "You lead one of the creatures into a long thin hallway...",
+				[3] = "You succeed."
+			}
+		},
+		Effect = {
+			[1] = {
+				[1] = {
+					StartEncounter = 1607,
+					Coins = 3,
+					Keys = 1,
+				},
+				[2] = {
+					StartEncounter = 1603,
+					Keys = 2,
+					Bombs = 1,
+				},
+				[3] = {
+					StartEncounter = 1605,
+					Keys = 1,
+					Coins = 2,
+					Bombs = 2,
+				}
+			}
+		}
+	},
+	-- ETTERCAPS
+	{
+		Title = "You enter the lair of Ettercaps, spider-like aberrations.",
+		Options = {
+			[1] = {"Roll", "You try to sneak out through the smallest cavern."}
+		},
+		Outcome = {
+			[1] = {
+				[1] = "Unfortunately, this is the biggest one!",
+				[2] = "You encounter a medium-sized cavern.",
+				[3] = "You enter the smallest cavern in the lair."
+			}
+		},
+		Effect = {
+			[1] = {
+				[1] = {
+					StartEncounter = 1609,
+					Coins = 3,
+					Keys = 1,
+					Collectible = CollectibleType.COLLECTIBLE_MUTANT_SPIDER
+				},
+				[2] = {
+					StartEncounter = 1610,
+					Keys = 2,
+					Bombs = 1,
+					Collectible = CollectibleType.COLLECTIBLE_TINYTOMA
+				},
+				[3] = {
+					StartEncounter = 1611,
+					Keys = 1,
+					Coins = 2,
+					Bombs = 2,
+					Collectible = CollectibleType.COLLECTIBLE_INTRUDER
+				}
+			}
+		}
+	},
+	-- DURRTS
+	{
+		Title = "A group of massive animated boulders stands in your way!",
+		Options = {
+			[1] = {"Roll", "You try to remain neutral to them and not cause aggression."},
+			[2] = {"Select", "You reasonably decide to bomb them.", "Bomb1"},
+			[3] = {"Select", "Can Stone giants be compassionate?", PlayerType.PLAYER_MAGDALENE}
+		},
+		Outcome = {
+			[1] = {
+				[1] = "Stone giants do not recognize your peaceful motifs.",
+				[2] = "Stone giants question your intentions.",
+				[3] = "Only the least wise giants decide to stand in your way."
+			},
+			[2] = "The explosion cleans up some space but reveals more enemies!",
+			[3] = "They can. All around is stone, all is soft inside."
+		},
+		Effect = {
+			[1] = {
+				[1] = {
+					StartEncounter = 1613,
+					Keys = 1,
+					Coins = 1,
+					Collectible = CollectibleType.COLLECTIBLE_SMALL_ROCK
+				},
+				[2] = {
+					StartEncounter = 1615,
+					Keys = 2,
+					Collectible = CollectibleType.COLLECTIBLE_SMALL_ROCK
+				},
+				[3] = {
+					StartEncounter = 1612,
+					Keys = 1,
+					Coins = 2,
+					Collectible = CollectibleType.COLLECTIBLE_SMALL_ROCK
+				}
+			},
+			[2] = {
+				StartEncounter = 1614,
+				Coins = 1,
+				Keys = 1,
+				Collectible = CollectibleType.COLLECTIBLE_SMALL_ROCK
+			},
+			[3] = {
+				StartEncounter = 1612,
+				ApplyStatus = {StatusEffect = cncText.StatusEffect.CHARMED, Duration = 90},
+				Keys = 2,
+				Coins = 3,
+				Collectible = CollectibleType.COLLECTIBLE_SMALL_ROCK
+			}
+		}
+	},
+	-- GRELLS
+	{
+		Title = "You encounter floating brains with tentacles and a beak. Oh, mother Nature!",
+		Options = {
+			[1] = {"Roll", "You try to remain unnoticed."},
+			[2] = {"Select", "You try to sneak by.", PlayerType.PLAYER_CAIN}
+		},
+		Outcome = {
+			[1] = {
+				[1] = "The creatures swarm you.",
+				[2] = "The creatures are hesitant.",
+				[3] = "The creatures are distracted."
+			},
+			[2] = "The creatures are distracted and you sneak by most of them."
+		},
+		Effect = {
+			[1] = {
+				[1] = {
+					StartEncounter = 1617,
+					Keys = 1,
+					Coins = 2
+				},
+				[2] = {
+					StartEncounter = 1618,
+					Keys = 2,
+					Coins = 1
+				},
+				[3] = {
+					StartEncounter = 1618,
+					Keys = 1,
+					Coins = 2,
+				}
+			},
+			[2] = {
+				StartEncounter = 1616,
+				Coins = 3,
+				Keys = 2,
+			}
+		}
+	},
 }
 
 ---@type Prompt[]
