@@ -169,8 +169,8 @@ function durrt:onNpcUpdate(npc)
         ---@type Sprite
         local rockSprite = npc:GetData().rockToPickup:GetSprite()
         p:GetSprite():Load(rockSprite:GetFilename(), true)
-        p:GetSprite():ReplaceSpritesheet(0, "gfx/rocks_caves.png")
         p:GetSprite():SetFrame(rockSprite:GetAnimation(), rockSprite:GetFrame())
+        p:GetSprite():ReplaceSpritesheet(0, "gfx/rocks_caves.png")
 
         npc:GetData().rockToPickup:Destroy()
 

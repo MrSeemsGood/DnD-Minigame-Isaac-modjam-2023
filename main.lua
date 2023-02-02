@@ -10,6 +10,7 @@ local yochlol = include("src_dndtable.enemies.yochlol")
 local bodak = include("src_dndtable.enemies.bodak")
 local durrt = include("src_dndtable.enemies.durrt")
 local grell = include("src_dndtable.enemies.grell")
+local mindFlayer = include('src_dndtable.enemies.mindFlayer')
 
 --![Look at this dog under Visual Studio Code's preview](https://cdn.discordapp.com/attachments/305511626277126144/1070385115496194088/IMG_4569.PNG)
 local thisDogLovesYou
@@ -83,3 +84,9 @@ mod:AddCallback(ModCallbacks.MC_NPC_UPDATE,  durrt.onNpcUpdate, g.CUSTOM_DUNGEON
 -- grell
 mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, grell.onNpcUpdate, g.CUSTOM_DUNGEON_ENEMY_TYPE)
 mod:AddCallback(ModCallbacks.MC_POST_PEFFECT_UPDATE, grell.onPlayerUpdate)
+
+-- mind flayer
+mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, mindFlayer.onNpcUpdate, g.CUSTOM_DUNGEON_ENEMY_TYPE)
+mod:AddCallback(ModCallbacks.MC_POST_NPC_DEATH, mindFlayer.onNpcDeath, g.CUSTOM_DUNGEON_ENEMY_TYPE)
+mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, mindFlayer.onPonNpcUpdate, EntityType.ENTITY_PON)
+mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, mindFlayer.onCultistNpcUpdate, EntityType.ENTITY_CULTIST)

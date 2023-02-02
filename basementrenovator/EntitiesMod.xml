@@ -11,6 +11,9 @@
     <entity Group="DnD Enemies" ID="898" Image="dnd/grell_se.png" Kind="Floors" Name="Grell (Start South-East)" Variant="4" Subtype="3" />
     <entity Group="DnD Enemies" ID="898" Image="dnd/grell_sw.png" Kind="Floors" Name="Grell (Start South-West)" Variant="4" Subtype="4" />
 
+    <entity Group="DnD Enemies" ID="898" Image="dnd/mind flayer.png" Kind="Floors" Name="Mind Flayer" Subtype="0" Variant="10" />
+    <entity Group="DnD Enemies" ID="840" Image="dnd/purple pon.png" Kind="Floors" Name="Pon (Purple)" Subtype="0" Variant="1" />
+
     <entity Group="DnD Enemies" ID="39" Image="dnd/bodak.png" Kind="Floors" Name="Bodak" Subtype="3" Variant="0" />
     <entity Group="DnD Enemies" ID="879" Image="dnd/ettercap.png" Kind="Floors" Name="Ettercap" Subtype="0" Variant="3" />
 </data>
