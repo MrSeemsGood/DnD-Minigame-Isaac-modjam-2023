@@ -2,14 +2,14 @@
 	<Info CreatedBy="Unknown" CreatedOn="1/2/2023 21:53:20" Version="45" Fps="30"/>
 	<Content>
 		<Spritesheets>
-			<Spritesheet Path="Mod Jam 2023 Year of the Gaper\PlaceHolders\gfx\ui\bgblack.png" Id="0"/>
-			<Spritesheet Path="Mod Jam 2023 Year of the Gaper\PlaceHolders\gfx\ui\debugframe.png" Id="1"/>
-			<Spritesheet Path="Mod Jam 2023 Year of the Gaper\PlaceHolders\gfx\ui\heads.png" Id="2"/>
-			<Spritesheet Path="Mod Jam 2023 Year of the Gaper\PlaceHolders\gfx\ui\cnc_frame.png" Id="3"/>
-			<Spritesheet Path="Mod Jam 2023 Year of the Gaper\PlaceHolders\gfx\ui\cnc_title.png" Id="4"/>
-			<Spritesheet Path="Mod Jam 2023 Year of the Gaper\PlaceHolders\gfx\ui\fadein.png" Id="5"/>
-			<Spritesheet Path="Mod Jam 2023 Year of the Gaper\PlaceHolders\gfx\ui\characterselect.png" Id="6"/>
-			<Spritesheet Path="Mod Jam 2023 Year of the Gaper\PlaceHolders\gfx\ui\cnc_frame2.png" Id="7"/>
+			<Spritesheet Path="ui\bgblack.png" Id="0"/>
+			<Spritesheet Path="ui\cnc_debugframe.png" Id="1"/>
+			<Spritesheet Path="ui\cnc_heads.png" Id="2"/>
+			<Spritesheet Path="ui\cnc_frame.png" Id="3"/>
+			<Spritesheet Path="ui\cnc_title.png" Id="4"/>
+			<Spritesheet Path="ui\fadein.png" Id="5"/>
+			<Spritesheet Path="ui\characterselect.png" Id="6"/>
+			<Spritesheet Path="ui\cnc_frame2.png" Id="7"/>
 		</Spritesheets>
 		<Layers>
 			<Layer Name="thefuckingvoid" Id="0" SpritesheetId="0"/>
