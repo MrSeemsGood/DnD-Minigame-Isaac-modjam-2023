@@ -85,16 +85,20 @@ local fadeType = "AllDown"
 local transitionY = {
 	Title = 0,
 	Prompt = 0,
-	Characters = 0
+	Characters = 0,
+	Dice = 0
 }
 local transitionAlpha = {
 	Title = 1,
 	Prompt = 1,
-	Characters = 1
+	Characters = 1,
+	Dice = 1
 }
 local headOffset = 0
 local headOffsetTimer = 30
-local roomIndexOnMinigameClear = 0
+local diceFlashAlpha = 0
+local roomIndexOnMinigameClear
+local resetting = false
 
 ---@type Stats
 local statsTable = {
@@ -236,33 +240,53 @@ local function resetMinigame()
 	}
 	background:Reset()
 	characters:Reset()
+	dice:Reset()
+	diceFlash:Reset()
+	diceFlashAlpha = 0
 	Isaac.GetPlayer().ControlsEnabled = true
-	for _, player in ipairs(dndPlayers) do
-		if not player:IsDead() then
-			player.GridCollisionClass = GridCollisionClass.COLLISION_NONE
-			player.Position = Vector(1000, 1000)
-			player:Die()
-			player:GetSprite():Play("Death", true)
-			player:GetSprite():SetLastFrame()
-		end
-	end
+	dndPlayers = {}
 	for _, player in ipairs(VeeHelper.GetAllPlayers()) do
 		local data = player:GetData()
-		if data.CNC_PreviousCollisionClass then
-			player.GridCollisionClass = player:GetData().CNC_PreviousCollisionClass
+		if data.CNC_PreviousCollisionClass ~= nil then
+			player.GridCollisionClass = data.CNC_PreviousCollisionClass
 			data.CNC_PreviousCollisionClass = nil
 		end
-		if data.CNC_CouldBeTargeted then
-			player:ClearEntityFlags(EntityFlag.FLAG_NO_TARGET)
+		if data.CNC_PreviousEntityCollissionClass ~= nil then
+			player.EntityCollisionClass = data.CNC_PreviousEntityCollissionClass
+			data.CNC_PreviousEntityCollissionClass = nil
+		end
+		if data.CNC_CouldBeTargeted ~= nil then
+			if data.CNC_CouldBeTargeted then
+				player:ClearEntityFlags(EntityFlag.FLAG_NO_TARGET)
+			end
 			data.CNC_CouldBeTargeted = nil
 		end
+		if data.CNC_WasVisible ~= nil then
+			player.Visible = true
+			data.CNC_WasVisible = nil
+		end
 	end
-	g.game:GetHUD():SetVisible(state.HudWasVisible)
-	--print(state.RoomIndexStartedGameFrom)
-	roomIndexOnMinigameClear = state.RoomIndexStartedGameFrom
 	VeeHelper.CopyOverTable(gameState, state)
-	print("minigame reset")
-	fadeType = "AllDown"
+	g.game:GetHUD():SetVisible(state.HudWasVisible)
+	resetting = false
+end
+
+local function startMinigameReset()
+	if not roomIndexOnMinigameClear and not resetting then
+		for _, player in ipairs(dndPlayers) do
+			if not player:IsDead() then
+				player.GridCollisionClass = GridCollisionClass.COLLISION_NONE
+				player.Position = Vector(1000, 1000)
+				player:Die()
+				player:GetSprite():Play("Death", true)
+				player:GetSprite():SetLastFrame()
+			end
+		end
+		roomIndexOnMinigameClear = state.RoomIndexStartedGameFrom
+		print("minigame reset")
+		fadeType = "AllDown"
+		resetting = true
+	end
 end
 
 function cnc:tryStartRoomEncounter()
@@ -270,7 +294,8 @@ function cnc:tryStartRoomEncounter()
 	if effects then
 		if effects.StartEncounter then
 			if not state.EncounterStarted then
-				Isaac.ExecuteCommand("goto s.default." .. tostring(effects.StartEncounter))
+				local roomType = state.PromptTypeSelected == cncText.PromptType.BOSS and "boss" or "default"
+				Isaac.ExecuteCommand("goto s." .. roomType .. "." .. tostring(effects.StartEncounter))
 				state.EncounterStarted = true
 			end
 		end
@@ -598,13 +623,17 @@ end
 
 local function initFirstPrompt()
 	local player1 = Isaac.GetPlayer()
-	background:Play("Frame", true)
+	background:Play("TransitionIn", true)
 	characters:SetFrame(tostring(#getPlayers()), 0)
 	cnc:startNextPrompt()
 	player1:GetData().CNC_KeyDelay = KEY_DELAY
 	fadeType = "AllUp"
 	state.RoomIndexStartedGameFrom = g.game:GetLevel():GetCurrentRoomIndex()
 	cnc:spawnDNDPlayers()
+	if player1.Visible then
+		player1:GetData().CNC_WasVisible = true
+		player1.Visible = false
+	end
 	Isaac.ExecuteCommand("goto s.default.2")
 end
 
@@ -627,8 +656,8 @@ end
 local function renderText(stringTable, startingPos, textType)
 	local center = getCenterScreen()
 	local nextLineMult = 0.15
-	local posPerLineMult = (textType == "Title" and (#stringTable < 4 and 0.15 or #stringTable >= 4 and 0.1)) or 0.05
-	local lineSpacingMult = 125
+	local posPerLineMult = textType == "Title" and 0.15 or 0.05
+	local lineSpacingMult = textType == "Title" and 100 or 125
 
 	local posX = textType == "Title" and (center.X - 120) or 0
 	local boxLength = textType == "Title" and 235 or Isaac.GetScreenWidth()
@@ -758,21 +787,21 @@ function cnc:OnPromptTransition()
 		if state.EncounterCleared then
 			if background:IsFinished("FadeIn") then
 				if state.PromptProgress == state.MaxPrompts then
-					resetMinigame()
+					startMinigameReset()
 				else
 					renderPrompt.Title = { "Room Cleared!" }
 					renderPrompt.Outcome = { "You defeat the creatures,", "moving onto the next room..." }
 					fadeType = "AllUp"
 					Isaac.ExecuteCommand("goto s.default.2")
-					background:Play("Frame", true)
+					background:Play("TransitionIn", true)
 				end
 			end
 		elseif background:IsPlaying("FadeIn") and background:GetFrame() == 40 then
 			background:Stop()
-			resetMinigame()
+			startMinigameReset()
 		elseif fadeType == "AllDown" and transitionY.Prompt == TRANSITION_Y_TARGET then
 			if cnc:AreAllPlayersDead() and not state.EncounterStarted then
-				resetMinigame()
+				startMinigameReset()
 			else
 				if not state.EncounterStarted and (
 					state.PromptTypeSelected == cncText.PromptType.ENEMY
@@ -789,10 +818,10 @@ function cnc:OnPromptTransition()
 	end
 end
 
-local diceFlashAlpha = 0
 function cnc:DiceAnimation()
 	if dice:GetAnimation() ~= "Idle" then
-		local dicePos = Vector(getCenterScreen().X + 170, getCenterScreen().Y + 80)
+		local dicePos = Vector(getCenterScreen().X + 205, getCenterScreen().Y + 95 + transitionY.Dice)
+		dice.Color = Color(1, 1, 1, transitionAlpha.Dice)
 		dice:RenderLayer(0, dicePos, Vector.Zero, Vector.Zero)
 		dice:Update()
 		if dice:IsFinished("Roll") then
@@ -888,6 +917,7 @@ function cnc:MinigameLogic()
 							)
 						then
 							fadeType = "AllDown"
+							background:Play("TransitionOut", true)
 						else
 							fadeType = "TitlePromptDown"
 						end
@@ -901,7 +931,7 @@ function cnc:MinigameLogic()
 				cnc:DiceAnimation()
 			end
 
-			renderText(renderPrompt.Title, -120, "Title")
+			renderText(renderPrompt.Title, -130, "Title")
 
 			if not state.HasSelected then
 				if renderPrompt.Options[2] ~= nil then
@@ -937,15 +967,12 @@ function cnc:MinigameLogic()
 				renderText(renderPrompt.Outcome, 0)
 			end
 		end
-	elseif not state.Active and roomIndexOnMinigameClear ~= 0 then
-		g.sfx:Stop(SoundEffect.SOUND_ISAACDIES)
-		g.sfx:Stop(SoundEffect.SOUND_DEATH_BURST_SMALL)
 	end
 	if Input.IsButtonTriggered(testEndPrompt, player1.ControllerIndex)
 		and not Isaac.GetPlayer():GetData().CNC_KeyDelay
 		and not g.game:IsPaused()
 	then
-		resetMinigame()
+		startMinigameReset()
 		Isaac.GetPlayer():GetData().CNC_KeyDelay = KEY_DELAY
 	end
 end
@@ -963,6 +990,7 @@ function cnc:RenderScreen()
 			if string.sub(characters:GetAnimation(), 1, 5) == "Title" then
 				background:RenderLayer(0, center, Vector.Zero, Vector.Zero) --Black background
 				background:RenderLayer(1, center, Vector.Zero, Vector.Zero) --Frame
+				background:RenderLayer(16, center, Vector.Zero, Vector.Zero) --Frame but animated
 				background:RenderLayer(7, center, Vector.Zero, Vector.Zero) --Debug frame
 				background:RenderLayer(8, center, Vector.Zero, Vector.Zero) -- Title
 
@@ -990,6 +1018,7 @@ function cnc:RenderScreen()
 			then
 				background:RenderLayer(0, center, Vector.Zero, Vector.Zero)
 				background:RenderLayer(1, center, Vector.Zero, Vector.Zero)
+				background:RenderLayer(16, center, Vector.Zero, Vector.Zero)
 				background:RenderLayer(7, center, Vector.Zero, Vector.Zero)
 				for i = 1, tonumber(characters:GetAnimation()) do
 					local startingFrame = (i * 2) - 2
@@ -1033,13 +1062,15 @@ end
 
 local playCavesMusic = false
 function cnc:OnNewRoom()
-	local roomVariant = g.game:GetLevel():GetCurrentRoomDesc().Data.OriginalVariant
+	local roomDescData = g.game:GetLevel():GetCurrentRoomDesc().Data
+	local roomVariant = roomDescData.OriginalVariant
 	local players = VeeHelper.GetAllPlayers()
 	if state.Active then
-		if (not cnc:IsInCNCRoom() and roomVariant ~= 2) then
+		if (
+			not cnc:IsInCNCRoom() and (roomVariant ~= 2 or g.game:GetLevel():GetCurrentRoomIndex() ~= GridRooms.ROOM_DEBUG_IDX)) then
 			resetMinigame()
 			return
-		elseif g.music:IsEnabled() then
+		elseif g.music:IsEnabled() and roomDescData.Type ~= RoomType.ROOM_BOSS then
 			playCavesMusic = true
 			g.music:Disable()
 		end
@@ -1073,15 +1104,25 @@ function cnc:OnNewRoom()
 			and not player:HasCollectible(g.DND_PLAYER_TECHNICAL)
 		then
 			local data = player:GetData()
-			if not data.CNC_PreviousCollisionClass then
+			if data.CNC_PreviousCollisionClass == nil then
 				data.CNC_PreviousCollisionClass = player.GridCollisionClass
-				player.GridCollisionClass = GridCollisionClass.COLLISION_NONE
 			end
-			if not data.CNC_CouldBeTargeted and not player:HasEntityFlags(EntityFlag.FLAG_NO_TARGET) then
-				player:AddEntityFlags(EntityFlag.FLAG_NO_TARGET)
-				data.CNC_CouldBeTargeted = true
+			if data.CNC_PreviousEntityCollissionClass == nil then
+				data.CNC_PreviousEntityCollissionClass = player.EntityCollisionClass
 			end
-			player.Position = Vector(-1000, -1000)
+			if data.CNC_CouldBeTargeted == nil then
+				data.CNC_CouldBeTargeted = player:HasEntityFlags(EntityFlag.FLAG_NO_TARGET)
+			end
+			if data.CNC_WasVisible == nil then
+				data.CNC_WasVisible = player.Visible
+			end
+			player.GridCollisionClass = GridCollisionClass.COLLISION_NONE
+			player.EntityCollisionClass = EntityCollisionClass.ENTCOLL_NONE
+			player.Visible = false
+			player:AddEntityFlags(EntityFlag.FLAG_NO_TARGET)
+			if GetPtrHash(player) ~= GetPtrHash(Isaac.GetPlayer()) then
+				player.Position = Vector(-1000, -1000)
+			end
 		end
 	end
 end
@@ -1089,7 +1130,7 @@ end
 ---@param pickup EntityPickup
 ---@param collider Entity
 ---@param low boolean
-function cnc:GivePickupsToMinigameState(pickup, collider, low)
+function cnc:OnPrePickupCollision(pickup, collider, low)
 	if collider.Type == EntityType.ENTITY_PLAYER then
 		local sprite = pickup:GetSprite()
 
@@ -1147,6 +1188,26 @@ function cnc:OnPostUpdate()
 	local allDead = #dndPlayers > 0 and cnc:AreAllPlayersDead() or false
 	local hasPickup = false
 
+	if state.Active then
+		if allDead
+			and background:GetAnimation() ~= "FadeIn"
+			and cnc:IsInCNCRoom()
+		then
+			background:Play("FadeIn", true)
+			state.ScreenShown = true
+		end
+		if roomIndexOnMinigameClear then
+			if roomIndexOnMinigameClear ~= 0 then
+				g.game:StartRoomTransition(roomIndexOnMinigameClear, Direction.NO_DIRECTION, RoomTransitionAnim.FADE)
+				g.sfx:Stop(SoundEffect.SOUND_ISAACDIES)
+				g.sfx:Stop(SoundEffect.SOUND_DEATH_BURST_SMALL)
+			end
+			roomIndexOnMinigameClear = nil
+			return
+		end
+	end
+	if allDead then return end
+
 	if playCavesMusic then
 		g.music:Enable()
 		g.music:Fadein(Music.MUSIC_CAVES, Options.MusicVolume, 0.05)
@@ -1169,13 +1230,6 @@ function cnc:OnPostUpdate()
 		end
 	end
 	if state.Active then
-		if allDead
-			and background:GetAnimation() ~= "FadeIn"
-			and cnc:IsInCNCRoom()
-		then
-			background:Play("FadeIn", true)
-			state.ScreenShown = true
-		end
 		if cnc:IsInCNCRoom() then
 			local effects = cnc:GetPromptEffects()
 
@@ -1209,22 +1263,26 @@ function cnc:OnPostUpdate()
 			end
 		end
 	end
-	if state.Active == false
-		and roomIndexOnMinigameClear ~= 0
-		and allDead
-	then
-		g.game:StartRoomTransition(roomIndexOnMinigameClear, Direction.NO_DIRECTION, RoomTransitionAnim.FADE)
-		roomIndexOnMinigameClear = 0
-		dndPlayers = {}
-	end
 end
 
 ---@param player EntityPlayer
 function cnc:OnPlayerUpdate(player)
-	if state.Active and player.ControlsEnabled == true then
-		if not player:HasCollectible(g.DND_PLAYER_TECHNICAL)
-			or (player:HasCollectible(g.DND_PLAYER_TECHNICAL) and not cnc:IsInCNCRoom()) then
-			player.ControlsEnabled = false
+	if state.Active then
+		if player.ControlsEnabled == true then
+			if not player:HasCollectible(g.DND_PLAYER_TECHNICAL)
+				or (player:HasCollectible(g.DND_PLAYER_TECHNICAL) and not cnc:IsInCNCRoom()) then
+				player.ControlsEnabled = false
+			end
+		elseif not state.ScreenShown and GetPtrHash(player) == GetPtrHash(Isaac.GetPlayer()) then
+			for _, cncPlayer in ipairs(dndPlayers) do
+				if not cncPlayer:IsDead() then
+					player.Position = Vector(cncPlayer.Position.X, cncPlayer.Position.Y - 25)
+					if player.Visible then
+						player.Visible = false
+					end
+					return
+				end
+			end
 		end
 	end
 end
@@ -1283,12 +1341,14 @@ function cnc:HandleTransitions()
 	local alpha = {
 		p = transitionAlpha.Prompt,
 		t = transitionAlpha.Title,
-		c = transitionAlpha.Characters
+		c = transitionAlpha.Characters,
+		d = transitionAlpha.Dice
 	}
 	local y = {
 		p = transitionY.Prompt,
 		t = transitionY.Title,
-		c = transitionY.Characters
+		c = transitionY.Characters,
+		d = transitionY.Dice
 	}
 	if fadeType == "TitlePromptDown" then
 		if alpha.p > 0 then
@@ -1354,6 +1414,9 @@ function cnc:HandleTransitions()
 		if alpha.c > 0 then
 			alpha.c = alpha.c - TRANSITION_ALPHA_SPEED
 		end
+		if alpha.d > 0 then
+			alpha.d = alpha.d - TRANSITION_ALPHA_SPEED
+		end
 		if y.p < TRANSITION_Y_TARGET then
 			y.p = y.p + TRANSITION_Y_SPEED
 		end
@@ -1362,6 +1425,9 @@ function cnc:HandleTransitions()
 		end
 		if y.c < TRANSITION_Y_TARGET then
 			y.c = y.c + TRANSITION_Y_SPEED
+		end
+		if y.d < TRANSITION_Y_TARGET then
+			y.d = y.d + TRANSITION_Y_SPEED
 		end
 	elseif fadeType == "AllUp" then
 		if alpha.p < 1 then
@@ -1373,6 +1439,9 @@ function cnc:HandleTransitions()
 		if alpha.c < 1 then
 			alpha.c = alpha.c + TRANSITION_ALPHA_SPEED
 		end
+		if alpha.d < 1 then
+			alpha.c = alpha.c + TRANSITION_ALPHA_SPEED
+		end
 		if y.p > 0 then
 			y.p = y.p - TRANSITION_Y_SPEED
 		end
@@ -1381,6 +1450,9 @@ function cnc:HandleTransitions()
 		end
 		if y.c > 0 then
 			y.c = y.c - TRANSITION_Y_SPEED
+		end
+		if y.d > 0 then
+			y.d = y.d - TRANSITION_Y_SPEED
 		end
 	end
 	for name, value in pairs(y) do
@@ -1400,9 +1472,11 @@ function cnc:HandleTransitions()
 	transitionAlpha.Prompt = alpha.p
 	transitionAlpha.Title = alpha.t
 	transitionAlpha.Characters = alpha.c
+	transitionAlpha.Dice = alpha.d
 	transitionY.Prompt = y.p
 	transitionY.Title = y.t
 	transitionY.Characters = y.c
+	transitionY.Dice = y.d
 end
 
 function cnc:AnimationTimer()

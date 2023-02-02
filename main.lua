@@ -19,6 +19,7 @@ local thisDogLovesYou
 function mod:OnGameStart(isContinued)
 	Isaac.ExecuteCommand('reloadshaders')
 end
+
 mod:AddCallback(ModCallbacks.MC_POST_GAME_STARTED, mod.OnGameStart)
 
 ---@param shaderName string
@@ -29,6 +30,7 @@ function mod:OnGetShaderParams(shaderName)
 		cnc:OnRender()
 	end
 end
+
 mod:AddCallback(ModCallbacks.MC_GET_SHADER_PARAMS, mod.OnGetShaderParams)
 
 function mod:OnPostRender()
@@ -36,16 +38,18 @@ function mod:OnPostRender()
 		cnc:OnRender()
 	end
 end
+
 mod:AddCallback(ModCallbacks.MC_POST_RENDER, mod.OnPostRender)
 
 function mod:OnPostUpdate()
 	cncTable:slotUpdate()
 	cnc:OnPostUpdate()
 end
+
 mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.OnPostUpdate)
 
 mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, cnc.OnNewRoom)
-mod:AddCallback(ModCallbacks.MC_PRE_PICKUP_COLLISION, cnc.GivePickupsToMinigameState)
+mod:AddCallback(ModCallbacks.MC_PRE_PICKUP_COLLISION, cnc.OnPrePickupCollision)
 mod:AddCallback(ModCallbacks.MC_PRE_SPAWN_CLEAN_AWARD, cnc.OnCNCRoomClear)
 mod:AddCallback(ModCallbacks.MC_EVALUATE_CACHE, cnc.OnCNCPlayerCache)
 
@@ -79,7 +83,7 @@ mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, bodak.onNpcUpdate, EntityType.ENTITY
 -- durrt
 mod:AddCallback(ModCallbacks.MC_POST_PROJECTILE_UPDATE, durrt.onProjectileUpdate, ProjectileVariant.PROJECTILE_ROCK)
 mod:AddCallback(ModCallbacks.MC_POST_NPC_DEATH, durrt.onNpcDeath, g.CUSTOM_DUNGEON_ENEMY_TYPE)
-mod:AddCallback(ModCallbacks.MC_NPC_UPDATE,  durrt.onNpcUpdate, g.CUSTOM_DUNGEON_ENEMY_TYPE)
+mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, durrt.onNpcUpdate, g.CUSTOM_DUNGEON_ENEMY_TYPE)
 
 -- grell
 mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, grell.onNpcUpdate, g.CUSTOM_DUNGEON_ENEMY_TYPE)
