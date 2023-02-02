@@ -342,7 +342,7 @@ cncText.Encounters = {
 	},
 	-- DURRTS
 	{
-		Title = "A group of massive animated boulders stands in your way!",
+		Title = "A group of massive animated boulders#stands in your way!",
 		Options = {
 			[1] = {"Roll", "You try to remain neutral to them and not cause aggression."},
 			[2] = {"Select", "You reasonably decide to bomb them.", "Bomb1"},

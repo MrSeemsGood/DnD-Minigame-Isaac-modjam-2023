@@ -134,13 +134,14 @@ end
 
 ---@param stringTable table
 function cnc:separateTextByHashtag(stringTable)
-	if type(stringTable) ~= "table" then return stringTable end
-	while string.find(stringTable[#stringTable], "#") ~= nil do
-		local curText = stringTable[#stringTable]
-		local line1, line2 = string.find(curText, "#")
-		local nextLine = string.sub(curText, line2 + 1, -1)
-		stringTable[#stringTable] = string.sub(curText, 1, line1 - 1)
-		stringTable.insert(stringTable, nextLine)
+	if type(stringTable) == "table" then
+		while string.find(stringTable[#stringTable], "#") ~= nil do
+			local curText = stringTable[#stringTable]
+			local line1, line2 = string.find(curText, "#")
+			local nextLine = string.sub(curText, line2 + 1, -1)
+			stringTable[#stringTable] = string.sub(curText, 1, line1 - 1)
+			table.insert(stringTable, nextLine)
+		end
 	end
 	return stringTable
 end
@@ -165,9 +166,9 @@ end
 function cnc:GetPromptEffects()
 	local curPrompt = cncText:GetTableFromPromptType(state.PromptTypeSelected)
 	if curPrompt[state.PromptSelected] then
-		if curPrompt[state.PromptSelected].Effect[state.OptionSelectedSaved] then
-			local effects = curPrompt[state.PromptSelected].Effect[state.OptionSelectedSaved][state.OutcomeResult] or
-				curPrompt[state.PromptSelected].Effect[state.OptionSelectedSaved]
+		if curPrompt[state.PromptSelected].Effect and curPrompt[state.PromptSelected].Effect[state.OptionSelectedSaved] then
+			local effects = curPrompt[state.PromptSelected].Effect[state.OptionSelectedSaved]
+			effects = effects[state.OutcomeResult] ~= nil and effects[state.OutcomeResult] or effects
 			return effects
 		end
 	end
@@ -257,7 +258,7 @@ local function resetMinigame()
 		end
 	end
 	g.game:GetHUD():SetVisible(state.HudWasVisible)
-	print(state.RoomIndexStartedGameFrom)
+	--print(state.RoomIndexStartedGameFrom)
 	roomIndexOnMinigameClear = state.RoomIndexStartedGameFrom
 	VeeHelper.CopyOverTable(gameState, state)
 	print("minigame reset")
@@ -524,6 +525,7 @@ function cnc:startNextPrompt()
 		end
 	end
 	local prompt = promptTable[state.PromptSelected]
+	--print(promptTable, prompt, prompt.Title)
 	local title = cnc:separateTextByHashtag({ prompt.Title })
 	renderPrompt.Title = title
 	renderPrompt.Options = {}
@@ -599,7 +601,7 @@ local function initFirstPrompt()
 	background:Play("Frame", true)
 	characters:SetFrame(tostring(#getPlayers()), 0)
 	cnc:startNextPrompt()
-	player1:GetData().DNDKEY_DELAY = KEY_DELAY
+	player1:GetData().CNC_KeyDelay = KEY_DELAY
 	fadeType = "AllUp"
 	state.RoomIndexStartedGameFrom = g.game:GetLevel():GetCurrentRoomIndex()
 	cnc:spawnDNDPlayers()
@@ -615,7 +617,7 @@ end
 local function renderCursor(text, posY)
 	local posX = getCenterScreen().X
 	posX = posX - (font:GetStringWidth(text) / 2)
-	optionCursor:Render(Vector(posX, posY), Vector.Zero, Vector.Zero)
+	optionCursor:Render(Vector(posX, posY + 8), Vector.Zero, Vector.Zero)
 	optionCursor:Update()
 end
 
@@ -649,11 +651,25 @@ local function renderText(stringTable, startingPos, textType)
 		local text = textType == "Option" and stringTable[i][2] or stringTable[i]
 
 		if textType == "Option"
-			and #stringTable > 1 and i == state.OptionSelected
+			and i == state.OptionSelected
 			and transitionY.Prompt == 0
 		then
-			renderCursor(text, posY + 8)
+			if #stringTable > 1 then
+				renderCursor(text, posY)
+			end
+			if cnc:IsRollOption() then
+				local posX = getCenterScreen().X
+				posX = posX - (font:GetStringWidth(text) / 2)
+				posX = #stringTable > 1 and posX - 32 or posX - 16
+				if diceFlash:GetAnimation() ~= "Idle" then
+					diceFlash:Play("Idle", true)
+					diceFlash.Scale = Vector(0.5, 0.5)
+				end
+				diceFlash:Render(Vector(posX, posY + 8), Vector.Zero, Vector.Zero)
+				diceFlash:Update()
+			end
 		end
+
 		local yOffset = textType == "Title" and transitionY.Title or transitionY.Prompt
 		local alphaOffset = textType == "Title" and transitionAlpha.Title or transitionAlpha.Prompt
 		font:DrawString(text, posX, posY + yOffset, KColor(1, 1, 1, alphaOffset), boxLength, true)
@@ -672,7 +688,7 @@ function cnc:CharacterSelect()
 				or isTriggered(ButtonAction.ACTION_MENUCONFIRM, player)
 				or isTriggered(ButtonAction.ACTION_BOMB, player)
 			)
-			and not player:GetData().DNDKEY_DELAY
+			and not player:GetData().CNC_KeyDelay
 			and not g.game:IsPaused()
 			and transitionY.Characters == 0
 		then
@@ -689,7 +705,7 @@ function cnc:CharacterSelect()
 				state.Characters.Selected[i] = state.Characters.Selected[i] > 4 and 1 or state.Characters.Selected[i] < 1 and 4 or
 					state.Characters.Selected[i]
 				g.sfx:Play(soundToPlay)
-				data.DNDKEY_DELAY = KEY_DELAY
+				data.CNC_KeyDelay = KEY_DELAY
 			end
 
 			if isTriggered(ButtonAction.ACTION_MENUCONFIRM, player)
@@ -700,7 +716,7 @@ function cnc:CharacterSelect()
 				state.Characters.Confirmed[i] = true
 				g.sfx:Play(SoundEffect.SOUND_THUMBSUP)
 				state.NumConfirmed = state.NumConfirmed + 1
-				data.DNDKEY_DELAY = KEY_DELAY
+				data.CNC_KeyDelay = KEY_DELAY
 			elseif isTriggered(ButtonAction.ACTION_BOMB, player)
 				and state.Characters.Confirmed[i] == true
 			then
@@ -708,13 +724,13 @@ function cnc:CharacterSelect()
 				state.Characters.NumActive[state.Characters.Selected[i]] = state.Characters.NumActive[state.Characters.Selected[i]] -
 					1
 				state.NumConfirmed = state.NumConfirmed - 1
-				data.DNDKEY_DELAY = KEY_DELAY
+				data.CNC_KeyDelay = KEY_DELAY
 			end
 		end
 	end
 	if state.NumConfirmed >= #players
 		and isTriggered(ButtonAction.ACTION_MENUCONFIRM, player1)
-		and not player1:GetData().DNDKEY_DELAY
+		and not player1:GetData().CNC_KeyDelay
 		and not g.game:IsPaused()
 	then
 		background:Play("FadeOutTitle", true)
@@ -735,17 +751,21 @@ function cnc:OnPromptTransition()
 				applyEffectsOnOutcome()
 				fadeType = "PromptUp"
 				local data = Isaac.GetPlayer():GetData()
-				data.DNDKEY_DELAY = KEY_DELAY + 120
+				data.CNC_KeyDelay = KEY_DELAY + 120
 			end
 		end
 	else
 		if state.EncounterCleared then
 			if background:IsFinished("FadeIn") then
-				renderPrompt.Title = { "Room Cleared!" }
-				renderPrompt.Outcome = { "You defeat the creatures,", "moving onto the next room..." }
-				fadeType = "AllUp"
-				Isaac.ExecuteCommand("goto s.default.2")
-				background:Play("Frame", true)
+				if state.PromptProgress == state.MaxPrompts then
+					resetMinigame()
+				else
+					renderPrompt.Title = { "Room Cleared!" }
+					renderPrompt.Outcome = { "You defeat the creatures,", "moving onto the next room..." }
+					fadeType = "AllUp"
+					Isaac.ExecuteCommand("goto s.default.2")
+					background:Play("Frame", true)
+				end
 			end
 		elseif background:IsPlaying("FadeIn") and background:GetFrame() == 40 then
 			background:Stop()
@@ -754,7 +774,7 @@ function cnc:OnPromptTransition()
 			if cnc:AreAllPlayersDead() and not state.EncounterStarted then
 				resetMinigame()
 			else
-				if (
+				if not state.EncounterStarted and (
 					state.PromptTypeSelected == cncText.PromptType.ENEMY
 						or state.PromptTypeSelected == cncText.PromptType.BOSS
 					)
@@ -780,7 +800,7 @@ function cnc:DiceAnimation()
 			dice:SetFrame("Result", state.RollResult - 1)
 			diceFlash:SetFrame("Result", state.RollResult - 1)
 			diceFlash.Scale = Vector(1, 1)
-			diceFlashAlpha = 1.2
+			diceFlashAlpha = 1.4
 		end
 		if diceFlashAlpha > 0 then
 			if diceFlashAlpha <= 1 then
@@ -826,7 +846,7 @@ function cnc:MinigameLogic()
 
 			if isTriggered(ButtonAction.ACTION_MENUCONFIRM, player1)
 				and not g.game:IsPaused()
-				and not data.DNDKEY_DELAY
+				and not data.CNC_KeyDelay
 				and transitionY.Prompt == 0
 				and state.ScreenShown
 			then
@@ -837,8 +857,8 @@ function cnc:MinigameLogic()
 					if cnc:IsRollOption() then
 						cnc:RollDice()
 						if not state.HasRolled then
-							if renderPrompt.Options[state.OptionSelectedSaved][3] then
-								local characterIndex = renderPrompt.Options[state.OptionSelectedSaved][3] + 1
+							if outcomeText[state.OptionSelectedSaved][3] then
+								local characterIndex = outcomeText[state.OptionSelectedSaved][3] + 1
 
 								if state.Characters.NumActive[characterIndex] > 1 then
 									state.NumAvailableRolls = state.Characters.NumActive[characterIndex] - 1
@@ -846,7 +866,8 @@ function cnc:MinigameLogic()
 							end
 						end
 					end
-					if cnc:IsRollOption() or (not cnc:IsRollOption() and state.HasRolled) then
+					--print(prompt, prompt[state.PromptSelected], prompt[state.PromptSelected].Outcome, outcomeText, state.PromptTypeSelected, state.PromptSelected, state.OptionSelectedSaved)
+					if outcomeText[state.OutcomeResult] then
 						outcomeText = outcomeText[state.OutcomeResult]
 					end
 					renderPrompt.Outcome = cnc:separateTextByHashtag({ outcomeText })
@@ -872,11 +893,13 @@ function cnc:MinigameLogic()
 						end
 					end
 				end
-				data.DNDKEY_DELAY = KEY_DELAY
+				data.CNC_KeyDelay = KEY_DELAY + 20
 			end
 
 			cnc:OnPromptTransition()
-			cnc:DiceAnimation()
+			if state.ScreenShown and not state.EncounterCleared then
+				cnc:DiceAnimation()
+			end
 
 			renderText(renderPrompt.Title, -120, "Title")
 
@@ -886,7 +909,7 @@ function cnc:MinigameLogic()
 						isTriggered(ButtonAction.ACTION_MENUUP, player1)
 							or isTriggered(ButtonAction.ACTION_MENUDOWN, player1)
 						)
-						and not data.DNDKEY_DELAY
+						and not data.CNC_KeyDelay
 						and not g.game:IsPaused()
 						and transitionY.Prompt == 0
 						and state.ScreenShown
@@ -900,7 +923,7 @@ function cnc:MinigameLogic()
 						local soundToPlay = isTriggered(ButtonAction.ACTION_MENUUP, player1) and
 							SoundEffect.SOUND_CHARACTER_SELECT_LEFT or SoundEffect.SOUND_CHARACTER_SELECT_RIGHT
 						g.sfx:Play(soundToPlay)
-						data.DNDKEY_DELAY = KEY_DELAY
+						data.CNC_KeyDelay = KEY_DELAY
 						if not state.HasRolled then
 							state.OptionSelectedSaved = state.OptionSelected
 						end
@@ -919,11 +942,11 @@ function cnc:MinigameLogic()
 		g.sfx:Stop(SoundEffect.SOUND_DEATH_BURST_SMALL)
 	end
 	if Input.IsButtonTriggered(testEndPrompt, player1.ControllerIndex)
-		and not Isaac.GetPlayer():GetData().DNDKEY_DELAY
+		and not Isaac.GetPlayer():GetData().CNC_KeyDelay
 		and not g.game:IsPaused()
 	then
 		resetMinigame()
-		Isaac.GetPlayer():GetData().DNDKEY_DELAY = KEY_DELAY
+		Isaac.GetPlayer():GetData().CNC_KeyDelay = KEY_DELAY
 	end
 end
 
@@ -1247,11 +1270,11 @@ end
 ---@param player EntityPlayer
 function cnc:KeyDelayHandle(player)
 	local data = player:GetData()
-	if data.DNDKEY_DELAY then
-		if data.DNDKEY_DELAY > 0 then
-			data.DNDKEY_DELAY = data.DNDKEY_DELAY - 1
+	if data.CNC_KeyDelay then
+		if data.CNC_KeyDelay > 0 then
+			data.CNC_KeyDelay = data.CNC_KeyDelay - 1
 		else
-			data.DNDKEY_DELAY = nil
+			data.CNC_KeyDelay = nil
 		end
 	end
 end
