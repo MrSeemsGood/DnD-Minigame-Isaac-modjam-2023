@@ -76,17 +76,23 @@ cncText.StatusEffect = {
 ---@type Prompt[]
 cncText.Prompts = {
 	{
-		Title = "Hey",
+		Title = "testtesttesttesttesttesttest",
 		Options = {
 			[1] = { "Select", "Do it" },
-			[2] = { "Select", "You should kill yourself NOW" }
+			[2] = { "Roll", "Do it but roll" },
+			[3] = { "Select", "You should kill yourself NOW" }
 		},
 		Outcome = {
 			[1] = "Don't mind me",
-			[2] = "You obey LowTierGod",
+			[2] = {
+				[1] = "You rolled low",
+				[2] = "You rolled medium",
+				[3] = "You rolled high",
+			},
+			[3] = "You obey LowTierGod",
 		},
 		Effect = {
-			[2] = {
+			[3] = {
 				DamagePlayers = 10
 			}
 		}
@@ -273,7 +279,7 @@ cncText.Encounters = {
 	{
 		Title = "You encounter weird oozy creatures.#Their flesh melts off of them and piles back together.",
 		Options = {
-			[1] = {"Roll", "These creatures emit deadly gases,#so you try to lure them out into the open"}
+			[1] = {"Roll", "You try to lure them out into the open"}
 		},
 		Outcome = {
 			[1] = {
