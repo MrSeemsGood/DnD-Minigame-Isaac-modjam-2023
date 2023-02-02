@@ -1130,7 +1130,7 @@ end
 ---@param pickup EntityPickup
 ---@param collider Entity
 ---@param low boolean
-function cnc:GivePickupsToMinigameState(pickup, collider, low)
+function cnc:OnPrePickupCollision(pickup, collider, low)
 	if collider.Type == EntityType.ENTITY_PLAYER then
 		local sprite = pickup:GetSprite()
 
