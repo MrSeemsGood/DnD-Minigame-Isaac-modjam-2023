@@ -774,17 +774,19 @@ function VeeHelper.IsTrinketOwned(trinketType)
 	return hasTrinket
 end
 
---Takes a custom array of CollectibleTypes and returns a modified version of the array that excludes any player-owned items. Active items are removed if any player owns the "No!" trinket.
+---- Takes a custom array of CollectibleTypes and returns a modified version of the array that excludes any player-owned items
+---- Active items are removed if any player owns the "No!" trinket
+---- A default item can be provided and will insert itself in the table if the pool is depleted. Breakfast by default.
 ---@param pool CollectibleType[]
-function VeeHelper.GetCustomItemPool(pool)
+---@param defaultItem? CollectibleType
+function VeeHelper.GetCustomItemPool(pool, defaultItem)
 	local itemsOutOfPool = {}
 	local players = VeeHelper.GetAllPlayers()
 	local hasNO = VeeHelper.IsTrinketOwned(TrinketType.TRINKET_NO)
 
-	for i = 1, #players do
-		local player = players[i]
+	for _, player in ipairs(players) do
 		for j = 1, #pool do
-			if player:HasCollectible(pool[j]) or hasNO then
+			if player:HasCollectible(pool[j]) or (hasNO and Isaac.GetItemConfig():GetCollectible(pool[j]).Type == ItemType.ITEM_ACTIVE) then
 				itemsOutOfPool[j] = true
 			end
 		end
@@ -794,6 +796,10 @@ function VeeHelper.GetCustomItemPool(pool)
 		if not itemsOutOfPool[i] then
 			table.insert(currentPool, pool[i])
 		end
+	end
+	if #pool == 0 then
+		if not defaultItem then defaultItem = CollectibleType.COLLECTIBLE_BREAKFAST end
+		table.insert(currentPool, defaultItem)
 	end
 	return currentPool
 end

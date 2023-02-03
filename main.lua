@@ -52,6 +52,7 @@ mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, cnc.OnNewRoom)
 mod:AddCallback(ModCallbacks.MC_PRE_PICKUP_COLLISION, cnc.OnPrePickupCollision)
 mod:AddCallback(ModCallbacks.MC_PRE_SPAWN_CLEAN_AWARD, cnc.OnCNCRoomClear)
 mod:AddCallback(ModCallbacks.MC_EVALUATE_CACHE, cnc.OnCNCPlayerCache)
+mod:AddCallback(ModCallbacks.MC_POST_BOMB_INIT, cnc.LampOilRopeBombsYouWantItItsYourMyFriendAsLongAsYouGotThemInTheMinigame)
 
 mod:AddCallback(ModCallbacks.MC_PRE_PLAYER_COLLISION, cncTable.onPlayerCollision, 0)
 
