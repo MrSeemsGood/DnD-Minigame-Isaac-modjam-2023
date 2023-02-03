@@ -13,7 +13,7 @@ MINDFLAYER_PROJECTILE.WiggleFrameOffset = 15
 
 local PON_PROJECTILE = ProjectileParams()
 PON_PROJECTILE.BulletFlags = ProjectileFlags.SMART
-PON_PROJECTILE.HomingStrength = 0.5
+PON_PROJECTILE.HomingStrength = 0.4
 
 local function wavyCap()
     Isaac.GetPlayer():UseActiveItem(CollectibleType.COLLECTIBLE_WAVY_CAP, false, true, false, false, ActiveSlot.SLOT_PRIMARY)
@@ -53,16 +53,11 @@ function mindFlayer:onNpcUpdate(npc)
         return
     end
 
-
-
     local player = npc:GetPlayerTarget()
-    if npc:GetData().helper
-    and npc:GetData().helper:Exists() and not npc:GetData().helper:IsDead() then
-        npc.Velocity = npc:GetData().helper.Velocity
-    else
-        local helper = Isaac.Spawn(EntityType.ENTITY_CULTIST, 0, 0, npc.Position, Vector.Zero, npc):ToNPC()
-        npc:GetData().helper = helper
-    end
+    local direction = (player.Position - npc.Position):Normalized()
+    local sine_offset = math.sin(npc.FrameCount * 0.15) * 1.75
+    local offset_vector = direction:Rotated(90):Normalized() * sine_offset
+    npc.Velocity = (direction + offset_vector) * 2.5
 
     if phase == 1 then
         npc:GetData().attackCooldown = npc:GetData().attackCooldown - 1
@@ -105,7 +100,6 @@ function mindFlayer:onNpcUpdate(npc)
 
         if s:IsPlaying('PhaseChange')
         and s:IsEventTriggered('PhaseChange') then
-            g.sfx:Play(SoundEffect.SOUND_THE_FORSAKEN_LAUGH)
             wavyCap()
             for _, pon in pairs(Isaac.FindByType(EntityType.ENTITY_PON, 1)) do
                 pon = pon:ToNPC()
@@ -123,10 +117,11 @@ function mindFlayer:onNpcUpdate(npc)
         if s:IsFinished('PhaseChange') then
             s:Play('IdlePhase2')
             npc.EntityCollisionClass = EntityCollisionClass.ENTCOLL_ALL
+            g.sfx:Play(SoundEffect.SOUND_THE_FORSAKEN_LAUGH)
         end
 
         if s:IsPlaying('IdlePhase2') then
-            player:AddVelocity((npc.Position - player.Position):Normalized() * 0.33)
+            player:AddVelocity((npc.Position - player.Position):Normalized() * 0.25)
 
             if npc.FrameCount % 6 == 0 then
                 local angle = Vector.FromAngle(vee.RandomNum(360)) * 2
