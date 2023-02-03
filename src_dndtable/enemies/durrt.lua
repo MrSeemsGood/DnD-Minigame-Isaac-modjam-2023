@@ -169,9 +169,14 @@ function durrt:onNpcUpdate(npc)
         ---@type Sprite
         local rockSprite = npc:GetData().rockToPickup:GetSprite()
         p:GetSprite():Load(rockSprite:GetFilename(), true)
-        p:GetSprite():SetFrame(rockSprite:GetAnimation(), rockSprite:GetFrame())
+        local anim = rockSprite:GetAnimation()
+        local frame = rockSprite:GetFrame()
+        if anim == "big" then
+            anim = "normal"
+            frame = VeeHelper.RandomNum(0, 2)
+        end
+        p:GetSprite():SetFrame(anim, frame)
         p:GetSprite():ReplaceSpritesheet(0, "gfx/rocks_caves.png")
-
         npc:GetData().rockToPickup:Destroy()
 
     elseif s:IsFinished('Pick') then

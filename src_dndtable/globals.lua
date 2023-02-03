@@ -20,4 +20,22 @@ g.GameState = {
 	}
 }
 
+g.DungeonVariant = {
+	INVISIBLE_STALKER = 1,
+	YOCHLOL = 2,
+	DURRT = 3,
+	GRELL = 4,
+	MIND_FLAYER = 10,
+}
+
+g.AllDungeonEnemies = {
+	{g.CUSTOM_DUNGEON_ENEMY_TYPE, g.DungeonVariant.INVISIBLE_STALKER},
+	{g.CUSTOM_DUNGEON_ENEMY_TYPE, g.DungeonVariant.YOCHLOL},
+	{g.CUSTOM_DUNGEON_ENEMY_TYPE, g.DungeonVariant.DURRT},
+	{g.CUSTOM_DUNGEON_ENEMY_TYPE, g.DungeonVariant.GRELL, 0},
+	{EntityType.ENTITY_PON, 1},
+	{EntityType.ENTITY_BLOATY, 3},
+	{EntityType.ENTITY_VIS, 0, 3},
+}
+
 return g

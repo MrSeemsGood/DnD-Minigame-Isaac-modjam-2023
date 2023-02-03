@@ -22,14 +22,26 @@ local function RemoveRecentRewards(pos)
 end
 
 ---@param slot Entity
+local function YouFuckedUp(slot)
+	local beggarRNG = RNG()
+	beggarRNG:SetSeed(slot.InitSeed, 0)
+	for i = 1, 3 do
+		local enemyToSpawn = beggarRNG:RandomInt(#g.AllDungeonEnemies) + 1
+		local subType = enemyToSpawn[3] ~= nil and enemyToSpawn[3] or 0
+		g.game:Spawn(enemyToSpawn[1], enemyToSpawn[2], g.game:GetRoom():FindFreeTilePosition(slot.Position, 150^2), Vector.Zero, slot, subType, slot.InitSeed)
+	end
+end
+
+---@param slot Entity
 local function OverrideExplosionHack(slot)
 	local s = slot:GetSprite()
 	local bombed = slot.GridCollisionClass == EntityGridCollisionClass.GRIDCOLL_GROUND
-	if not bombed or slot:GetData().Bombed or s:IsPlaying("EmptyTable") then return end
+	if not bombed or s:IsPlaying("EmptyTable") then return end
 
-	slot:GetData().Bombed = true
 	RemoveRecentRewards(slot.Position)
-	--s:Play("Bombed", true)
+	s:Play("Bombed", true)
+	slot.GridCollisionClass = EntityGridCollisionClass.GRIDCOLL_NONE
+	YouFuckedUp(slot)
 end
 
 ---@param slot Entity
@@ -40,6 +52,9 @@ local function SpawnRewards(slot)
 		CollectibleType.COLLECTIBLE_LUCKY_FOOT,
 		CollectibleType.COLLECTIBLE_BOOK_OF_BELIAL,
 		CollectibleType.COLLECTIBLE_D20,
+		CollectibleType.COLLECTIBLE_D8,
+		CollectibleType.COLLECTIBLE_D10,
+		CollectibleType.COLLECTIBLE_D12,
 		CollectibleType.COLLECTIBLE_BERSERK,
 		CollectibleType.COLLECTIBLE_MONSTER_MANUAL,
 	}
@@ -72,11 +87,13 @@ function cnctable:slotUpdate()
 		local s = slot:GetSprite()
 		local d = slot:GetData()
 
-		if s:IsPlaying("Bombed") then --Or whatever the name you want to be
+		if not s:IsPlaying("Bombed") then --Or whatever the name you want to be
 			if g.GameState.HasLost then
+				print("You lost")
 				s:Play("Loser", true)
 				g.GameState.HasLost = false
 				d.TimesEndAnimLooped = 0
+				print("You won!")
 			elseif g.GameState.HasWon then
 				s:Play("Winner", true)
 				g.GameState.HasLost = false
@@ -89,6 +106,7 @@ function cnctable:slotUpdate()
 				then
 					if d.TimesEndAnimLooped < 3 then
 						d.TimesEndAnimLooped = d.TimesEndAnimLooped + 1
+						print("Loopy")
 					elseif not s:IsPlaying("EmptyTable") then
 						if s:IsPlaying("Winner") then
 							SpawnRewards(slot)

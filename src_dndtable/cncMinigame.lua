@@ -138,14 +138,51 @@ local function isTriggered(action, player)
 end
 
 ---@param stringTable table
-function cnc:separateTextByHashtag(stringTable)
+---@param stringLengthLimit integer
+function cnc:separateText(stringTable, stringLengthLimit)
 	if type(stringTable) == "table" then
-		while string.find(stringTable[#stringTable], "#") ~= nil do
-			local curText = stringTable[#stringTable]
-			local line1, line2 = string.find(curText, "#")
-			local nextLine = string.sub(curText, line2 + 1, -1)
-			stringTable[#stringTable] = string.sub(curText, 1, line1 - 1)
-			table.insert(stringTable, nextLine)
+
+		local hashtag = true
+		while hashtag do
+			for i = 1, #stringTable do
+				if string.find(stringTable[i], "#") ~= nil then
+					local curText = stringTable[i]
+					local line1, line2 = string.find(curText, "#")
+					local nextLine = string.sub(curText, line2 + 1, -1)
+					stringTable[i] = string.sub(curText, 1, line1 - 1)
+					table.insert(stringTable, i + 1, nextLine)
+					break
+				elseif i == #stringTable then
+					hashtag = false
+				end
+			end
+		end
+
+		local tooLong = true
+		while tooLong do
+			for i = 1, #stringTable do
+				if font:GetStringWidth(stringTable[i]) >= stringLengthLimit then
+					local curText = stringTable[i]
+					local currentLine = curText
+					local indexEnd = 1
+					while font:GetStringWidth(string.sub(currentLine, 1, indexEnd)) < stringLengthLimit do
+						indexEnd = indexEnd + 1
+						if string.sub(currentLine, 1, indexEnd) == string.sub(currentLine, 1, -1) then break end
+					end
+					local indexStart = indexEnd
+					while string.sub(currentLine, indexStart, indexEnd) ~= " " do
+						indexStart = indexStart - 1
+						indexEnd = indexEnd - 1
+						if indexStart == 1 then break end
+					end
+					currentLine = string.sub(currentLine, 1, indexStart)
+					local nextLine = string.sub(curText, indexEnd, -1)
+					stringTable[i] = currentLine
+					table.insert(stringTable, i + 1, nextLine)
+				elseif i == #stringTable then
+					tooLong = false
+				end
+			end
 		end
 	end
 	return stringTable
@@ -159,8 +196,12 @@ function cnc:RollDice()
 end
 
 function cnc:IsInCNCRoom()
-	local roomVariant = g.game:GetLevel():GetCurrentRoomDesc().Data.OriginalVariant
-	if state.Active and roomVariant >= 1600 and roomVariant <= 1620 then
+	local roomDescData = g.game:GetLevel():GetCurrentRoomDesc().Data
+	local roomVariant = roomDescData.OriginalVariant
+	local isDefaultRoom = roomDescData.Type == RoomType.ROOM_DEFAULT and (roomVariant >= 1600 and roomVariant <= 1618)
+	local isBossRoom = roomDescData.Type == RoomType.ROOM_BOSS and (roomVariant >= 16000 and roomVariant <= 16002)
+
+	if state.Active and (isDefaultRoom or isBossRoom) then
 		return true
 	else
 		return false
@@ -293,6 +334,7 @@ local function resetMinigame()
 end
 
 local function startMinigameReset()
+	print("reset attempt")
 	if not roomIndexOnMinigameClear and not resetting then
 		for _, player in ipairs(dndPlayers) do
 			if not player:IsDead() then
@@ -304,6 +346,7 @@ local function startMinigameReset()
 			end
 		end
 		roomIndexOnMinigameClear = state.RoomIndexStartedGameFrom
+		print(roomIndexOnMinigameClear)
 		print("minigame reset")
 		fadeType = "AllDown"
 		resetting = true
@@ -477,11 +520,6 @@ local function spawnRewardsOnRoomClear(rng, spawnPos)
 	if effects then
 		for i, player in ipairs(dndPlayers) do
 			if not player:IsDead() then
-				if effects.Collectible then
-					local pos = g.game:GetRoom():FindFreePickupSpawnPosition(spawnPos)
-					local seed = rng:GetSeed()
-					g.game:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COLLECTIBLE, pos, vel, nil, effects.Collectible, seed)
-				end
 				if effects.AddHearts and effects.AddHearts[1] then
 					for subType, num in pairs(effects.AddHearts) do
 						for _ = 1, num do
@@ -495,6 +533,11 @@ local function spawnRewardsOnRoomClear(rng, spawnPos)
 					player:AddMaxHearts(effects.AddMaxHearts)
 				end
 			end
+		end
+		if effects.Collectible then
+			local pos = g.game:GetRoom():FindFreePickupSpawnPosition(spawnPos)
+			local seed = rng:GetSeed()
+			g.game:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COLLECTIBLE, pos, vel, nil, effects.Collectible, seed)
 		end
 		if effects.Coins then
 			local coinsToSpawn = effects.Coins
@@ -572,7 +615,7 @@ function cnc:startNextPrompt()
 	end
 	local prompt = promptTable[state.PromptSelected]
 	--print(promptTable, prompt, prompt.Title)
-	local title = cnc:separateTextByHashtag({ prompt.Title })
+	local title = cnc:separateText({ prompt.Title }, 230)
 	renderPrompt.Title = title
 	renderPrompt.Options = {}
 	for _, option in ipairs(prompt.Options) do
@@ -812,15 +855,17 @@ function cnc:OnPromptTransition()
 	else
 		if state.EncounterCleared then
 			if background:IsFinished("FadeIn") then
-				if state.PromptProgress == state.MaxPrompts then
+				if state.PromptProgress == state.MaxPrompts and not state.AdventureEnded then
 					state.AdventureEnded = true
 					startMinigameReset()
+					print("you won bitch!")
 				else
 					renderPrompt.Title = { "Room Cleared!" }
 					renderPrompt.Outcome = { "You defeat the creatures,", "moving onto the next room..." }
 					fadeType = "AllUp"
 					Isaac.ExecuteCommand("goto s.default.2")
 					background:Play("TransitionIn", true)
+					print("go back to your playmate")
 				end
 			end
 		elseif background:IsPlaying("FadeIn") and background:GetFrame() == 40 then
@@ -929,7 +974,7 @@ function cnc:MinigameLogic()
 					if outcomeText[state.OutcomeResult] then
 						outcomeText = outcomeText[state.OutcomeResult]
 					end
-					renderPrompt.Outcome = cnc:separateTextByHashtag({ outcomeText })
+					renderPrompt.Outcome = cnc:separateText({ outcomeText }, 400)
 					fadeType = "PromptDown"
 				else
 					if cnc:IsRollOption()
@@ -961,7 +1006,7 @@ function cnc:MinigameLogic()
 				cnc:DiceAnimation()
 			end
 
-			renderText(renderPrompt.Title, -130, "Title")
+			renderText(renderPrompt.Title, -110, "Title")
 
 			if not state.HasSelected then
 				if renderPrompt.Options[2] ~= nil then
@@ -1102,9 +1147,11 @@ function cnc:OnNewRoom()
 	if state.Active then
 		if (
 			not cnc:IsInCNCRoom() and (roomVariant ~= 2 or g.game:GetLevel():GetCurrentRoomIndex() ~= GridRooms.ROOM_DEBUG_IDX)) then
+			print("in a room you should or shouldn't be in")
 			for _, slot in ipairs(Isaac.FindByType(EntityType.ENTITY_SLOT, g.CNC_BEGGAR)) do
 				if g.GameState.BeggarInitSeed ~= 0 then
 					if slot.InitSeed == g.GameState.BeggarInitSeed then
+						print("boy located")
 						for _, player in ipairs(players) do
 							player.Position = Vector(slot.Position.X, slot.Position.Y + 25)
 						end
@@ -1264,8 +1311,8 @@ function cnc:OnPostUpdate()
 	end
 
 	for i, player in ipairs(dndPlayers) do
-		if not player:IsDead() then
-			if player:IsHoldingItem() then
+		if not player:IsDead() and player:Exists() then
+			if not player:IsDead() and player:Exists() and player:IsHoldingItem() then
 				hasPickup = true
 			end
 		elseif not state.Characters.Dead[i] and state.Active then
@@ -1638,6 +1685,18 @@ end
 
 function cnc:OnPreGameExit()
 	resetMinigame()
+	g.GameState = {
+		ShouldStart = false,
+		GameActive = false,
+		BeggarInitSeed = 0,
+		HasWon = false,
+		HasLost = false,
+		PickupsCollected = {
+			Coins = 0,
+			Keys = 0,
+			Bombs = 0
+		}
+	}
 end
 
 return cnc

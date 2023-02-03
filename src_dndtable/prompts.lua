@@ -76,24 +76,24 @@ cncText.StatusEffect = {
 ---@type Prompt[]
 cncText.Prompts = {
 	{
-		Title = "testtesttesttesttesttesttest",
+		Title = "You find an impatient, brown furry creature pointing to the next room",
 		Options = {
-			[1] = { "Select", "Do it" },
-			[2] = { "Roll", "Do it but roll" },
-			[3] = { "Select", "You should kill yourself NOW" }
+			[1] = { "Select", "Follow its directions" },
+			[2] = { "Roll", "Roll a dice for no reason" },
+			[3] = { "Select", "Disobey its directions" }
 		},
 		Outcome = {
-			[1] = "Don't mind me",
+			[1] = "You walk into the next room",
 			[2] = {
 				[1] = "You rolled low",
 				[2] = "You rolled medium",
 				[3] = "You rolled high",
 			},
-			[3] = "You obey LowTierGod",
+			[3] = "The creature's eyes glow bright as lightning strikes down around them from the ceiling. They utter a phrase spoken in legend before you're smited down",
 		},
 		Effect = {
 			[3] = {
-				DamagePlayers = 10
+				DamagePlayers = 24
 			}
 		}
 	},
@@ -348,7 +348,7 @@ cncText.Encounters = {
 	},
 	-- DURRTS
 	{
-		Title = "A group of massive animated boulders#stands in your way!",
+		Title = "A group of massive animated boulders stands in your way!",
 		Options = {
 			[1] = {"Roll", "You try to remain neutral to them and not cause aggression."},
 			[2] = {"Select", "You reasonably decide to bomb them.", "Bomb1"},
@@ -443,35 +443,37 @@ cncText.Encounters = {
 ---@type Prompt[]
 cncText.RarePrompts = {
 	{
-		Title = "Holy crap luis#its a rare prompt",
+		Title = "You find an impatient, brown furry creature pointing to the next room",
 		Options = {
-			[1] = { "Select", "Do it" },
-			[2] = { "Roll", "Roll it" }
+			[1] = { "Select", "Follow its directions" },
+			[2] = { "Roll", "Roll a dice for no reason" },
+			[3] = { "Select", "Disobey its directions" }
 		},
 		Outcome = {
-			[1] = "Don't mind me",
+			[1] = "You walk into the next room",
 			[2] = {
-				[1] = "You failure",
-				[2] = "it alright",
-				[3] = ":)"
-			}
-		}
+				[1] = "You rolled low",
+				[2] = "You rolled medium",
+				[3] = "You rolled high",
+			},
+			[3] = "The creature's eyes glow bright as lightning strikes down around them from the ceiling. They utter a phrase spoken in legend before you're smited down",
+		},
 	},
 }
 
 ---@type Prompt[]
 cncText.BossEncounters = {
 	{
-		Title = "lmao its monstro",
+		Title = "Its the boy",
 		Options = {
 			[1] = { "Select", "Dunk his ass" }
 		},
 		Outcome = {
-			[1] = "You proceed to show this fool#whos in charge"
+			[1] = "You proceed to show this fool whos in charge"
 		},
 		Effect = {
 			[1] = {
-
+				StartEncounter = 16000
 			}
 		}
 	}
