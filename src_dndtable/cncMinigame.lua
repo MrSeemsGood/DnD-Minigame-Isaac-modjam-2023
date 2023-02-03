@@ -1612,11 +1612,14 @@ end
 
 ---@param bomb EntityBomb
 function cnc:LampOilRopeBombsYouWantItItsYourMyFriendAsLongAsYouGotThemInTheMinigame(bomb)
-	if state.Inventory.Bombs >= 0 then
-		bomb:Remove()
-		g.sfx:Stop(SoundEffect.SOUND_FETUS_LAND)
-	elseif state.Inventory.Bombs > 0 then
-		state.Inventory.Bombs = state.Inventory.Bombs - 1
+	if bomb.SpawnerEntity and bomb.SpawnerEntity:ToPlayer() and state.Active then
+		if state.Inventory.Bombs >= 0 then
+			bomb:Remove()
+			g.sfx:Stop(SoundEffect.SOUND_FETUS_LAND)
+			bomb.SpawnerEntity:ToPlayer():AddBombs(1)
+		elseif state.Inventory.Bombs > 0 then
+			state.Inventory.Bombs = state.Inventory.Bombs - 1
+		end
 	end
 end
 
