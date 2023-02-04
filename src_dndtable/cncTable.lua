@@ -25,10 +25,13 @@ end
 local function YouFuckedUp(slot)
 	local beggarRNG = RNG()
 	beggarRNG:SetSeed(slot.InitSeed, 0)
-	for i = 1, 3 do
+	for _ = 1, 3 do
 		local enemyToSpawn = beggarRNG:RandomInt(#g.AllDungeonEnemies) + 1
+		local type = enemyToSpawn[1]
+		local variant = enemyToSpawn[2]
 		local subType = enemyToSpawn[3] ~= nil and enemyToSpawn[3] or 0
-		g.game:Spawn(enemyToSpawn[1], enemyToSpawn[2], g.game:GetRoom():FindFreeTilePosition(slot.Position, 150^2), Vector.Zero, slot, subType, slot.InitSeed)
+		g.game:Spawn(type, variant, g.game:GetRoom():FindFreeTilePosition(slot.Position, 150 ^ 2),
+			Vector.Zero, slot, subType, slot.InitSeed)
 	end
 end
 
@@ -36,11 +39,10 @@ end
 local function OverrideExplosionHack(slot)
 	local s = slot:GetSprite()
 	local bombed = slot.GridCollisionClass == EntityGridCollisionClass.GRIDCOLL_GROUND
-	if not bombed or s:IsPlaying("EmptyTable") then return end
+	if not bombed or s:GetAnimation() == "EmptyTable" or s:GetAnimation() == "Bombed" then return end
 
 	RemoveRecentRewards(slot.Position)
 	s:Play("Bombed", true)
-	slot.GridCollisionClass = EntityGridCollisionClass.GRIDCOLL_NONE
 	YouFuckedUp(slot)
 end
 
@@ -62,7 +64,8 @@ local function SpawnRewards(slot)
 	local beggarRNG = RNG()
 	beggarRNG:SetSeed(slot.InitSeed, 0)
 	local pos = g.game:GetRoom():FindFreePickupSpawnPosition(slot.Position, 1)
-	g.game:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COLLECTIBLE, pos, Vector.Zero, slot, beggarRNG:RandomInt(#itemPool) + 1, slot.InitSeed)
+	g.game:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COLLECTIBLE, pos, Vector.Zero, slot,
+		itemPool[beggarRNG:RandomInt(#itemPool) + 1], slot.InitSeed)
 
 	for name, num in pairs(g.GameState.PickupsCollected) do
 		if num > 0 then
@@ -88,34 +91,32 @@ function cnctable:slotUpdate()
 		local d = slot:GetData()
 
 		if not s:IsPlaying("Bombed") then --Or whatever the name you want to be
-			if g.GameState.HasLost then
-				print("You lost")
-				s:Play("Loser", true)
-				g.GameState.HasLost = false
-				d.TimesEndAnimLooped = 0
-				print("You won!")
-			elseif g.GameState.HasWon then
-				s:Play("Winner", true)
-				g.GameState.HasLost = false
-				d.TimesEndAnimLooped = 0
-			end
-
 			if d.TimesEndAnimLooped then
-				if (s:IsPlaying("Loser") and s:GetFrame() == 13)
-					or (s:IsPlaying("Winner") and s:GetFrame() == 12)
-				then
+				if s:GetFrame() == 0 then
 					if d.TimesEndAnimLooped < 3 then
 						d.TimesEndAnimLooped = d.TimesEndAnimLooped + 1
 						print("Loopy")
-					elseif not s:IsPlaying("EmptyTable") then
+					elseif s:GetAnimation() ~= "EmptyTable" then
 						if s:IsPlaying("Winner") then
 							SpawnRewards(slot)
 						end
 						s:Play("EmptyTable", true)
 						Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.POOF01, 0, slot.Position, Vector.Zero, slot)
-						slot.GridCollisionClass = EntityGridCollisionClass.GRIDCOLL_GROUND
+						slot.EntityCollisionClass = EntityCollisionClass.ENTCOLL_NONE
 					end
 				end
+			end
+
+			if g.GameState.HasLost then
+				print("You lost")
+				s:Play("Loser", true)
+				g.GameState.HasLost = false
+				d.TimesEndAnimLooped = 0
+			elseif g.GameState.HasWon then
+				print("You won!")
+				s:Play("Winner", true)
+				g.GameState.HasWon = false
+				d.TimesEndAnimLooped = 0
 			end
 
 			if s:IsFinished('Hide') then
@@ -124,7 +125,7 @@ function cnctable:slotUpdate()
 				s:Play('IdleShown', true)
 			end
 
-			if s:IsPlaying("Winner") or s:IsPlaying("Loser") or s:IsPlaying("EmptyTable") then return end
+			if s:IsPlaying("Winner") or s:IsPlaying("Loser") or s:GetAnimation() == "EmptyTable" then return end
 
 			local near = #Isaac.FindInRadius(slot.Position, 80, EntityPartition.PLAYER)
 			if near > 0
@@ -142,11 +143,14 @@ end
 ---@param collider Entity
 ---@param _ any
 function cnctable:onPlayerCollision(player, collider, _)
+	local s = collider:GetSprite()
 	if collider.Type == EntityType.ENTITY_SLOT
 		and collider.Variant == g.CNC_BEGGAR
 		and not g.GameState.ShouldStart
 		and not g.GameState.GameActive
 		and not (g.GameState.HasLost or g.GameState.HasWon)
+		and collider.GridCollisionClass ~= EntityGridCollisionClass.GRIDCOLL_GROUND
+		and not (s:IsPlaying("Winner") or s:IsPlaying("Loser") or s:GetAnimation() == "EmptyTable")
 	then
 		g.GameState.BeggarInitSeed = collider.InitSeed
 		g.GameState.ShouldStart = true

@@ -279,10 +279,23 @@ local function initCharacterSelect()
 end
 
 local function resetMinigame()
+	print("but its actually reset eyy")
 	renderPrompt = {
 		Title = {},
 		Options = {},
 		Outcome = {}
+	}
+	transitionY = {
+		Title = 0,
+		Prompt = 0,
+		Characters = 0,
+		Dice = 0
+	}
+	transitionAlpha = {
+		Title = 1,
+		Prompt = 1,
+		Characters = 1,
+		Dice = 1
 	}
 	background:Reset()
 	characters:Reset()
@@ -735,7 +748,7 @@ end
 local function renderText(stringTable, startingPos, textType)
 	local center = getCenterScreen()
 	local nextLineMult = 0.15
-	local posPerLineMult = textType == "Title" and 0.15 or 0.05
+	local posPerLineMult = textType == "Title" and -0.05 or 0.05
 	local lineSpacingMult = textType == "Title" and 100 or 125
 
 	local posX = textType == "Title" and (center.X - 120) or 0
@@ -854,8 +867,8 @@ function cnc:OnPromptTransition()
 		end
 	else
 		if state.EncounterCleared then
-			if background:IsFinished("FadeIn") then
-				if state.PromptProgress == state.MaxPrompts and not state.AdventureEnded then
+			if background:IsFinished("FadeIn") and not state.AdventureEnded then
+				if state.PromptProgress == state.MaxPrompts then
 					state.AdventureEnded = true
 					startMinigameReset()
 					print("you won bitch!")
@@ -1006,7 +1019,7 @@ function cnc:MinigameLogic()
 				cnc:DiceAnimation()
 			end
 
-			renderText(renderPrompt.Title, -110, "Title")
+			renderText(renderPrompt.Title, -80, "Title")
 
 			if not state.HasSelected then
 				if renderPrompt.Options[2] ~= nil then
@@ -1153,7 +1166,7 @@ function cnc:OnNewRoom()
 					if slot.InitSeed == g.GameState.BeggarInitSeed then
 						print("boy located")
 						for _, player in ipairs(players) do
-							player.Position = Vector(slot.Position.X, slot.Position.Y + 25)
+							player.Position = Vector(slot.Position.X, slot.Position.Y + 50)
 						end
 					end
 				end
