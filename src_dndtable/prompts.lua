@@ -35,6 +35,7 @@ cncText.StatusEffect = {
 ---@field Luck number
 ---@field Range number
 ---@field ShotSpeed number
+---@field Speed number
 
 ---@class OutcomeEffect
 ---@field Collectible CollectibleType
