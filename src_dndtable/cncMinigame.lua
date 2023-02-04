@@ -109,7 +109,8 @@ local statsTable = {
 	TearsMult = 1,
 	Luck = 0,
 	Range = 0,
-	ShotSpeed = 0
+	ShotSpeed = 0,
+	Speed = 0
 }
 ---@type EntityPlayer[]
 local dndPlayers = {
@@ -1437,6 +1438,8 @@ function cnc:OnCNCPlayerCache(player, cacheFlag)
 			player.ShotSpeed = player.ShotSpeed + stats.ShotSpeed
 		elseif cacheFlag == CacheFlag.CACHE_LUCK then
 			player.Luck = player.Luck + stats.Luck
+		elseif cacheFlag == CacheFlag.CACHE_SPEED then
+			player.MoveSpeed = player.MoveSpeed + stats.Speed
 		end
 	end
 end

@@ -35,6 +35,7 @@ cncText.StatusEffect = {
 ---@field Luck number
 ---@field Range number
 ---@field ShotSpeed number
+---@field Speed number
 
 ---@class OutcomeEffect
 ---@field Collectible CollectibleType
@@ -89,7 +90,7 @@ cncText.Prompts = {
 				[2] = "You rolled medium",
 				[3] = "You rolled high",
 			},
-			[3] = "The creature's eyes glow bright as lightning strikes down around them from the ceiling. They utter a phrase spoken in legend before you're smited down",
+			[3] = "hehe hoho",
 		},
 		Effect = {
 			[3] = {
