@@ -996,9 +996,6 @@ function cnc:MinigameLogic()
 				if not state.HasSelected then
 					local prompt = cncText:GetTableFromPromptType(state.PromptTypeSelected)
 					local outcomeText = prompt[state.PromptSelected].Outcome[state.OptionSelectedSaved]
-					if outcomeText[state.OutcomeResult] then
-                        outcomeText = outcomeText[state.OutcomeResult]
-                    end
 
 					if cnc:IsRollOption() then
 						cnc:RollDice()
@@ -1013,6 +1010,9 @@ function cnc:MinigameLogic()
 						end
 					end
 					--print(prompt, prompt[state.PromptSelected], prompt[state.PromptSelected].Outcome, outcomeText, state.PromptTypeSelected, state.PromptSelected, state.OptionSelectedSaved)
+					if outcomeText[state.OutcomeResult] then
+                        outcomeText = outcomeText[state.OutcomeResult]
+                    end
 
 					renderPrompt.Outcome = cnc:separateText({ outcomeText }, 300)
 					fadeType = "PromptDown"

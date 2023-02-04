@@ -309,18 +309,18 @@ cncText.Prompts = {
 		Options = {
 			[1] = { "Select", "You shake his hand." },
 			[2] = { "Select", "You back off and keep going." },
-			[3] = { "Select", "You smile back very politely.", PlayerType.PLAYER_MAGDALENE},
-			[4] = { "Roll", "You decide to offer a deal.", "Coin2"}
+			[3] = { "Roll", "You decide to offer a deal.", "Coin2"},
+			[4] = { "Select", "You smile back very politely.", PlayerType.PLAYER_MAGDALENE},
 		},
 		Outcome = {
 			[1] = "The stranger wishes you the best of luck in traversing these caves.",
 			[2] = "The stranger frowns, calls you rude and leaves.",
-			[3] = "The stranger blushes and welcomes you to the caves with a special gift.",
-			[4] = {
+			[3] = {
 				[1] = "The stranger steals the coins you offer him and runs into the dark.",
 				[2] = "The stranger is not a merchant. He has nothing to offer you.",
 				[3] = "The stranger is excited. They'd been craving for a new customer!"
-			}
+			},
+			[4] = "The stranger blushes and welcomes you to the caves with a special gift.",
 		},
 		Effect = {
 			[1] = {
@@ -329,10 +329,6 @@ cncText.Prompts = {
 				}
 			},
 			[3] = {
-				Coins = 2,
-				Bombs = 2
-			},
-			[4] = {
 				[1] = {
 					Coins = -2
 				},
@@ -340,7 +336,11 @@ cncText.Prompts = {
 					Coins = -2,
 					Collectible = CollectibleType.COLLECTIBLE_BOT_FLY
 				}
-			}
+			},
+			[4] = {
+				Coins = 2,
+				Bombs = 2
+			},
 		}
 	},
 	-- 6: PITCH BLACK
