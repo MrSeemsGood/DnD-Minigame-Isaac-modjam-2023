@@ -263,13 +263,13 @@ cncText.Prompts = {
 		Options = {
 			[1] = { "Select", "Leave it be." },
 			[2] = { "Roll", "Search it for books." },
-			[3] = { "Roll", "There are some books on the very top. You decide to crush the bookcase down and then search it.", PlayerType.PLAYER_ISAAC}
+			[3] = { "Roll", "You decide to crush the bookcase down and then search it.", PlayerType.PLAYER_ISAAC}
 		},
 		Outcome = {
 			[1] = "You walk into the next room. Right as you leave, you hear a loud thud as the bookcase finally collapses under its own weight.",
 			[2] = {
 				[1] = "You tilt the bookcase too much and it falls down on you.",
-				[2] = "All books here are extremely old and fragile. You can't find anything useful",
+				[2] = "All books here are extremely old and fragile. You can't find anything useful.",
 				[3] = "You find a book and take it with you!",
 			},
 			[3] = {
@@ -319,7 +319,7 @@ cncText.Prompts = {
 			[4] = {
 				[1] = "The stranger steals the coins you offer him and runs into the dark.",
 				[2] = "The stranger is not a merchant. He has nothing to offer you.",
-				[3] = "The stranger is excited; they'd been craving for a new customer!"
+				[3] = "The stranger is excited. They'd been craving for a new customer!"
 			}
 		},
 		Effect = {
@@ -349,7 +349,7 @@ cncText.Prompts = {
 		Options = {
 			[1] = { "Roll", "You walk through very carefully." },
 			[2] = { "Select", "You pass through.", PlayerType.PLAYER_CAIN},
-			[3] = { "Select", "You light the fuse on a bomb to observe the cavern.", "Bomb1"},
+			[3] = { "Select", "You lit the fuse on a bomb to observe the cavern.", "Bomb1"},
 		},
 		Outcome = {
 			[1] = {
@@ -466,7 +466,7 @@ cncText.Encounters = {
 			[1] = {
 				[1] = "You encounter Bodaks and their lesser undead friends.",
 				[2] = "You encounter 2 Bodaks. However, the room is a bit too tight...",
-				[3] = "You encounter 4 Bodaks. They don't seem too interested in you.",
+				[3] = "You encounter 4 Bodaks.",
 			},
 			[2] = "The creatures seem very excited with the coins you threw."
 		},
@@ -501,7 +501,7 @@ cncText.Encounters = {
 	{
 		Title = "You encounter weird oozy creatures.#Their flesh melts off of them and piles back together.",
 		Options = {
-			[1] = { "Roll", "You try to lure them out into the open" }
+			[1] = { "Roll", "You try to lure them out into the open." }
 		},
 		Outcome = {
 			[1] = {
@@ -622,7 +622,7 @@ cncText.Encounters = {
 	},
 	-- 6: GRELLS
 	{
-		Title = "You encounter floating brains with tentacles and a beak. Oh, mother Nature!",
+		Title = "You encounter floating brains with tentacles and a beak. Oh, Mother Nature!",
 		Options = {
 			[1] = { "Roll", "You try to remain unnoticed." },
 			[2] = { "Select", "You try to sneak by.", PlayerType.PLAYER_CAIN }

@@ -160,7 +160,8 @@ function cnc:separateText(stringTable, stringLengthLimit)
 		end
 
 		local tooLong = true
-		while tooLong do
+		local freezePreventChecker = 0
+		while tooLong and freezePreventChecker < 1000 do
 			for i = 1, #stringTable do
 				if font:GetStringWidth(stringTable[i]) > stringLengthLimit then
 					--Isaac.DebugString("Current length: "..tostring(font:GetStringWidth(stringTable[i])))
@@ -172,6 +173,7 @@ function cnc:separateText(stringTable, stringLengthLimit)
 						--Isaac.DebugString("Finding lower than limit: "..tostring(indexEnd))
 						if string.sub(currentLine, 1, indexEnd) == string.sub(currentLine, 1, -1) then break end
 					end
+					indexEnd = indexEnd - 1
 					local indexStart = indexEnd
 					while string.sub(currentLine, indexStart, indexEnd) ~= " " do
 						indexStart = indexStart - 1
@@ -190,8 +192,15 @@ function cnc:separateText(stringTable, stringLengthLimit)
 					tooLong = false
 				end
 			end
+
+			freezePreventChecker = freezePreventChecker + 1
+		end
+
+		if freezePreventChecker == 10000 then
+			--print('Terminated after ' .. tostring(freezePreventChecker) .. " attempts")
 		end
 	end
+
 	return stringTable
 end
 
@@ -411,7 +420,7 @@ local function applyEffectsOnNewPrompt()
 			if effects.Collectible then
 				for _, player in ipairs(dndPlayers) do
 					if not player:IsDead() then
-						player:AddCollectible(effects.Collectible)
+						player:AddCollectible(effects.Collectible, 12, false)
 					end
 				end
 			end
@@ -987,6 +996,9 @@ function cnc:MinigameLogic()
 				if not state.HasSelected then
 					local prompt = cncText:GetTableFromPromptType(state.PromptTypeSelected)
 					local outcomeText = prompt[state.PromptSelected].Outcome[state.OptionSelectedSaved]
+					if outcomeText[state.OutcomeResult] then
+                        outcomeText = outcomeText[state.OutcomeResult]
+                    end
 
 					if cnc:IsRollOption() then
 						cnc:RollDice()
@@ -1001,9 +1013,7 @@ function cnc:MinigameLogic()
 						end
 					end
 					--print(prompt, prompt[state.PromptSelected], prompt[state.PromptSelected].Outcome, outcomeText, state.PromptTypeSelected, state.PromptSelected, state.OptionSelectedSaved)
-					if outcomeText[state.OutcomeResult] then
-						outcomeText = outcomeText[state.OutcomeResult]
-					end
+
 					renderPrompt.Outcome = cnc:separateText({ outcomeText }, 300)
 					fadeType = "PromptDown"
 				else
