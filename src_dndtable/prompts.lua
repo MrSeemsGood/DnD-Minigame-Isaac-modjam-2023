@@ -464,16 +464,33 @@ cncText.RarePrompts = {
 ---@type Prompt[]
 cncText.BossEncounters = {
 	{
-		Title = "Its the boy",
+		Title = "As you approach the next room, a migraine starts growing on you. It feels like somebody's trying to control your mind...",
 		Options = {
-			[1] = { "Select", "Dunk his ass" }
+			[1] = {"Roll", "Choose the hallway to proceed."},
+			[2] = {"Select", "Go back the previous room."}
 		},
 		Outcome = {
-			[1] = "You proceed to show this fool whos in charge"
+			[1] = {
+				[1] = "You can't run away from The Mind Flayer.",
+				[2] = "You can't run away from The Mind Flayer.",
+				[3] = "You can't run away from The Mind Flayer."
+			},
+			[2] = "You can't run away from The Mind Flayer."
 		},
 		Effect = {
 			[1] = {
-				StartEncounter = 16000
+				[1] = {
+					StartEncounter = 16001
+				},
+				[2] = {
+					StartEncounter = 16000
+				},
+				[3] = {
+					StartEncounter = 16002
+				}
+			},
+			[2] = {
+				StartEncounter = 16002
 			}
 		}
 	}
@@ -491,6 +508,7 @@ function cncText:GetTableFromPromptType(promptType)
 	elseif promptType == cncText.PromptType.RARE then
 		return cncText.RarePrompts
 	end
+
 	return cncText.Prompts
 end
 

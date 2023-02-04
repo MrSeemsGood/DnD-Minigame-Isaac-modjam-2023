@@ -44,7 +44,7 @@ local gameState = {
 	PromptProgress = 0,
 	PromptSelected = 1,
 	PromptTypeSelected = cncText.PromptType.NORMAL,
-	MaxPrompts = 5,
+	MaxPrompts = 6,
 	HasSelected = false,
 	HasRolled = false,
 	HOLUPLETHIMCOOK = false,
@@ -609,15 +609,16 @@ function cnc:startNextPrompt()
 	local promptTable = cncText:GetTableFromPromptType(state.PromptTypeSelected)
 
 	if selectNextPrompt then
-		if state.PromptProgress == 3 then
-			state.PromptTypeSelected = cncText.PromptType.ENEMY
-		elseif state.PromptProgress == state.MaxPrompts then
+		if state.PromptProgress == state.MaxPrompts then
 			state.PromptTypeSelected = cncText.PromptType.BOSS
+		elseif state.PromptProgress % 2 == 0 then
+			state.PromptTypeSelected = cncText.PromptType.ENEMY
 		elseif VeeHelper.RandomNum(1, 50) == 50 then
 			state.PromptTypeSelected = cncText.PromptType.RARE
 		else
 			state.PromptTypeSelected = cncText.PromptType.NORMAL
 		end
+
 		promptTable = cncText:GetTableFromPromptType(state.PromptTypeSelected)
 		if state.PromptTypeSelected == cncText.PromptType.NORMAL or state.PromptTypeSelected == cncText.PromptType.ENEMY then
 			local tableToUse = state.PromptTypeSelected == cncText.PromptType.ENEMY and state.EncountersSeen or state.PromptsSeen
@@ -1304,6 +1305,11 @@ function cnc:OnPostUpdate()
 		then
 			background:Play("FadeIn", true)
 			state.ScreenShown = true
+
+			-- If all players died during the boss fight, remove Wavy Cap effects.
+			for i = 0, g.game:GetNumPlayers() do
+				Isaac.GetPlayer(0):GetEffects():RemoveCollectibleEffect(CollectibleType.COLLECTIBLE_WAVY_CAP, 2)
+			end
 		end
 		if roomIndexOnMinigameClear then
 			if roomIndexOnMinigameClear ~= 0 then
@@ -1351,7 +1357,11 @@ function cnc:OnPostUpdate()
 			and not state.EncounterCleared
 		then
 			local noPickups = false
-			if #Isaac.FindByType(EntityType.ENTITY_PICKUP) == 0 then
+
+			-- Okay so my logic here is that hearts can only drop from the boss fight,
+			-- and you don't really care about those anymore since you either won or died.
+			-- So please *actually* trigger the room clear even if there are hearts in one.
+			if #Isaac.FindByType(EntityType.ENTITY_PICKUP) == #Isaac.FindByType(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_HEART) then
 				noPickups = true
 			else
 				for _, pedestal in ipairs(Isaac.FindByType(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COLLECTIBLE)) do
@@ -1365,6 +1375,7 @@ function cnc:OnPostUpdate()
 					end
 				end
 			end
+
 			if noPickups then
 				state.EncounterCleared = true
 				background:Play("FadeIn", true)

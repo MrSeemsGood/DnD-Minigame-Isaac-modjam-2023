@@ -25,8 +25,8 @@ end
 local function YouFuckedUp(slot)
 	local beggarRNG = RNG()
 	beggarRNG:SetSeed(slot.InitSeed, 0)
-	for _ = 1, 3 do
-		local enemyToSpawn = beggarRNG:RandomInt(#g.AllDungeonEnemies) + 1
+	for _ = 1, 2 do
+		local enemyToSpawn = g.AllDungeonEnemies[beggarRNG:RandomInt(#g.AllDungeonEnemies) + 1]
 		local type = enemyToSpawn[1]
 		local variant = enemyToSpawn[2]
 		local subType = enemyToSpawn[3] ~= nil and enemyToSpawn[3] or 0
@@ -39,11 +39,15 @@ end
 local function OverrideExplosionHack(slot)
 	local s = slot:GetSprite()
 	local bombed = slot.GridCollisionClass == EntityGridCollisionClass.GRIDCOLL_GROUND
-	if not bombed or s:GetAnimation() == "EmptyTable" or s:GetAnimation() == "Bombed" then return end
+	if not bombed or s:GetAnimation() == "Bombed" then return end
 
 	RemoveRecentRewards(slot.Position)
 	s:Play("Bombed", true)
-	YouFuckedUp(slot)
+	slot.Friction = 0
+
+	if slot.Variant == g.CNC_BEGGAR then
+		YouFuckedUp(slot)
+	end
 end
 
 ---@param slot Entity
@@ -85,35 +89,43 @@ local function SpawnRewards(slot)
 end
 
 function cnctable:slotUpdate()
+	for _, slot in pairs(Isaac.FindByType(EntityType.ENTITY_SLOT, g.CNC_EMPTY_TABLE)) do
+		OverrideExplosionHack(slot)
+
+		slot:GetSprite():Play('EmptyTable')
+	end
+
 	for _, slot in pairs(Isaac.FindByType(EntityType.ENTITY_SLOT, g.CNC_BEGGAR)) do
 		OverrideExplosionHack(slot)
 		local s = slot:GetSprite()
 		local d = slot:GetData()
 
 		if not s:IsPlaying("Bombed") then --Or whatever the name you want to be
+			print(d.TimesEndAnimLooped)
 			if d.TimesEndAnimLooped then
 				if s:GetFrame() == 0 then
 					if d.TimesEndAnimLooped < 3 then
 						d.TimesEndAnimLooped = d.TimesEndAnimLooped + 1
-						print("Loopy")
-					elseif s:GetAnimation() ~= "EmptyTable" then
+						--print("Loopy")
+					else
 						if s:IsPlaying("Winner") then
 							SpawnRewards(slot)
 						end
-						s:Play("EmptyTable", true)
+
 						Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.POOF01, 0, slot.Position, Vector.Zero, slot)
-						slot.EntityCollisionClass = EntityCollisionClass.ENTCOLL_NONE
+						slot:Remove()
+						local empty = Isaac.Spawn(6, g.CNC_EMPTY_TABLE, 0, slot.Position, Vector.Zero, nil)
 					end
 				end
 			end
 
 			if g.GameState.HasLost then
-				print("You lost")
+				--print("You lost")
 				s:Play("Loser", true)
 				g.GameState.HasLost = false
 				d.TimesEndAnimLooped = 0
 			elseif g.GameState.HasWon then
-				print("You won!")
+				--print("You won!")
 				s:Play("Winner", true)
 				g.GameState.HasWon = false
 				d.TimesEndAnimLooped = 0

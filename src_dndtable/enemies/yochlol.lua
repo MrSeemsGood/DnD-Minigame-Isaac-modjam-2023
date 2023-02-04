@@ -58,8 +58,10 @@ function yochlol:onNpcUpdate(npc)
                 creep.Scale = 2
                 creep.Timeout = 60
 
-                local maggot = Isaac.Spawn(EntityType.ENTITY_SMALL_MAGGOT, 0, 0, npc.Position, Vector.Zero, npc)
-                maggot:ClearEntityFlags(EntityFlag.FLAG_APPEAR)
+                for _ = 1, 3 do
+                    local maggot = Isaac.Spawn(EntityType.ENTITY_SMALL_MAGGOT, 0, 0, npc.Position, Vector.Zero, npc)
+                    maggot:ClearEntityFlags(EntityFlag.FLAG_APPEAR)
+                end
 
                 if player.Position:Distance(npc.Position) < YOCHLOL_SLAM_HIT_DISTANCE then
                     player:TakeDamage(1, 0, EntityRef(npc), 0)

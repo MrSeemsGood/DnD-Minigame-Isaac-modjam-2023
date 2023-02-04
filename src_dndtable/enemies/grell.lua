@@ -35,13 +35,16 @@ local function isGridToTurn(room, pos)
     and (room:GetGridEntityFromPos(pos):GetType() == GridEntityType.GRID_WALL or room:GetGridEntityFromPos(pos):GetType() == GridEntityType.GRID_DOOR)
 end
 
+---@param npc EntityNPC
+---@param checkCooldown boolean
+---@param player? EntityPlayer|Entity
 local function isPlayerInWhipRange(npc, checkCooldown, player)
     player = player or npc:GetPlayerTarget()
     if checkCooldown and npc:GetData().whipCooldown > 0 then return false end
 
     local sprite = npc:GetSprite()
 
-    if not player
+    if not player or not player.Visible
     or not g.game:GetRoom():CheckLine(player.Position, npc.Position, 0) then
         return false
     end

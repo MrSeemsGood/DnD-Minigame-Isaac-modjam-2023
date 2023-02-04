@@ -4,12 +4,15 @@
         <gibs amount="0" blood="0" bone="0" eye="0" gut="0" large="0" />
     </entity>
 
+    <entity anm2path="006.089_table_empty.anm2" baseHP="0" boss="0" champion="0" collisionDamage="0" collisionMass="3" collisionRadius="18" friction="0" id="6" name="CnC Table (Empty)" numGridCollisionPoints="18" shadowSize="24" stageHP="0" variant="89">
+    </entity>
+
     <!-- enemies -->
     <entity anm2path="898.001_invisiblestalker.anm2" baseHP="20" boss="0" champion="0" gridCollision="walls" collisionDamage="1" collisionMass="3" collisionRadius="12" friction="1" id="898" variant="1" name="Invisible Stalker" numGridCollisionPoints="12" shadowSize="16" stageHP="0" shadowSize="0">
         <gibs amount="0" blood="0" bone="0" eye="0" gut="0" large="0" />
     </entity>
 
-    <entity anm2path="898.002_yochlol.anm2" baseHP="25" shieldStrength="3" boss="0" champion="0" collisionDamage="1" collisionMass="3" collisionRadius="14" friction="1" id="898" variant="2" name="Yochlol" numGridCollisionPoints="12" shadowSize="16" stageHP="0">
+    <entity anm2path="898.002_yochlol.anm2" baseHP="30" shieldStrength="3" boss="0" champion="0" collisionDamage="1" collisionMass="3" collisionRadius="14" friction="1" id="898" variant="2" name="Yochlol" numGridCollisionPoints="12" shadowSize="16" stageHP="0">
         <gibs amount="0" blood="0" bone="0" eye="0" gut="0" large="0" />
     </entity>
 
@@ -17,7 +20,7 @@
     </entity>
 
 <!-- Grells -->
-    <entity anm2path="898.004_grell.anm2" baseHP="30" boss="0" champion="0" gridCollision="walls" collisionDamage="1" collisionMass="3" collisionRadius="12" friction="1" id="898" variant="4" name="Grell (Start North-East)" numGridCollisionPoints="12" shadowSize="16" stageHP="0" subtype="1">
+    <entity anm2path="898.004_grell.anm2" baseHP="20" boss="0" champion="0" gridCollision="walls" collisionDamage="1" collisionMass="3" collisionRadius="12" friction="1" id="898" variant="4" name="Grell (Start North-East)" numGridCollisionPoints="12" shadowSize="16" stageHP="0" subtype="1">
     </entity>
 
     <entity anm2path="898.004_grell.anm2" baseHP="30" boss="0" champion="0" gridCollision="walls" collisionDamage="1" collisionMass="3" collisionRadius="12" friction="1" id="898" variant="4" name="Grell (Start North-West)" numGridCollisionPoints="12" shadowSize="16" stageHP="0" subtype="2">
