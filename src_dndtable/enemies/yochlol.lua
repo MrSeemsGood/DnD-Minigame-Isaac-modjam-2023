@@ -86,7 +86,7 @@ function yochlol:onNpcUpdate(npc)
         if s:IsPlaying('Gas') then
             if npc:GetData().gasDuration % 6 == 0 then
                 local gas = Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.SMOKE_CLOUD, 0, npc.Position, Vector.Zero, npc):ToEffect()
-                gas.Timeout = 100
+                gas.Timeout = 75
             end
             npc:GetData().gasDuration = npc:GetData().gasDuration - 1
             npc.Velocity = (player.Position - npc.Position):Normalized() * YOCHLOL_MOVESPEED_GAS

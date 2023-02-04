@@ -348,8 +348,8 @@ cncText.Prompts = {
 		Title = "You enter a cavern. It's pitch black. Completely",
 		Options = {
 			[1] = { "Roll", "You walk through very carefully." },
-			[2] = { "Select", "You light the fuse on a bomb to observe the cavern.", "Bomb1"},
-			[3] = { "Select", "You pass through.", PlayerType.PLAYER_CAIN},
+			[2] = { "Select", "You pass through.", PlayerType.PLAYER_CAIN},
+			[3] = { "Select", "You light the fuse on a bomb to observe the cavern.", "Bomb1"},
 		},
 		Outcome = {
 			[1] = {
@@ -357,8 +357,8 @@ cncText.Prompts = {
 				[2] = "You notice a spike trap, but you aren't very careful around it.",
 				[3] = "You notice a spike trap and barely pass through without getting hurt."
 			},
-			[2] = "You see a spike trap in the middle of the room. You cross right before the bomb explodes.",
-			[3] = "You are used to the darkness, you manage to dodge a spike trap and even pick something up!",
+			[2] = "You are used to the darkness, you manage to dodge a spike trap and even pick something up!",
+			[3] = "You see a spike trap in the middle of the room. You cross right before the bomb explodes.",
 		},
 		Effect = {
 			[1] = {
