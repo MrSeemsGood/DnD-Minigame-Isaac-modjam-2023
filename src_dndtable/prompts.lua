@@ -74,39 +74,6 @@ cncText.StatusEffect = {
 --Add a string named "Key", "Coin", or "Bomb" with a number next to it without spaces (e.g. "Key1") to require a consumable for the option to be selected
 --The Effect table, the list of variables for it described above. Setup the same as Options and Title, but only include the numbers you need (e.g. You only want an effect for Option 3, so only include an effect for the index of 3)
 
----@type Prompt[]
-cncText.Prompts = {
-	{
-		Title = "You come across a beggar who asks for but a measely penny to help them get through the day.",
-		Options = {
-			[1] = { "Select", "Pay no notice to the beggar" },
-			[2] = { "Select", "Give a coin to the beggar", "Coin1" },
-			[3] = { "Select", "'Trade' with the beggar", PlayerType.PLAYER_CAIN },
-		},
-		Outcome = {
-			[1] = "You move forwards through the caves, leaving the beggar for dead.",
-			[2] = "You part ways with your penny and give it to the beggar. He thanks you and reveals himself to be a wizard! A magical spell grants you +1 damage to assist in defeating your foes.",
-			[3] = "You offer some coins in exchange for any valuables they have. They give you a tooth, but you run off the moment it's in your hands. A curse is enacted upon you from the beggar, you feel slower!"
-		},
-		Effect = {
-			[2] = {
-				Coins = -1,
-				Stats = {
-					DamageFlat = 1
-				}
-			},
-			[3] = {
-				Stats = {
-					Speed = -0.3
-				},
-				Collectible = CollectibleType.COLLECTIBLE_DEAD_TOOTH
-			}
-		}
-	}
-}
-
----@type Prompt[]
-cncText.Encounters = {
 	--The following prompt has everything possible so you know how its setup
 	--[[ 	{
 		Title = "Wow that's a lot of options#This hashtag makes another line",
@@ -407,6 +374,34 @@ cncText.Prompts = {
 			},
 			[3] = {
 				Keys = 1
+			}
+		}
+	},
+	--7: INNOCENT BEGGAR
+	{
+		Title = "You come across a beggar who asks for but a measely penny to help them get through the day.",
+		Options = {
+			[1] = { "Select", "Pay no notice to the beggar" },
+			[2] = { "Select", "Give a coin to the beggar", "Coin1" },
+			[3] = { "Select", "'Trade' with the beggar", PlayerType.PLAYER_CAIN },
+		},
+		Outcome = {
+			[1] = "You move forwards through the caves, leaving the beggar for dead.",
+			[2] = "You part ways with your penny and give it to the beggar. He thanks you and reveals himself to be a wizard! A magical spell grants you +1 damage to assist in defeating your foes.",
+			[3] = "You offer some coins in exchange for any valuables they have. They give you a tooth, but you run off the moment it's in your hands. A curse is enacted upon you from the beggar, you feel slower!"
+		},
+		Effect = {
+			[2] = {
+				Coins = -1,
+				Stats = {
+					DamageFlat = 1
+				}
+			},
+			[3] = {
+				Stats = {
+					Speed = -0.3
+				},
+				Collectible = CollectibleType.COLLECTIBLE_DEAD_TOOTH
 			}
 		}
 	}
