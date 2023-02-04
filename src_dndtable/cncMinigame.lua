@@ -1308,7 +1308,7 @@ function cnc:OnPostUpdate()
 			state.ScreenShown = true
 
 			-- If all players died during the boss fight, remove Wavy Cap effects.
-			for i = 0, g.game:GetNumPlayers() do
+			for _ = 0, g.game:GetNumPlayers() do
 				Isaac.GetPlayer(0):GetEffects():RemoveCollectibleEffect(CollectibleType.COLLECTIBLE_WAVY_CAP, 2)
 			end
 		end

@@ -98,7 +98,7 @@ function cnctable:slotUpdate()
 	for _, slot in pairs(Isaac.FindByType(EntityType.ENTITY_SLOT, g.CNC_BEGGAR)) do
 		local s = slot:GetSprite()
 		local d = slot:GetData()
-		
+
 		if not s:IsPlaying("Bombed") then --Or whatever the name you want to be
 			OverrideExplosionHack(slot)
 			if d.TimesEndAnimLooped then
