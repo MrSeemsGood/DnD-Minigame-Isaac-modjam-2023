@@ -73,122 +73,315 @@ cncText.StatusEffect = {
 --Add a string named "Key", "Coin", or "Bomb" with a number next to it without spaces (e.g. "Key1") to require a consumable for the option to be selected
 --The Effect table, the list of variables for it described above. Setup the same as Options and Title, but only include the numbers you need (e.g. You only want an effect for Option 3, so only include an effect for the index of 3)
 
----@type Prompt[]
-cncText.Prompts = {
-	{
-		Title = "You find an impatient, brown furry creature pointing to the next room",
-		Options = {
-			[1] = { "Select", "Follow its directions" },
-			[2] = { "Roll", "Roll a dice for no reason" },
-			[3] = { "Select", "Disobey its directions" }
-		},
-		Outcome = {
-			[1] = "You walk into the next room",
-			[2] = {
-				[1] = "You rolled low",
-				[2] = "You rolled medium",
-				[3] = "You rolled high",
-			},
-			[3] = "The creature's eyes glow bright as lightning strikes down around them from the ceiling. They utter a phrase spoken in legend before you're smited down",
-		},
-		Effect = {
-			[3] = {
-				DamagePlayers = 24
-			}
-		}
+--The following prompt has everything possible so you know how its setup
+--[[ 	{
+	Title = "Wow that's a lot of options#This hashtag makes another line",
+	Options = {
+		[1] = {"Select", "Basic Select Option"},
+		[2] = {"Roll", "Basic Roll Option"},
+		[3] = {"Select", "This option only appears when Isaac is in your party", PlayerType.PLAYER_ISAAC},
+		[4] = {"Select", "Love about it", PlayerType.PLAYER_MAGDALENA},
+		[5] = {"Select", "Greed about it", PlayerType.PLAYER_CAIN},
+		[6] = {"Select", "Stab about it", PlayerType.PLAYER_JUDAS},
+		[7] = {"Select", "This option appears if you have at least 1 key", "Key1"},
+		[8] = {"Select", "Same as above but for 2 bombs", "Bomb2"},
+		[9] = {"Select", "Same as above but for 5 coins", "Coin5"},
+		[10] = {"Select", "Start an encounter"}
 	},
-}
+	Outcome = {
+		[1] = "You selected this option!",
+		[2] = {
+			[1] = "You rolled a 1-5",
+			[2] = "You rolled a 6-15",
+			[3] = "You rolled a 16-20"
+		},
+		[3] = "You have Isaac in your party!#Holy shit another line",
+		[4] = "You have Maggy in your party!#You can't apply hashtags to Options though",
+		[5] = "You have Cain in your party!",
+		[6] = "You have Judas in your party!",
+		[7] = "You used a key",
+		[8] = "You used 2 bombs",
+		[9] = "You spent 5 dabloons"
+	},
+	Effect = {
+		[2] = {
+			[1] = {
+				DamagePlayers = 1 -- Damages all players for half a heart. Please don't give these a negative number.
+			},
+			[2] = {
+				AddHearts = { --All hearts available listed in the HeartSubType table in the luadocs
+					[HeartSubType.HEART_SOUL] = 1, --gives every player 1 full soul heart. Please don't give these a negative number.
+					[HeartSubType.HEART_HALF] = 2, --heals every player 1 full red heart.
+					[HeartSubType.HEART_FULL] = 1 -- heals every player 1 full red heart, again! 
+				}
+			},
+			[3] = {
+				Collectible = CollectibleType.COLLECTIBLE_SAD_ONION, --All players get a Sad Onion
+				Stats = { --All stats available listed above in the "Stats" class. Stats lasts the minigame
+					DamageFlat = 1, --You get +1 damage
+					DamageMult = 2, --You get x2 damage
+					Luck = -2 --minus 2 luck for the rest of the run oh shit!
+				},
+				StatsTemp = { --Only relevant in enemy encounters, lasting the encounter until the room is cleared. As such, Luck is not useful unless you have an item that uses the luck stat.
+					TearsFlat = 3 --You get a -3 tears delay for the room. Remember that these do NOT equate to the HUD stat!
+				}
+			},
+		},
+		[7] = {
+			Keys = -1 --You need to set whether the pickup is actually consumed or not yourself!
+		},
+		[8] = {
+			Bombs = -2
+		},
+		[9] = {
+			Coins = -5
+		},
+		[10] = {
+			StartEncounter = 1600,
+			ApplyStatus = {cncText.StatusEffect.BURN, 22},
+			DamageEnemies = 1, --All enemies take 1 damage
+			ApplyDarkness = true, --Permanent darkness for the room!
+			TimeLimit = 5, --YOU HAVE FIVE SECONDS TO CLEAR THE ROOM OR EVERYONE FUCKING D I E S
+			Keys = 1, --Everything here and below is on-room-clear
+			Coins = 1,
+			Bombs = 1,
+			Collectible = CollectibleType.COLLECTIBLE_SAD_ONION,
+			AddHearts = {
+				[HeartSubType.HEART_SOUL] = 1, --Spawns a full soul heart
+				[HeartSubType.HEART_HALF] = 2, --Spawns 2 half red hearts
+				[HeartSubType.HEART_FULL] = 1 --Spawns a full red heart
+			},
+			AddMaxHearts = 1 --Adds 1 empty red heart
+		}
+	}
+}, ]]
 
 ---@type Prompt[]
-cncText.Encounters = {
-	--The following prompt has everything possible so you know how its setup
-	--[[ 	{
-		Title = "Wow that's a lot of options#This hashtag makes another line",
+cncText.Prompts = {
+
+	-- 1: ROCKS WITH GOLD
+	{
+		Title = "You come across a giant rock with shiny nuggets sticking out of it.",
 		Options = {
-			[1] = {"Select", "Basic Select Option"},
-			[2] = {"Roll", "Basic Roll Option"},
-			[3] = {"Select", "This option only appears when Isaac is in your party", PlayerType.PLAYER_ISAAC},
-			[4] = {"Select", "Love about it", PlayerType.PLAYER_MAGDALENA},
-			[5] = {"Select", "Greed about it", PlayerType.PLAYER_CAIN},
-			[6] = {"Select", "Stab about it", PlayerType.PLAYER_JUDAS},
-			[7] = {"Select", "This option appears if you have at least 1 key", "Key1"},
-			[8] = {"Select", "Same as above but for 2 bombs", "Bomb2"},
-			[9] = {"Select", "Same as above but for 5 coins", "Coin5"},
-			[10] = {"Select", "Start an encounter"}
+			[1] = { "Select", "Leave it be." },
+			[2] = { "Roll", "Try to break it with your hands." },
+			[3] = { "Select", "Bomb it.", "Bomb1"}
 		},
 		Outcome = {
-			[1] = "You selected this option!",
+			[1] = "You walk into the next room.",
 			[2] = {
-				[1] = "You rolled a 1-5",
-				[2] = "You rolled a 6-15",
-				[3] = "You rolled a 16-20"
+				[1] = "You hurt yourself trying to tear the nuggets off.",
+				[2] = "You tried tearing the precious parts off, to no avail.",
+				[3] = "You can tear some pieces off just fine.",
 			},
-			[3] = "You have Isaac in your party!#Holy shit another line",
-			[4] = "You have Maggy in your party!#You can't apply hashtags to Options though",
-			[5] = "You have Cain in your party!",
-			[6] = "You have Judas in your party!",
-			[7] = "You used a key",
-			[8] = "You used 2 bombs",
-			[9] = "You spent 5 dabloons"
+			[3] = "The bomb you placed does quick work of the rock.",
 		},
 		Effect = {
 			[2] = {
 				[1] = {
-					DamagePlayers = 1 -- Damages all players for half a heart. Please don't give these a negative number.
+					DamagePlayers = 1,
+					Coins = 1
 				},
 				[2] = {
-					AddHearts = { --All hearts available listed in the HeartSubType table in the luadocs
-						[HeartSubType.HEART_SOUL] = 1, --gives every player 1 full soul heart. Please don't give these a negative number.
-						[HeartSubType.HEART_HALF] = 2, --heals every player 1 full red heart.
-						[HeartSubType.HEART_FULL] = 1 -- heals every player 1 full red heart, again! 
+					Coins = 1
+				},
+				[3] = {
+					Coins = 3
+				},
+			},
+			[3] = {
+				Bombs = -1,
+				Coins = 5
+			},
+		}
+	},
+	-- 2: BAG ON A CLIFF
+	{
+		Title = "You notice a cloth bag on a small cliff above. You can climb the rope to get to it.",
+		Options = {
+			[1] = { "Select", "Leave it be." },
+			[2] = { "Roll", "Try to climb the rope." },
+		},
+		Outcome = {
+			[1] = "You walk into the next room.",
+			[2] = {
+				[1] = "The rope breaks as soon as you start climbing it.",
+				[2] = "THe rope breaks as you've almost reach the bag. You fall down.",
+				[3] = "You succesfully climb the rope.",
+			},
+		},
+		Effect = {
+			[2] = {
+				[2] = {
+					Stats = {
+						Speed = -0.1
 					}
 				},
 				[3] = {
-					Collectible = CollectibleType.COLLECTIBLE_SAD_ONION, --All players get a Sad Onion
-					Stats = { --All stats available listed above in the "Stats" class. Stats lasts the minigame
-						DamageFlat = 1, --You get +1 damage
-						DamageMult = 2, --You get x2 damage
-						Luck = -2 --minus 2 luck for the rest of the run oh shit!
-					},
-					StatsTemp = { --Only relevant in enemy encounters, lasting the encounter until the room is cleared. As such, Luck is not useful unless you have an item that uses the luck stat.
-						TearsFlat = 3 --You get a -3 tears delay for the room. Remember that these do NOT equate to the HUD stat!
-					}
+					Coins = 3,
+					Keys = 1,
+					Bombs = 1
 				},
 			},
-			[7] = {
-				Keys = -1 --You need to set whether the pickup is actually consumed or not yourself!
+		}
+	},
+	-- 3: OLD DRESSING TABLE
+	{
+		Title = "You come across a vintage dressing table.",
+		Options = {
+			[1] = { "Select", "Leave it be." },
+			[2] = { "Roll", "Search it." },
+			[3] = { "Select", "Bomb it.", "Bomb1"}
+		},
+		Outcome = {
+			[1] = "You walk into the next room.",
+			[2] = {
+				[1] = "You find a lipstick.",
+				[2] = "You find a perfume.",
+				[3] = "You find a bunch of old jewelry.",
 			},
-			[8] = {
-				Bombs = -2
-			},
-			[9] = {
-				Coins = -5
-			},
-			[10] = {
-				StartEncounter = 1600,
-				ApplyStatus = {cncText.StatusEffect.BURN, 22},
-				DamageEnemies = 1, --All enemies take 1 damage
-				ApplyDarkness = true, --Permanent darkness for the room!
-				TimeLimit = 5, --YOU HAVE FIVE SECONDS TO CLEAR THE ROOM OR EVERYONE FUCKING D I E S
-				Keys = 1, --Everything here and below is on-room-clear
-				Coins = 1,
-				Bombs = 1,
-				Collectible = CollectibleType.COLLECTIBLE_SAD_ONION,
-				AddHearts = {
-					[HeartSubType.HEART_SOUL] = 1, --Spawns a full soul heart
-					[HeartSubType.HEART_HALF] = 2, --Spawns 2 half red hearts
-					[HeartSubType.HEART_FULL] = 1 --Spawns a full red heart
+			[3] = "Nothing happens when you bomb it.",
+		},
+		Effect = {
+			[2] = {
+				[1] = {
+					Collectible = CollectibleType.COLLECTIBLE_MOMS_LIPSTICK
 				},
-				AddMaxHearts = 1 --Adds 1 empty red heart
+				[2] = {
+					Collectible = CollectibleType.COLLECTIBLE_MOMS_PERFUME
+				},
+				[3] = {
+					Collectible = CollectibleType.COLLECTIBLE_MOMS_RING
+				},
+			},
+		}
+	},
+	-- 4: OLD BOOKCASE
+	{
+		Title = "You come across a giant bookcase. It is very old, barely holding itself together.",
+		Options = {
+			[1] = { "Select", "Leave it be." },
+			[2] = { "Roll", "Search it for books." },
+			[3] = { "Roll", "There are some books on the very top. You decide to crush the bookcase down and then search it.", PlayerType.PLAYER_ISAAC}
+		},
+		Outcome = {
+			[1] = "You walk into the next room. Right as you leave, you hear a loud thud as the bookcase finally collapses under its own weight.",
+			[2] = {
+				[1] = "You tilt the bookcase too much and it falls down on you.",
+				[2] = "All books here are extremely old and fragile. You can't find anything useful",
+				[3] = "You find a book and take it with you!",
+			},
+			[3] = {
+				[1] = "You take one of the books with you. It looks relatively new.",
+				[2] = "You take one of the books with you. It looks relatively new.",
+				[3] = "You take one of the books with you. It looks relatively new.",
+			},
+		},
+		Effect = {
+			[2] = {
+				[1] = {
+					DamagePlayers = 1,
+				},
+				[2] = {
+					Collectible = CollectibleType.COLLECTIBLE_MISSING_PAGE_2
+				},
+				[3] = {
+					Collectible = CollectibleType.COLLECTIBLE_TELEPATHY_BOOK
+				},
+			},
+			[3] = {
+				[1] = {
+					Collectible = CollectibleType.COLLECTIBLE_BOOK_OF_SHADOWS
+				},
+				[2] = {
+					Collectible = CollectibleType.COLLECTIBLE_BOOK_OF_BELIAL
+				},
+				[3] = {
+					Collectible = CollectibleType.COLLECTIBLE_TELEPATHY_BOOK
+				},
+			},
+		}
+	},
+	-- 5: STRANGER
+	{
+		Title = "A shady figure is approaching you, extending his hand towards.",
+		Options = {
+			[1] = { "Select", "You shake his hand." },
+			[2] = { "Select", "You back off and keep going." },
+			[3] = { "Select", "You smile back very politely.", PlayerType.PLAYER_MAGDALENE},
+			[4] = { "Roll", "You decide to offer a deal.", "Coin2"}
+		},
+		Outcome = {
+			[1] = "The stranger wishes you the best of luck in traversing these caves.",
+			[2] = "The stranger frowns, calls you rude and leaves.",
+			[3] = "The stranger blushes and welcomes you to the caves with a special gift.",
+			[4] = {
+				[1] = "The stranger steals the coins you offer him and runs into the dark.",
+				[2] = "The stranger is not a merchant. He has nothing to offer you.",
+				[3] = "The stranger is excited; they'd been craving for a new customer!"
+			}
+		},
+		Effect = {
+			[1] = {
+				StatsTemp = {
+					DamageMult = 1.1
+				}
+			},
+			[3] = {
+				Coins = 2,
+				Bombs = 2
+			},
+			[4] = {
+				[1] = {
+					Coins = -2
+				},
+				[3] = {
+					Coins = -2,
+					Collectible = CollectibleType.COLLECTIBLE_BOT_FLY
+				}
 			}
 		}
-	}, ]]
+	},
+	-- 6: PITCH BLACK
+	{
+		Title = "You enter a cavern. It's pitch black. Completely",
+		Options = {
+			[1] = { "Roll", "You walk through very carefully." },
+			[2] = { "Select", "You light the fuse on a bomb to observe the cavern.", "Bomb1"},
+			[3] = { "Select", "You pass through.", PlayerType.PLAYER_CAIN},
+		},
+		Outcome = {
+			[1] = {
+				[1] = "You do not notice a spike trap in the middle of a cavern.",
+				[2] = "You notice a spike trap, but you aren't very careful around it.",
+				[3] = "You notice a spike trap and barely pass through without getting hurt."
+			},
+			[2] = "You see a spike trap in the middle of the room. You cross right before the bomb explodes.",
+			[3] = "You are used to the darkness, you manage to dodge a spike trap and even pick something up!",
+		},
+		Effect = {
+			[1] = {
+				[1] = {
+					DamagePlayers = 2
+				},
+				[2] = {
+					DamagePlayers = 1
+				}
+			},
+			[2] = {
+				Bombs = -1
+			},
+			[3] = {
+				Keys = 1
+			}
+		}
+	}
+}
 
-	--[[
-		ENEMY ENCOUNTERS
-	--]]
+---@type Prompt[]
+cncText.Encounters = {
 
-	-- INVISIBLE STALKERS
+	-- 1: INVISIBLE STALKERS
 	{
 		Title = "You enter a mysterious haunted hallway...",
 		Options = {
@@ -233,7 +426,7 @@ cncText.Encounters = {
 			}
 		}
 	},
-	-- BODAKS
+	-- 2: BODAKS
 	{
 		Title = "You see strange creatures. Their skin is deathly pale and white...",
 		Options = {
@@ -275,7 +468,7 @@ cncText.Encounters = {
 			}
 		}
 	},
-	-- YOCHLOLS
+	-- 3: YOCHLOLS
 	{
 		Title = "You encounter weird oozy creatures.#Their flesh melts off of them and piles back together.",
 		Options = {
@@ -309,7 +502,7 @@ cncText.Encounters = {
 			}
 		}
 	},
-	-- ETTERCAPS
+	-- 4: ETTERCAPS
 	{
 		Title = "You enter the lair of Ettercaps, spider-like aberrations.",
 		Options = {
@@ -346,7 +539,7 @@ cncText.Encounters = {
 			}
 		}
 	},
-	-- DURRTS
+	-- 5: DURRTS
 	{
 		Title = "A group of massive animated boulders stands in your way!",
 		Options = {
@@ -398,7 +591,7 @@ cncText.Encounters = {
 			}
 		}
 	},
-	-- GRELLS
+	-- 6: GRELLS
 	{
 		Title = "You encounter floating brains with tentacles and a beak. Oh, mother Nature!",
 		Options = {
