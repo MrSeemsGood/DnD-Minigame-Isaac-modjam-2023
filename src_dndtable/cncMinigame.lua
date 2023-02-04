@@ -59,7 +59,7 @@ local gameState = {
 	AdventureEnded = false,
 	HudWasVisible = true,
 }
-local debug = true
+local debug = false
 
 ---@type GameState
 local state = {}
@@ -142,7 +142,7 @@ end
 ---@param stringLengthLimit integer
 function cnc:separateText(stringTable, stringLengthLimit)
 	if type(stringTable) == "table" then
-
+		--Isaac.DebugString("[START HERE]")
 		local hashtag = true
 		while hashtag do
 			for i = 1, #stringTable do
@@ -162,25 +162,31 @@ function cnc:separateText(stringTable, stringLengthLimit)
 		local tooLong = true
 		while tooLong do
 			for i = 1, #stringTable do
-				if font:GetStringWidth(stringTable[i]) >= stringLengthLimit then
+				if font:GetStringWidth(stringTable[i]) > stringLengthLimit then
+					--Isaac.DebugString("Current length: "..tostring(font:GetStringWidth(stringTable[i])))
 					local curText = stringTable[i]
 					local currentLine = curText
 					local indexEnd = 1
 					while font:GetStringWidth(string.sub(currentLine, 1, indexEnd)) < stringLengthLimit do
 						indexEnd = indexEnd + 1
+						--Isaac.DebugString("Finding lower than limit: "..tostring(indexEnd))
 						if string.sub(currentLine, 1, indexEnd) == string.sub(currentLine, 1, -1) then break end
 					end
 					local indexStart = indexEnd
 					while string.sub(currentLine, indexStart, indexEnd) ~= " " do
 						indexStart = indexStart - 1
 						indexEnd = indexEnd - 1
+						--Isaac.DebugString("Finding a space: "..tostring(indexStart))
 						if indexStart == 1 then break end
 					end
 					currentLine = string.sub(currentLine, 1, indexStart)
 					local nextLine = string.sub(curText, indexEnd, -1)
 					stringTable[i] = currentLine
 					table.insert(stringTable, i + 1, nextLine)
+					--Isaac.DebugString("Current line: "..currentLine.. " "..tostring(i))
+					--Isaac.DebugString("Next line: "..nextLine.. " "..tostring(i+1))
 				elseif i == #stringTable then
+					--print("no longer long")
 					tooLong = false
 				end
 			end
@@ -268,7 +274,7 @@ local function initMinigame()
 	timerFont:Load("font/pftempestasevencondensed.fnt")
 	Isaac.GetPlayer().ControlsEnabled = false
 	g.music:Fadeout(0.03)
-	print("minigame init")
+	--print("minigame init")
 end
 
 local function initCharacterSelect()
@@ -280,7 +286,7 @@ local function initCharacterSelect()
 end
 
 local function resetMinigame()
-	print("but its actually reset eyy")
+	--print("but its actually reset eyy")
 	renderPrompt = {
 		Title = {},
 		Options = {},
@@ -348,7 +354,7 @@ local function resetMinigame()
 end
 
 local function startMinigameReset()
-	print("reset attempt")
+	--print("reset attempt")
 	if not roomIndexOnMinigameClear and not resetting then
 		for _, player in ipairs(dndPlayers) do
 			if not player:IsDead() then
@@ -360,8 +366,8 @@ local function startMinigameReset()
 			end
 		end
 		roomIndexOnMinigameClear = state.RoomIndexStartedGameFrom
-		print(roomIndexOnMinigameClear)
-		print("minigame reset")
+		--print(roomIndexOnMinigameClear)
+		--print("minigame reset")
 		fadeType = "AllDown"
 		resetting = true
 	end
@@ -623,7 +629,16 @@ function cnc:startNextPrompt()
 		promptTable = cncText:GetTableFromPromptType(state.PromptTypeSelected)
 		if state.PromptTypeSelected == cncText.PromptType.NORMAL or state.PromptTypeSelected == cncText.PromptType.ENEMY then
 			local tableToUse = state.PromptTypeSelected == cncText.PromptType.ENEMY and state.EncountersSeen or state.PromptsSeen
-			state.PromptSelected = VeeHelper.GetDifferentRandomNum(tableToUse, #promptTable, VeeHelper.RandomRNG)
+			if #tableToUse == 0 then
+				state.PromptSelected = VeeHelper.RandomNum(1, #promptTable)
+			else
+				state.PromptSelected = VeeHelper.GetDifferentRandomNum(tableToUse, #promptTable, VeeHelper.RandomRNG)
+			end
+			if tableToUse == state.EncountersSeen then
+				table.insert(state.EncountersSeen, state.PromptSelected)
+			else
+				table.insert(state.PromptsSeen, state.PromptSelected)
+			end
 		else
 			state.PromptSelected = VeeHelper.RandomNum(1, #promptTable)
 		end
@@ -873,14 +888,14 @@ function cnc:OnPromptTransition()
 				if state.PromptProgress == state.MaxPrompts then
 					state.AdventureEnded = true
 					startMinigameReset()
-					print("you won bitch!")
+					--print("you won bitch!")
 				else
 					renderPrompt.Title = { "Room Cleared!" }
 					renderPrompt.Outcome = { "You defeat the creatures,", "moving onto the next room..." }
 					fadeType = "AllUp"
 					Isaac.ExecuteCommand("goto s.default.2")
 					background:Play("TransitionIn", true)
-					print("go back to your playmate")
+					--print("go back to your playmate")
 				end
 			end
 		elseif background:IsPlaying("FadeIn") and background:GetFrame() == 40 then
@@ -989,7 +1004,7 @@ function cnc:MinigameLogic()
 					if outcomeText[state.OutcomeResult] then
 						outcomeText = outcomeText[state.OutcomeResult]
 					end
-					renderPrompt.Outcome = cnc:separateText({ outcomeText }, 400)
+					renderPrompt.Outcome = cnc:separateText({ outcomeText }, 300)
 					fadeType = "PromptDown"
 				else
 					if cnc:IsRollOption()
@@ -1162,16 +1177,32 @@ function cnc:OnNewRoom()
 	if state.Active then
 		if (
 			not cnc:IsInCNCRoom() and (roomVariant ~= 2 or g.game:GetLevel():GetCurrentRoomIndex() ~= GridRooms.ROOM_DEBUG_IDX)) then
-			print("in a room you should or shouldn't be in")
+			--print("in a room you should or shouldn't be in")
+			local boyFound = false
 			for _, slot in ipairs(Isaac.FindByType(EntityType.ENTITY_SLOT, g.CNC_BEGGAR)) do
+				boyFound = true
 				if g.GameState.BeggarInitSeed ~= 0 then
 					if slot.InitSeed == g.GameState.BeggarInitSeed then
-						print("boy located")
+						--print("boy located")
 						for _, player in ipairs(players) do
 							player.Position = Vector(slot.Position.X, slot.Position.Y + 50)
 						end
 					end
 				end
+			end
+			if not boyFound then
+				g.GameState = {
+					ShouldStart = false,
+					GameActive = false,
+					BeggarInitSeed = 0,
+					HasWon = false,
+					HasLost = false,
+					PickupsCollected = {
+						Coins = 0,
+						Keys = 0,
+						Bombs = 0
+					}
+				}
 			end
 			resetMinigame()
 			return
@@ -1332,7 +1363,7 @@ function cnc:OnPostUpdate()
 
 	for i, player in ipairs(dndPlayers) do
 		if not player:IsDead() and player:Exists() then
-			if not player:IsDead() and player:Exists() and player:IsHoldingItem() then
+			if not player:IsDead() and player:Exists() and player.QueuedItem.Item ~= nil then
 				hasPickup = true
 			end
 		elseif not state.Characters.Dead[i] and state.Active then
