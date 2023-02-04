@@ -71,6 +71,7 @@ local characters = Sprite()
 local optionCursor = Sprite()
 local dice = Sprite()
 local diceFlash = Sprite()
+local bossVs = Sprite()
 local testStartPrompt = Keyboard.KEY_J
 local testEndPrompt = Keyboard.KEY_K
 local KEY_DELAY = 10
@@ -279,6 +280,7 @@ local function initMinigame()
 	diceFlash:Load("gfx/cnc_d20.anm2", true)
 	diceFlash:SetFrame("Idle", 0)
 	diceFlash.Scale = Vector(0.5, 0.5)
+	bossVs:Load("gfx/ui/boss/versusscreen.anm2", true)
 	font:Load("font/teammeatfont12.fnt")
 	timerFont:Load("font/pftempestasevencondensed.fnt")
 	Isaac.GetPlayer().ControlsEnabled = false
@@ -317,6 +319,7 @@ local function resetMinigame()
 	characters:Reset()
 	dice:Reset()
 	diceFlash:Reset()
+	bossVs:Reset()
 	diceFlashAlpha = 0
 	Isaac.GetPlayer().ControlsEnabled = true
 	dndPlayers = {}
