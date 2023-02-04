@@ -30,7 +30,17 @@ local function YouFuckedUp(slot)
 		local type = enemyToSpawn[1]
 		local variant = enemyToSpawn[2]
 		local subType = enemyToSpawn[3] ~= nil and enemyToSpawn[3] or 0
-		g.game:Spawn(type, variant, g.game:GetRoom():FindFreeTilePosition(slot.Position, 150 ^ 2),
+		local pos = slot.Position
+		for doorSlot = 0, DoorSlot.NUM_DOOR_SLOTS do
+			local door = g.game:GetRoom():GetDoor(doorSlot)
+			local doorPos = g.game:GetRoom():GetDoorSlotPosition(doorSlot)
+
+			if door then
+				pos = doorPos
+				break
+			end
+		end
+		g.game:Spawn(type, variant, g.game:GetRoom():FindFreeTilePosition(slot.Position, 200 ^ 2),
 			Vector.Zero, slot, subType, slot.InitSeed)
 	end
 end
@@ -42,10 +52,10 @@ local function OverrideExplosionHack(slot)
 	if not bombed or s:GetAnimation() == "Bombed" then return end
 
 	RemoveRecentRewards(slot.Position)
-	s:Play("Bombed", true)
 	slot.Friction = 0
-
+	
 	if slot.Variant == g.CNC_BEGGAR then
+		s:Play("Bombed", true)
 		YouFuckedUp(slot)
 	end
 end
@@ -90,8 +100,8 @@ end
 
 function cnctable:slotUpdate()
 	for _, slot in pairs(Isaac.FindByType(EntityType.ENTITY_SLOT, g.CNC_EMPTY_TABLE)) do
+		slot.GridCollisionClass = EntityGridCollisionClass.GRIDCOLL_GROUND
 		OverrideExplosionHack(slot)
-
 		slot:GetSprite():Play('EmptyTable')
 	end
 
@@ -111,7 +121,8 @@ function cnctable:slotUpdate()
 							SpawnRewards(slot)
 						end
 
-						Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.POOF01, 0, slot.Position, Vector.Zero, slot)
+						local empty = Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.POOF01, 0, slot.Position, Vector.Zero, slot)
+						empty.GridCollisionClass = EntityGridCollisionClass.GRIDCOLL_GROUND
 						slot:Remove()
 						local empty = Isaac.Spawn(6, g.CNC_EMPTY_TABLE, 0, slot.Position, Vector.Zero, nil)
 					end
