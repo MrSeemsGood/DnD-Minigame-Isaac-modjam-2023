@@ -1,5 +1,5 @@
 local invisStalker = {}
-local g = require("src_dndtable.globals")
+local g = require("src_cavesncreatures.globals")
 
 --[[
     Invisible Stalkers start stationary.

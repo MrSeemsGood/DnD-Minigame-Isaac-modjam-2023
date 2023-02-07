@@ -1,6 +1,6 @@
 local durrt = {}
-local g = require('src_dndtable.globals')
-local vee = require('src_dndtable.veeHelper')
+local g = require('src_cavesncreatures.globals')
+local vee = require('src_cavesncreatures.veeHelper')
 
 --[[
     Durrts wander around the room very slowly, not attempting to follow Isaac.

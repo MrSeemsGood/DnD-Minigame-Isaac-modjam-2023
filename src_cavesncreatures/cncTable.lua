@@ -1,6 +1,6 @@
 local cnctable = {}
-local g = require('src_dndtable.globals')
-local vee = require('src_dndtable.veeHelper')
+local g = require('src_cavesncreatures.globals')
+local vee = require('src_cavesncreatures.veeHelper')
 
 --Thank you budj for providing this old-ass hack I used in AB+ Eevee
 ---@param pos Vector

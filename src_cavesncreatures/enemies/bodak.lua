@@ -1,5 +1,5 @@
 local bodak = {}
-local g = require('src_dndtable.globals')
+local g = require('src_cavesncreatures.globals')
 
 --[[
     Bodaks act similarly to the Vis enemy, with two corrections:

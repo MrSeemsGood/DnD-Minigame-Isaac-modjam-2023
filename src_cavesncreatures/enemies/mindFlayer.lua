@@ -1,6 +1,6 @@
 local mindFlayer = {}
-local g = require('src_dndtable.globals')
-local vee = require('src_dndtable.veeHelper')
+local g = require('src_cavesncreatures.globals')
+local vee = require('src_cavesncreatures.veeHelper')
 
 local MINDFLAYER_ATTACK_COOLDOWN = 60
 

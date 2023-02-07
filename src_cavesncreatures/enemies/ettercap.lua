@@ -1,6 +1,6 @@
 local ettercap = {}
-local g = require('src_dndtable.globals')
-local vee = require('src_dndtable.veeHelper')
+local g = require('src_cavesncreatures.globals')
+local vee = require('src_cavesncreatures.veeHelper')
 
 --[[
     Ettercaps acts similarly to Bloaties, wandering around the room and occasionally stop to attack.

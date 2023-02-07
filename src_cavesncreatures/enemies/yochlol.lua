@@ -1,6 +1,6 @@
 local yochlol = {}
-local g = require("src_dndtable.globals")
-local vee = require('src_dndtable.veeHelper')
+local g = require("src_cavesncreatures.globals")
+local vee = require('src_cavesncreatures.veeHelper')
 
 local YOCHLOL_MOVESPEED_WALK = 3
 local YOCHLOL_MOVESPEED_GAS = 6

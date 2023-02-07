@@ -1,6 +1,6 @@
 local grell = {}
-local g = require('src_dndtable.globals')
-local vee = require('src_dndtable.veeHelper')
+local g = require('src_cavesncreatures.globals')
+local vee = require('src_cavesncreatures.veeHelper')
 
 --[[
     Grells fly digonally around the room, bouncing off of walls.

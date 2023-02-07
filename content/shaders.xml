@@ -1,7 +1,7 @@
 <shaders>
     <!-- Empty shader, only used for rendering above HUD workaround -->
-	<!-- Credit to StageAPI! -->
-    <shader name="DnDMinigame-RenderAboveHUD">
+    <!-- Credit to StageAPI! -->
+    <shader name="CNCMinigame-RenderAboveHUD">
         <parameters>
         </parameters>
         <vertex><![CDATA[
@@ -26,7 +26,7 @@
                 TexCoord0 = TexCoord;
                 gl_Position = Transform * vec4(Position.xyz, 1.0);
             }
-        ]]></vertex>
+        ]]>        </vertex>
         <fragment><![CDATA[
             varying lowp vec4 Color0;
             varying mediump vec2 TexCoord0;
@@ -38,6 +38,6 @@
                 vec4 Color = Color0 * texture2D(Texture0, TexCoord0);
                 gl_FragColor = Color;
             }
-        ]]></fragment>
+        ]]>        </fragment>
     </shader>
 </shaders>

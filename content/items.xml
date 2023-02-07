@@ -1,3 +1,3 @@
 <items gfxroot="gfx/items/" version="1" deathanm2="gfx/death items.anm2">
-	<passive cache="" name="[TECHNICAL] Average DND Player" description="You shouldn't have this" gfx="collectibles/kidnamedburger.png" hidden="true" tags="nocantrip quest" />
+	<passive cache="" name="[TECHNICAL] Average CNC Player" description="You shouldn't have this" gfx="collectibles/kidnamedburger.png" hidden="true" tags="nocantrip quest" />
 </items>

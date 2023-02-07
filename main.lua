@@ -1,16 +1,15 @@
-local mod = RegisterMod("DND", 1)
-DnDMod = mod
-local g = require("src_dndtable.globals")
-local cnc = include("src_dndtable.cncMinigame")
-local cncTable = include('src_dndtable.cncTable')
+local mod = RegisterMod("Caves N' Creatures", 1)
+local g = require("src_cavesncreatures.globals")
+local cnc = include("src_cavesncreatures.cncMinigame")
+local cncTable = include('src_cavesncreatures.cncTable')
 
-local ettercap = include("src_dndtable.enemies.ettercap")
-local invisStalker = include("src_dndtable.enemies.invisibleStalker")
-local yochlol = include("src_dndtable.enemies.yochlol")
-local bodak = include("src_dndtable.enemies.bodak")
-local durrt = include("src_dndtable.enemies.durrt")
-local grell = include("src_dndtable.enemies.grell")
-local mindFlayer = include('src_dndtable.enemies.mindFlayer')
+local ettercap = include("src_cavesncreatures.enemies.ettercap")
+local invisStalker = include("src_cavesncreatures.enemies.invisibleStalker")
+local yochlol = include("src_cavesncreatures.enemies.yochlol")
+local bodak = include("src_cavesncreatures.enemies.bodak")
+local durrt = include("src_cavesncreatures.enemies.durrt")
+local grell = include("src_cavesncreatures.enemies.grell")
+local mindFlayer = include('src_cavesncreatures.enemies.mindFlayer')
 
 --![Look at this dog under Visual Studio Code's preview](https://cdn.discordapp.com/attachments/305511626277126144/1070385115496194088/IMG_4569.PNG)
 local thisDogLovesYou
@@ -24,7 +23,7 @@ mod:AddCallback(ModCallbacks.MC_POST_GAME_STARTED, mod.OnGameStart)
 
 ---@param shaderName string
 function mod:OnGetShaderParams(shaderName)
-	if shaderName == "DnDMinigame-RenderAboveHUD"
+	if shaderName == "CNCMinigame-RenderAboveHUD"
 		and not g.game:IsPaused()
 	then
 		cnc:OnRender()
@@ -52,7 +51,8 @@ mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, cnc.OnNewRoom)
 mod:AddCallback(ModCallbacks.MC_PRE_PICKUP_COLLISION, cnc.OnPrePickupCollision)
 mod:AddCallback(ModCallbacks.MC_PRE_SPAWN_CLEAN_AWARD, cnc.OnCNCRoomClear)
 mod:AddCallback(ModCallbacks.MC_EVALUATE_CACHE, cnc.OnCNCPlayerCache)
-mod:AddCallback(ModCallbacks.MC_POST_BOMB_INIT, cnc.LampOilRopeBombsYouWantItItsYourMyFriendAsLongAsYouGotThemInTheMinigame)
+mod:AddCallback(ModCallbacks.MC_POST_BOMB_INIT,
+	cnc.LampOilRopeBombsYouWantItItsYourMyFriendAsLongAsYouGotThemInTheMinigame)
 
 mod:AddCallback(ModCallbacks.MC_PRE_PLAYER_COLLISION, cncTable.onPlayerCollision, 0)
 

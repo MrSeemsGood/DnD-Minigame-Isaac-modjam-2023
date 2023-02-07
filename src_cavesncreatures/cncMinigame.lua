@@ -1,7 +1,7 @@
 local cnc = {}
-local g = require("src_dndtable.globals")
-local VeeHelper = include("src_dndtable.veeHelper")
-local cncText = include("src_dndtable.prompts")
+local g = require("src_cavesncreatures.globals")
+local VeeHelper = require("src_cavesncreatures.veeHelper")
+local cncText = include("src_cavesncreatures.prompts")
 
 ---@class GameState
 local gameState = {
@@ -83,6 +83,21 @@ local renderPrompt = {
 local TRANSITION_Y_TARGET = 25
 local TRANSITION_ALPHA_SPEED = 0.04
 local TRANSITION_Y_SPEED = 0.75
+---@enum FadeContext
+local FadeContext = {
+	IDLE = 0,
+	TITLESCREEN_DOWN = 1,
+	PROMPT_INIT = 2,
+	OPTION_SELECT = 3,
+	OPTION_SELECT_ROLL = 4,
+	ROLL_EXTRA_UP = 5,
+	ROLL_EXTRA_DOWN = 6,
+	OUTCOME_UP = 7,
+	PROMPT_NEXT = 8,
+	ENCOUNTER_NEXT = 9,
+	ENCOUNTER_WIN = 10,
+	BOSS_WIN = 11
+}
 local fadeType = "AllDown"
 local transitionY = {
 	Title = 0,
@@ -114,9 +129,7 @@ local statsTable = {
 	Speed = 0
 }
 ---@type EntityPlayer[]
-local dndPlayers = {
-
-}
+local cncPlayers = {}
 
 --------------------------
 --  BASIC HELPER STUFF  --
@@ -129,7 +142,6 @@ end
 local function getPlayers()
 	local players = VeeHelper.GetAllMainPlayers()
 	if #players > 4 then players = { players[1], players[2], players[3], players[4] } end
-	--players = { players[1], players[1], players[1], players[1] }
 	return players
 end
 
@@ -143,7 +155,7 @@ end
 ---@param stringLengthLimit integer
 function cnc:separateText(stringTable, stringLengthLimit)
 	if type(stringTable) == "table" then
-		--Isaac.DebugString("[START HERE]")
+		
 		local hashtag = true
 		while hashtag do
 			for i = 1, #stringTable do
@@ -195,10 +207,11 @@ function cnc:separateText(stringTable, stringLengthLimit)
 			end
 
 			freezePreventChecker = freezePreventChecker + 1
-		end
-
-		if freezePreventChecker == 10000 then
-			--print('Terminated after ' .. tostring(freezePreventChecker) .. " attempts")
+			if freezePreventChecker == 10000 then
+				tooLong = false
+				break
+				--print('Terminated after ' .. tostring(freezePreventChecker) .. " attempts")
+			end
 		end
 	end
 
@@ -237,18 +250,20 @@ function cnc:GetPromptEffects()
 	end
 end
 
+---@return boolean | nil
 function cnc:IsRollOption()
 	if renderPrompt.Options[state.OptionSelected]
 		and renderPrompt.Options[state.OptionSelected][1]
 	then
 		return renderPrompt.Options[state.OptionSelected][1] == "Roll"
 	end
-	return
 end
 
+--TODO: Change how dead players are detected, removing them from the table upon death
+--TODO: Differenciate "Table is empty because no players are spawned yet" vs "Table is empty because all players died in the minigame"
 function cnc:AreAllPlayersDead()
 	local allDead = true
-	for _, player in ipairs(dndPlayers) do
+	for _, player in ipairs(cncPlayers) do
 		if not player:IsDead() or player:Exists() then
 			allDead = false
 			break
@@ -322,7 +337,7 @@ local function resetMinigame()
 	bossVs:Reset()
 	diceFlashAlpha = 0
 	Isaac.GetPlayer().ControlsEnabled = true
-	dndPlayers = {}
+	cncPlayers = {}
 	for _, player in ipairs(VeeHelper.GetAllPlayers()) do
 		local data = player:GetData()
 		if data.CNC_PreviousCollisionClass ~= nil then
@@ -345,7 +360,7 @@ local function resetMinigame()
 		end
 		if data.CNC_WereBombsEmpty ~= nil then
 			if data.CNC_WereBombsEmpty == true then
-				player:AddBombs(-1)
+				player:AddBombs( -1)
 			end
 			data.CNC_WereBombsEmpty = nil
 		end
@@ -368,7 +383,7 @@ end
 local function startMinigameReset()
 	--print("reset attempt")
 	if not roomIndexOnMinigameClear and not resetting then
-		for _, player in ipairs(dndPlayers) do
+		for _, player in ipairs(cncPlayers) do
 			if not player:IsDead() then
 				player.GridCollisionClass = GridCollisionClass.COLLISION_NONE
 				player.Position = Vector(1000, 1000)
@@ -421,7 +436,7 @@ local function applyEffectsOnNewPrompt()
 				state.Inventory.Coins = state.Inventory.Coins + effects.Coins
 			end
 			if effects.Collectible then
-				for _, player in ipairs(dndPlayers) do
+				for _, player in ipairs(cncPlayers) do
 					if not player:IsDead() then
 						player:AddCollectible(effects.Collectible, 12, false)
 					end
@@ -454,7 +469,7 @@ local function applyEffectsOnRoomEnter()
 				end
 			end
 		end
-		for _, player in ipairs(dndPlayers) do
+		for _, player in ipairs(cncPlayers) do
 			if effects.Stats or effects.StatsTemp then
 				if effects.Stats then
 					local data = player:GetData()
@@ -491,7 +506,7 @@ local function applyEffectsOnOutcome()
 	local effects = cnc:GetPromptEffects()
 
 	if effects then
-		for _, player in ipairs(dndPlayers) do
+		for _, player in ipairs(cncPlayers) do
 			if effects.DamagePlayers then
 				player:TakeDamage(effects.DamagePlayers, DamageFlag.DAMAGE_NO_PENALTIES, EntityRef(player), 0)
 			end
@@ -550,14 +565,15 @@ local function spawnRewardsOnRoomClear(rng, spawnPos)
 	local vel = Vector.Zero
 
 	if effects then
-		for i, player in ipairs(dndPlayers) do
+		for _, player in ipairs(cncPlayers) do
 			if not player:IsDead() then
 				if effects.AddHearts and effects.AddHearts[1] then
 					for subType, num in pairs(effects.AddHearts) do
 						for _ = 1, num do
 							local pos = g.game:GetRoom():FindFreePickupSpawnPosition(spawnPos)
 							local seed = rng:GetSeed()
-							g.game:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_HEART, pos, vel, nil, subType, seed)
+							g.game:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_HEART, pos, vel, nil, subType,
+								seed)
 						end
 					end
 				end
@@ -569,45 +585,52 @@ local function spawnRewardsOnRoomClear(rng, spawnPos)
 		if effects.Collectible then
 			local pos = g.game:GetRoom():FindFreePickupSpawnPosition(spawnPos)
 			local seed = rng:GetSeed()
-			g.game:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COLLECTIBLE, pos, vel, nil, effects.Collectible, seed)
+			g.game:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COLLECTIBLE, pos, vel, nil, effects.Collectible,
+				seed)
 		end
 		if effects.Coins then
 			local coinsToSpawn = effects.Coins
 			while coinsToSpawn >= 10 do
 				local pos = g.game:GetRoom():FindFreePickupSpawnPosition(spawnPos)
 				local seed = rng:GetSeed()
-				g.game:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COIN, pos, vel, nil, CoinSubType.COIN_DIME, seed)
+				g.game:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COIN, pos, vel, nil, CoinSubType.COIN_DIME,
+					seed)
 				coinsToSpawn = coinsToSpawn - 10
 			end
 			if coinsToSpawn >= 5 then
 				local pos = g.game:GetRoom():FindFreePickupSpawnPosition(spawnPos)
 				local seed = rng:GetSeed()
-				g.game:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COIN, pos, vel, nil, CoinSubType.COIN_NICKEL, seed)
+				g.game:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COIN, pos, vel, nil, CoinSubType.COIN_NICKEL,
+					seed)
 				coinsToSpawn = coinsToSpawn - 5
 			end
 			for _ = 1, coinsToSpawn do
 				local pos = g.game:GetRoom():FindFreePickupSpawnPosition(spawnPos)
 				local seed = rng:GetSeed()
-				g.game:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COIN, pos, vel, nil, CoinSubType.COIN_PENNY, seed)
+				g.game:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COIN, pos, vel, nil, CoinSubType.COIN_PENNY,
+					seed)
 			end
 		end
 		if effects.Keys then
 			for _ = 1, effects.Keys do
 				local pos = g.game:GetRoom():FindFreePickupSpawnPosition(spawnPos)
 				local seed = rng:GetSeed()
-				g.game:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, pos, vel, nil, KeySubType.KEY_NORMAL, seed)
+				g.game:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_KEY, pos, vel, nil, KeySubType.KEY_NORMAL,
+					seed)
 			end
 		end
 		if effects.Bombs then
 			for _ = 1, effects.Bombs do
 				local pos = g.game:GetRoom():FindFreePickupSpawnPosition(spawnPos)
 				local seed = rng:GetSeed()
-				g.game:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_BOMB, pos, vel, nil, BombSubType.BOMB_NORMAL, seed)
+				g.game:Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_BOMB, pos, vel, nil, BombSubType.BOMB_NORMAL,
+					seed)
 			end
 		end
 	end
 end
 
+--TODO: Edit this maybe
 function cnc:startNextPrompt()
 	fadeType = "TitlePromptUp"
 	selectNextPrompt = true
@@ -640,7 +663,8 @@ function cnc:startNextPrompt()
 
 		promptTable = cncText:GetTableFromPromptType(state.PromptTypeSelected)
 		if state.PromptTypeSelected == cncText.PromptType.NORMAL or state.PromptTypeSelected == cncText.PromptType.ENEMY then
-			local tableToUse = state.PromptTypeSelected == cncText.PromptType.ENEMY and state.EncountersSeen or state.PromptsSeen
+			local tableToUse = state.PromptTypeSelected == cncText.PromptType.ENEMY and state.EncountersSeen or
+				state.PromptsSeen
 			if #tableToUse == 0 then
 				state.PromptSelected = VeeHelper.RandomNum(1, #promptTable)
 			else
@@ -672,22 +696,22 @@ function cnc:startNextPrompt()
 			elseif type(optionRequirment) == "string"
 				and (
 				(
-					string.sub(optionRequirment, 1, 3) ~= "Key"
-						and string.sub(optionRequirment, 1, 4) ~= "Bomb"
-						and string.sub(optionRequirment, 1, 4) ~= "Coin"
-					)
-					or (
-					string.sub(optionRequirment, 1, 3) == "Key"
-						and state.Inventory.Keys < tonumber(string.sub(optionRequirment, 4, -1))
-					)
-					or (
-					string.sub(optionRequirment, 1, 4) == "Bomb"
-						and state.Inventory.Bombs < tonumber(string.sub(optionRequirment, 5, -1))
-					)
-					or (
-					string.sub(optionRequirment, 1, 4) == "Coin"
-						and state.Inventory.Coins < tonumber(string.sub(optionRequirment, 5, -1))
-					)
+				string.sub(optionRequirment, 1, 3) ~= "Key"
+				and string.sub(optionRequirment, 1, 4) ~= "Bomb"
+				and string.sub(optionRequirment, 1, 4) ~= "Coin"
+				)
+				or (
+				string.sub(optionRequirment, 1, 3) == "Key"
+				and state.Inventory.Keys < tonumber(string.sub(optionRequirment, 4, -1))
+				)
+				or (
+				string.sub(optionRequirment, 1, 4) == "Bomb"
+				and state.Inventory.Bombs < tonumber(string.sub(optionRequirment, 5, -1))
+				)
+				or (
+				string.sub(optionRequirment, 1, 4) == "Coin"
+				and state.Inventory.Coins < tonumber(string.sub(optionRequirment, 5, -1))
+				)
 				)
 			then
 				shouldCreate = false
@@ -727,6 +751,7 @@ function cnc:startNextPrompt()
 	end
 end
 
+--TODO: Edit this maybe
 local function initFirstPrompt()
 	local player1 = Isaac.GetPlayer()
 	background:Play("TransitionIn", true)
@@ -735,7 +760,7 @@ local function initFirstPrompt()
 	player1:GetData().CNC_KeyDelay = KEY_DELAY
 	fadeType = "AllUp"
 	state.RoomIndexStartedGameFrom = g.game:GetLevel():GetCurrentRoomIndex()
-	cnc:spawnDNDPlayers()
+	cnc:spawnCNCPlayers()
 	if player1.Visible then
 		player1:GetData().CNC_WasVisible = true
 		player1.Visible = false
@@ -777,7 +802,8 @@ end
 local function renderText(stringTable, startingPos, textType)
 	local center = getCenterScreen()
 	local nextLineMult = 0.15
-	local posPerLineMult = textType == "Title" and -0.05 or 0.05
+	local posPerLineMult = -0.02
+	--Previous posPerLineMult: textType == "Title" and -0.05 or 0.05
 	local lineSpacingMult = textType == "Title" and 100 or 125
 
 	local posX = textType == "Title" and (center.X - 120) or 0
@@ -824,9 +850,9 @@ function cnc:CharacterSelect()
 		local data = player:GetData()
 		if (
 			isTriggered(ButtonAction.ACTION_MENULEFT, player)
-				or isTriggered(ButtonAction.ACTION_MENURIGHT, player)
-				or isTriggered(ButtonAction.ACTION_MENUCONFIRM, player)
-				or isTriggered(ButtonAction.ACTION_BOMB, player)
+			or isTriggered(ButtonAction.ACTION_MENURIGHT, player)
+			or isTriggered(ButtonAction.ACTION_MENUCONFIRM, player)
+			or isTriggered(ButtonAction.ACTION_BOMB, player)
 			)
 			and not player:GetData().CNC_KeyDelay
 			and not g.game:IsPaused()
@@ -834,7 +860,7 @@ function cnc:CharacterSelect()
 		then
 			if (
 				isTriggered(ButtonAction.ACTION_MENULEFT, player)
-					or isTriggered(ButtonAction.ACTION_MENURIGHT, player)
+				or isTriggered(ButtonAction.ACTION_MENURIGHT, player)
 				)
 				and state.Characters.Confirmed[i] == false
 			then
@@ -842,7 +868,8 @@ function cnc:CharacterSelect()
 				local soundToPlay = isTriggered(ButtonAction.ACTION_MENULEFT, player) and
 					SoundEffect.SOUND_CHARACTER_SELECT_LEFT or SoundEffect.SOUND_CHARACTER_SELECT_RIGHT
 				state.Characters.Selected[i] = state.Characters.Selected[i] + num
-				state.Characters.Selected[i] = state.Characters.Selected[i] > 4 and 1 or state.Characters.Selected[i] < 1 and 4 or
+				state.Characters.Selected[i] = state.Characters.Selected[i] > 4 and 1 or
+					state.Characters.Selected[i] < 1 and 4 or
 					state.Characters.Selected[i]
 				g.sfx:Play(soundToPlay)
 				data.CNC_KeyDelay = KEY_DELAY
@@ -851,7 +878,8 @@ function cnc:CharacterSelect()
 			if isTriggered(ButtonAction.ACTION_MENUCONFIRM, player)
 				and state.Characters.Confirmed[i] == false
 			then
-				state.Characters.NumActive[state.Characters.Selected[i]] = state.Characters.NumActive[state.Characters.Selected[i]] +
+				state.Characters.NumActive[state.Characters.Selected[i]] = state.Characters.NumActive
+					[state.Characters.Selected[i]] +
 					1
 				state.Characters.Confirmed[i] = true
 				g.sfx:Play(SoundEffect.SOUND_THUMBSUP)
@@ -861,7 +889,8 @@ function cnc:CharacterSelect()
 				and state.Characters.Confirmed[i] == true
 			then
 				state.Characters.Confirmed[i] = false
-				state.Characters.NumActive[state.Characters.Selected[i]] = state.Characters.NumActive[state.Characters.Selected[i]] -
+				state.Characters.NumActive[state.Characters.Selected[i]] = state.Characters.NumActive
+					[state.Characters.Selected[i]] -
 					1
 				state.NumConfirmed = state.NumConfirmed - 1
 				data.CNC_KeyDelay = KEY_DELAY
@@ -878,6 +907,7 @@ function cnc:CharacterSelect()
 	end
 end
 
+--TODO: Clean this
 function cnc:OnPromptTransition()
 	if not state.HasSelected then
 		if fadeType == "PromptDown" and transitionY.Prompt == TRANSITION_Y_TARGET then
@@ -919,7 +949,7 @@ function cnc:OnPromptTransition()
 			else
 				if not state.EncounterStarted and (
 					state.PromptTypeSelected == cncText.PromptType.ENEMY
-						or state.PromptTypeSelected == cncText.PromptType.BOSS
+					or state.PromptTypeSelected == cncText.PromptType.BOSS
 					)
 				then
 					cnc:tryStartRoomEncounter()
@@ -932,6 +962,7 @@ function cnc:OnPromptTransition()
 	end
 end
 
+--TODO: Clean this
 function cnc:DiceAnimation()
 	if dice:GetAnimation() ~= "Idle" then
 		local dicePos = Vector(getCenterScreen().X + 205, getCenterScreen().Y + 95 + transitionY.Dice)
@@ -968,12 +999,13 @@ function cnc:DiceAnimation()
 	end
 end
 
+--TODO: Clean this
 function cnc:MinigameLogic()
 	local player1 = Isaac.GetPlayer()
 
 	if (
 		g.GameState.ShouldStart
-			or (Input.IsButtonTriggered(testStartPrompt, player1.ControllerIndex) and debug)
+		or (Input.IsButtonTriggered(testStartPrompt, player1.ControllerIndex) and debug)
 		)
 		and not state.Active
 		and not g.game:IsPaused()
@@ -1014,8 +1046,8 @@ function cnc:MinigameLogic()
 					end
 					--print(prompt, prompt[state.PromptSelected], prompt[state.PromptSelected].Outcome, outcomeText, state.PromptTypeSelected, state.PromptSelected, state.OptionSelectedSaved)
 					if outcomeText[state.OutcomeResult] then
-                        outcomeText = outcomeText[state.OutcomeResult]
-                    end
+						outcomeText = outcomeText[state.OutcomeResult]
+					end
 
 					renderPrompt.Outcome = cnc:separateText({ outcomeText }, 300)
 					fadeType = "PromptDown"
@@ -1027,11 +1059,11 @@ function cnc:MinigameLogic()
 					else
 						if (
 							cnc:AreAllPlayersDead()
-								or (
-								state.PromptTypeSelected == cncText.PromptType.ENEMY
-									or state.PromptTypeSelected == cncText.PromptType.BOSS
-								)
-								and not state.EncounterCleared
+							or (
+							state.PromptTypeSelected == cncText.PromptType.ENEMY
+							or state.PromptTypeSelected == cncText.PromptType.BOSS
+							)
+							and not state.EncounterCleared
 							)
 						then
 							fadeType = "AllDown"
@@ -1055,7 +1087,7 @@ function cnc:MinigameLogic()
 				if renderPrompt.Options[2] ~= nil then
 					if (
 						isTriggered(ButtonAction.ACTION_MENUUP, player1)
-							or isTriggered(ButtonAction.ACTION_MENUDOWN, player1)
+						or isTriggered(ButtonAction.ACTION_MENUDOWN, player1)
 						)
 						and not data.CNC_KeyDelay
 						and not g.game:IsPaused()
@@ -1116,7 +1148,8 @@ function cnc:RenderScreen()
 				for i = 1, tonumber(string.sub(characters:GetAnimation(), 6, -1)) do
 					local startingFrame = (i * 3) - 3
 					local selectFrame = (i * 3) - 1
-					local frameToUse = state.Characters.Confirmed[i] and selectFrame or (startingFrame + characterFrameOffset)
+					local frameToUse = state.Characters.Confirmed[i] and selectFrame or
+						(startingFrame + characterFrameOffset)
 					local characterLayer = state.Characters.Selected[i] + 10
 					characters:RenderLayer(characterLayer, transitionPos, Vector.Zero, Vector.Zero) --Characters
 					characters:SetLayerFrame(characterLayer, frameToUse)
@@ -1160,7 +1193,7 @@ end
 --------------------------
 
 --Thank you tem
-function cnc:spawnDNDPlayers()
+function cnc:spawnCNCPlayers()
 	for i, player in ipairs(getPlayers()) do
 		local playerType = state.Characters.Selected[i] - 1
 		local lastPlayerIndex = g.game:GetNumPlayers() - 1
@@ -1171,17 +1204,18 @@ function cnc:spawnDNDPlayers()
 			Isaac.ExecuteCommand('addplayer ' .. playerType .. ' ' .. player.ControllerIndex)
 			local strawman = Isaac.GetPlayer(lastPlayerIndex + 1)
 			strawman.Parent = player
-			strawman:AddCollectible(g.DND_PLAYER_TECHNICAL)
+			strawman:AddCollectible(g.CNC_PLAYER_TECHNICAL)
 			strawman.ControlsEnabled = false
 			if playerType == PlayerType.PLAYER_ISAAC then
-				player:AddBombs(-1)
+				player:AddBombs( -1)
 			end
-			table.insert(dndPlayers, strawman)
+			table.insert(cncPlayers, strawman)
 			Game():GetHUD():AssignPlayerHUDs()
 		end
 	end
 end
 
+--TOOO: Clean this
 local playCavesMusic = false
 function cnc:OnNewRoom()
 	local roomDescData = g.game:GetLevel():GetCurrentRoomDesc().Data
@@ -1250,7 +1284,7 @@ function cnc:OnNewRoom()
 	end
 	for _, player in ipairs(players) do
 		if cnc:IsInCNCRoom()
-			and not player:HasCollectible(g.DND_PLAYER_TECHNICAL)
+			and not player:HasCollectible(g.CNC_PLAYER_TECHNICAL)
 		then
 			local data = player:GetData()
 			if data.CNC_PreviousCollisionClass == nil then
@@ -1276,7 +1310,7 @@ function cnc:OnNewRoom()
 			player.Visible = false
 			player:AddEntityFlags(EntityFlag.FLAG_NO_TARGET)
 			if GetPtrHash(player) ~= GetPtrHash(Isaac.GetPlayer()) then
-				player.Position = Vector(-1000, -1000)
+				player.Position = Vector( -1000, -1000)
 			end
 		end
 	end
@@ -1292,8 +1326,8 @@ function cnc:OnPrePickupCollision(pickup, collider, low)
 		if cnc:IsInCNCRoom()
 			and (
 			pickup.Variant == PickupVariant.PICKUP_COIN
-				or pickup.Variant == PickupVariant.PICKUP_KEY
-				or pickup.Variant == PickupVariant.PICKUP_BOMB
+			or pickup.Variant == PickupVariant.PICKUP_KEY
+			or pickup.Variant == PickupVariant.PICKUP_BOMB
 			)
 		then
 			if not pickup:IsDead() then
@@ -1320,7 +1354,7 @@ end
 function cnc:OnCNCRoomClear(rng, spawnPos)
 	if cnc:IsInCNCRoom() then
 		spawnRewardsOnRoomClear(rng, spawnPos)
-		for _, player in ipairs(dndPlayers) do
+		for _, player in ipairs(cncPlayers) do
 			local data = player:GetData()
 			if data.CNC_MinigameStatsTemp then
 				VeeHelper.CopyOverTable(statsTable, data.CNC_MinigameStatsTemp)
@@ -1339,8 +1373,9 @@ function cnc:OnCNCRoomClear(rng, spawnPos)
 	end
 end
 
+--TODO: Clean this
 function cnc:OnPostUpdate()
-	local allDead = #dndPlayers > 0 and cnc:AreAllPlayersDead() or false
+	local allDead = #cncPlayers > 0 and cnc:AreAllPlayersDead() or false
 	local hasPickup = false
 
 	if state.Active then
@@ -1374,7 +1409,7 @@ function cnc:OnPostUpdate()
 		playCavesMusic = false
 	end
 
-	for i, player in ipairs(dndPlayers) do
+	for i, player in ipairs(cncPlayers) do
 		if not player:IsDead() and player:Exists() then
 			if not player:IsDead() and player:Exists() and player.QueuedItem.Item ~= nil then
 				hasPickup = true
@@ -1434,14 +1469,14 @@ end
 function cnc:OnPlayerUpdate(player)
 	if state.Active then
 		if player.ControlsEnabled == true then
-			if not player:HasCollectible(g.DND_PLAYER_TECHNICAL)
-				or (player:HasCollectible(g.DND_PLAYER_TECHNICAL) and not cnc:IsInCNCRoom()) then
+			if not player:HasCollectible(g.CNC_PLAYER_TECHNICAL)
+				or (player:HasCollectible(g.CNC_PLAYER_TECHNICAL) and not cnc:IsInCNCRoom()) then
 				player.ControlsEnabled = false
 			end
 		elseif not state.ScreenShown and GetPtrHash(player) == GetPtrHash(Isaac.GetPlayer()) then
-			for _, cncPlayer in ipairs(dndPlayers) do
+			for _, cncPlayer in ipairs(cncPlayers) do
 				if not cncPlayer:IsDead() then
-					player.Position = Vector(cncPlayer.Position.X, cncPlayer.Position.Y - 25)
+					player.Position = Vector(cncPlayer.Position.X, cncPlayer.Position.Y) + VeeHelper.DirectionToVector(player:GetHeadDirection()):Resized(25)
 					if player.Visible then
 						player.Visible = false
 					end
@@ -1455,7 +1490,7 @@ end
 ---@param player EntityPlayer
 ---@param cacheFlag CacheFlag
 function cnc:OnCNCPlayerCache(player, cacheFlag)
-	if player:HasCollectible(g.DND_PLAYER_TECHNICAL) then
+	if player:HasCollectible(g.CNC_PLAYER_TECHNICAL) then
 		local data = player:GetData()
 		local stats = {}
 		VeeHelper.CopyOverTable(statsTable, stats)
@@ -1693,7 +1728,7 @@ function cnc:RoomTimer()
 					elseif timer <= 0 then
 						timerColor = KColor(1, 0, 0, 1)
 						if timerMillisecond == 0 then
-							for _, player in ipairs(dndPlayers) do
+							for _, player in ipairs(cncPlayers) do
 								if not player:IsDead() then
 									player:Die()
 								end
@@ -1711,7 +1746,8 @@ function cnc:RoomTimer()
 					timerTextMillisecond = "0" .. timerTextMillisecond
 				end
 
-				timerFont:DrawString(timerText .. ":" .. timerTextMillisecond, 0, center.Y - 150, timerColor, Isaac.GetScreenWidth()
+				timerFont:DrawString(timerText .. ":" .. timerTextMillisecond, 0, center.Y - 150, timerColor,
+					Isaac.GetScreenWidth()
 					, true)
 			elseif timer ~= -1 then
 				timer = -1
