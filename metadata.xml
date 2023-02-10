@@ -3,21 +3,31 @@
     <name>Caves 'n Creatures!</name>
     <directory>modjam2023_dndgame</directory>
     <id>2928446030</id>
-    <description>[h1]Description[/h1]
+    <description>[h3]Description[/h3]
 This mod adds a special beggar into the game - The Dungeon Master! Meet him in the arcade to play an Isaac-adapted version of a very popular board game - &quot;Caves n' Creatures&quot;! Featuring:
 [list]
-    [*] 6 new enemies to encounter during your quest;
-    [*] a new boss to fight against, exclusive to the minigame!
-    [*] a unique prompt system, where your fate is decided based on what character you choose to play (4 available!), what consumables you have, and of course, the roll of the die!
+    [*]6 new enemies to encounter during your quest alongside familiar ones.
+    [*]A new boss to fight against, exclusive to the minigame!
+    [*]A unique prompt system as your method of immersing yourself in the world.
+    [*]Change your fate with one of the four original cast of Isaac characters, the consumables you collect, and of course, the roll of the die!
+    [*]Up to three other players in your run able to play with you in the minigame!
+[/list]
 
-Credits:
+[h3]Important Notes[/h3]
+[list]
+[*]This mod was stitched together last minute and may be prone to bugs.
+[*]It is not recommended you exit and continue the run during the minigame. It may break, it may not.
+[*]Improvements to the flow of the minigame and overall quality will come around soon!
+[/list]
+
+[h3]Credits[/h3]
 Sanio - prompt system code
 Mr. SeemsGood - enemies and boss code
 AnglerFishart - sprites and art
 
 ---
 [i]This mod was made as an entry to Year of the Gaper 2023 Modding Jam.[/i]</description>
-    <version>1.1</version>
+    <version>1.3</version>
     <visibility>Public</visibility>
     <tag id="Lua"/>
     <tag id="Rooms"/>
