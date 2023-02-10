@@ -131,6 +131,19 @@ local statsTable = {
 ---@type EntityPlayer[]
 local cncPlayers = {}
 
+---@type Sprite[]
+local cncPlayerActiveItems = {
+	Sprite(),
+	Sprite(),
+	Sprite(),
+	Sprite(),
+}
+
+for _, s in pairs(cncPlayerActiveItems) do
+	s:Load('gfx/cnc_player_active_item.anm2', true)
+	s:Play('Item')
+end
+
 --------------------------
 --  BASIC HELPER STUFF  --
 --------------------------
@@ -1760,6 +1773,22 @@ function cnc:RoomTimer()
 	end
 end
 
+function cnc:RenderPlayersActiveItem()
+	if cnc:IsInCNCRoom() then
+		for i, player in ipairs(cncPlayers) do
+			local gfx = Isaac.GetItemConfig():GetCollectible(player:GetActiveItem(ActiveSlot.SLOT_PRIMARY)).GfxFileName
+			--print(gfx)
+			--todo chargerbars
+
+			if gfx and gfx ~= "" then
+				cncPlayerActiveItems[i]:ReplaceSpritesheet(0, gfx)
+				cncPlayerActiveItems[i]:LoadGraphics()
+				cncPlayerActiveItems[i]:Render(Vector(32 * i, 32))
+			end
+		end
+	end
+end
+
 ------------
 --  MISC  --
 ------------
@@ -1787,6 +1816,7 @@ function cnc:OnRender()
 		cnc:MinigameLogic()
 		cnc:HandleTransitions()
 		cnc:RoomTimer()
+		cnc:RenderPlayersActiveItem()
 	end
 end
 

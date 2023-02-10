@@ -736,9 +736,9 @@ end
 ---@param currentNums integer[]
 ---@param maxNum integer
 ---@param rng RNG
-function VeeHelper.DifferentRandomNum(currentNums, maxNum, rng)
+function VeeHelper.GetDifferentRandomNum(currentNums, maxNum, rng)
 	local checkCount = 0
-	local randomNum = function() return rng:RandomInt(maxNum) end
+	local randomNum = function() return rng:RandomInt(maxNum) + 1 end
 	local num = randomNum()
 	local allNums = {}
 	for _, int in ipairs(currentNums) do
@@ -774,17 +774,19 @@ function VeeHelper.IsTrinketOwned(trinketType)
 	return hasTrinket
 end
 
---Takes a custom array of CollectibleTypes and returns a modified version of the array that excludes any player-owned items. Active items are removed if any player owns the "No!" trinket.
+---- Takes a custom array of CollectibleTypes and returns a modified version of the array that excludes any player-owned items
+---- Active items are removed if any player owns the "No!" trinket
+---- A default item can be provided and will insert itself in the table if the pool is depleted. Breakfast by default.
 ---@param pool CollectibleType[]
-function VeeHelper.GetCustomItemPool(pool)
+---@param defaultItem? CollectibleType
+function VeeHelper.GetCustomItemPool(pool, defaultItem)
 	local itemsOutOfPool = {}
 	local players = VeeHelper.GetAllPlayers()
 	local hasNO = VeeHelper.IsTrinketOwned(TrinketType.TRINKET_NO)
 
-	for i = 1, #players do
-		local player = players[i]
+	for _, player in ipairs(players) do
 		for j = 1, #pool do
-			if player:HasCollectible(pool[j]) or hasNO then
+			if player:HasCollectible(pool[j]) or (hasNO and Isaac.GetItemConfig():GetCollectible(pool[j]).Type == ItemType.ITEM_ACTIVE) then
 				itemsOutOfPool[j] = true
 			end
 		end
@@ -794,6 +796,10 @@ function VeeHelper.GetCustomItemPool(pool)
 		if not itemsOutOfPool[i] then
 			table.insert(currentPool, pool[i])
 		end
+	end
+	if #pool == 0 then
+		if not defaultItem then defaultItem = CollectibleType.COLLECTIBLE_BREAKFAST end
+		table.insert(currentPool, defaultItem)
 	end
 	return currentPool
 end
@@ -899,7 +905,7 @@ function VeeHelper.ShouldPlayerGetInitialised(player) -- Credit to Kittenchilly
 	local sprite = player:GetSprite()
 	local level = game:GetLevel()
 	local room = level:GetCurrentRoom()
-	
+
 	if (player.FrameCount == 0 or (room:GetFrameCount() > 1 and player.FrameCount == 1)) and
 		sprite:IsFinished(sprite:GetDefaultAnimation()) and not player.Parent then
 		if (level:GetAbsoluteStage() == LevelStage.STAGE1_1 and level:GetCurrentRoomIndex() == level:GetStartingRoomIndex()) or
@@ -910,7 +916,7 @@ function VeeHelper.ShouldPlayerGetInitialised(player) -- Credit to Kittenchilly
 end
 
 ---@param laser EntityLaser
-function VeeHelper.isBrimLaser(laser)
+function VeeHelper.IsBrimLaser(laser)
 	local brimVariants = {
 		[LaserVariant.THIN_RED] = true,
 		[LaserVariant.THICK_RED] = true,
@@ -923,12 +929,15 @@ function VeeHelper.isBrimLaser(laser)
 	return brimVariants[laser.Variant]
 end
 
-function VeeHelper.copyOverTable(tableSubject, tableTarget)
-	for variableName, value in pairs(tableSubject) do
+---@param tableCopyFrom table
+---@param tableCopyTo table
+function VeeHelper.CopyOverTable(tableCopyFrom, tableCopyTo)
+	for variableName, value in pairs(tableCopyFrom) do
 		if type(value) == "table" then
-			tableTarget[variableName] = {}
+			tableCopyTo[variableName] = {}
+			VeeHelper.CopyOverTable(value, tableCopyTo[variableName])
 		else
-			tableTarget[variableName] = value
+			tableCopyTo[variableName] = value
 		end
 	end
 end
