@@ -27,7 +27,7 @@ AnglerFishart - sprites and art
 
 ---
 [i]This mod was made as an entry to Year of the Gaper 2023 Modding Jam.[/i]</description>
-    <version>1.4</version>
+    <version>1.5</version>
     <visibility>Public</visibility>
     <tag id="Lua"/>
     <tag id="Rooms"/>
