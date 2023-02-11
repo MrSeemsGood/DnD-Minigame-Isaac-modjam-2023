@@ -207,7 +207,7 @@ cncText.Prompts = {
 			[1] = "You walk into the next room.",
 			[2] = {
 				[1] = "The rope breaks as soon as you start climbing it.",
-				[2] = "THe rope breaks as you've almost reach the bag. You fall down.",
+				[2] = "The rope breaks as you've almost reach the bag. You fall down.",
 				[3] = "You succesfully climb the rope.",
 			},
 		},
@@ -263,7 +263,7 @@ cncText.Prompts = {
 		Options = {
 			[1] = { "Select", "Leave it be." },
 			[2] = { "Roll", "Search it for books." },
-			[3] = { "Roll", "You decide to crush the bookcase down and then search it.", PlayerType.PLAYER_ISAAC}
+			[3] = { "Roll", "Crush down the bookcase and then search it.", PlayerType.PLAYER_ISAAC}
 		},
 		Outcome = {
 			[1] = "You walk into the next room. Right as you leave, you hear a loud thud as the bookcase finally collapses under its own weight.",
@@ -345,7 +345,7 @@ cncText.Prompts = {
 	},
 	-- 6: PITCH BLACK
 	{
-		Title = "You enter a cavern. It's pitch black. Completely",
+		Title = "You enter a cavern. It's pitch black. Completely.",
 		Options = {
 			[1] = { "Roll", "You walk through very carefully." },
 			[2] = { "Select", "You pass through.", PlayerType.PLAYER_CAIN},
@@ -370,10 +370,10 @@ cncText.Prompts = {
 				}
 			},
 			[2] = {
-				Bombs = -1
+				Keys = 1
 			},
 			[3] = {
-				Keys = 1
+				Bombs = -1
 			}
 		}
 	},
@@ -399,7 +399,7 @@ cncText.Prompts = {
 			},
 			[3] = {
 				Stats = {
-					Speed = -0.3
+					Speed = -0.2
 				},
 				Collectible = CollectibleType.COLLECTIBLE_DEAD_TOOTH
 			}
@@ -612,8 +612,7 @@ cncText.Encounters = {
 				Collectible = CollectibleType.COLLECTIBLE_SMALL_ROCK
 			},
 			[3] = {
-				StartEncounter = 1612,
-				ApplyStatus = { StatusEffect = cncText.StatusEffect.CHARMED, Duration = 90 },
+				StartEncounter = 1619,
 				Keys = 2,
 				Coins = 3,
 				Collectible = CollectibleType.COLLECTIBLE_SMALL_ROCK

@@ -131,6 +131,13 @@ local statsTable = {
 ---@type EntityPlayer[]
 local cncPlayers = {}
 
+--[[
+	Sprites for:
+	-- Active items
+	-- Chargebars
+	-- Inventory
+	--? do we need to give players trinkets and consumables, or should we remove those?
+]]
 ---@type Sprite[]
 local cncPlayerActiveItems = {
 	Sprite(),
@@ -141,8 +148,25 @@ local cncPlayerActiveItems = {
 
 for _, s in pairs(cncPlayerActiveItems) do
 	s:Load('gfx/cnc_player_active_item.anm2', true)
-	s:Play('Item')
+	s:Play('item')
 end
+
+---@type Sprite[]
+local cncPlayerActiveChargebars = {
+	Sprite(),
+	Sprite(),
+	Sprite(),
+	Sprite(),
+}
+
+for _, s in pairs(cncPlayerActiveChargebars) do
+	s:Load('gfx/cnc_player_active_chargebar.anm2', true)
+	s:Play('charge_unknown')
+end
+
+local cncInventory = Sprite()
+cncInventory:Load('gfx/cnc_inventory.anm2', true)
+cncInventory:SetFrame('inventory', 0)
 
 --------------------------
 --  BASIC HELPER STUFF  --
@@ -241,7 +265,7 @@ end
 function cnc:IsInCNCRoom()
 	local roomDescData = g.game:GetLevel():GetCurrentRoomDesc().Data
 	local roomVariant = roomDescData.OriginalVariant
-	local isDefaultRoom = roomDescData.Type == RoomType.ROOM_DEFAULT and (roomVariant >= 1600 and roomVariant <= 1618)
+	local isDefaultRoom = roomDescData.Type == RoomType.ROOM_DEFAULT and (roomVariant >= 1600 and roomVariant <= 1619)
 	local isBossRoom = roomDescData.Type == RoomType.ROOM_BOSS and (roomVariant >= 16000 and roomVariant <= 16002)
 
 	if state.Active and (isDefaultRoom or isBossRoom) then
@@ -440,13 +464,13 @@ local function applyEffectsOnNewPrompt()
 		end
 		if not effects.StartEncounter then
 			if effects.Keys then
-				state.Inventory.Keys = state.Inventory.Keys + effects.Keys
+				state.Inventory.Keys = math.max(0, state.Inventory.Keys + effects.Keys)
 			end
 			if effects.Bombs then
-				state.Inventory.Bombs = state.Inventory.Bombs + effects.Bombs
+				state.Inventory.Bombs = math.max(0, state.Inventory.Bombs + effects.Bombs)
 			end
 			if effects.Coins then
-				state.Inventory.Coins = state.Inventory.Coins + effects.Coins
+				state.Inventory.Coins = math.max(0, state.Inventory.Coins + effects.Coins)
 			end
 			if effects.Collectible then
 				for _, player in ipairs(cncPlayers) do
@@ -1774,18 +1798,36 @@ function cnc:RoomTimer()
 end
 
 function cnc:RenderPlayersActiveItem()
-	if cnc:IsInCNCRoom() then
-		for i, player in ipairs(cncPlayers) do
+	for i, player in ipairs(cncPlayers) do
+		if player:GetActiveItem(ActiveSlot.SLOT_PRIMARY) and player:GetActiveItem(ActiveSlot.SLOT_PRIMARY) ~= -1 then
 			local gfx = Isaac.GetItemConfig():GetCollectible(player:GetActiveItem(ActiveSlot.SLOT_PRIMARY)).GfxFileName
-			--print(gfx)
-			--todo chargerbars
 
 			if gfx and gfx ~= "" then
 				cncPlayerActiveItems[i]:ReplaceSpritesheet(0, gfx)
 				cncPlayerActiveItems[i]:LoadGraphics()
-				cncPlayerActiveItems[i]:Render(Vector(32 * i, 32))
+				cncPlayerActiveItems[i]:Render(Vector(32 + 48 * (i - 1), 32))
+
+				local maxCharge = Isaac.GetItemConfig():GetCollectible(player:GetActiveItem(ActiveSlot.SLOT_PRIMARY)).MaxCharges
+				local charge = player:GetActiveCharge(ActiveSlot.SLOT_PRIMARY)
+
+				if maxCharge == 3 or maxCharge == 4 or maxCharge == 6 then
+					cncPlayerActiveChargebars[i]:SetFrame("charge_" .. tostring(charge) .. "_" .. tostring(maxCharge), 0)
+				end
+
+				cncPlayerActiveChargebars[i]:Render(Vector(64 + 48 * (i - 1), 32))
 			end
 		end
+	end
+end
+
+function cnc:RenderInventory()
+	if state.Active then
+		local inv = state.Inventory
+
+		cncInventory:Render(Vector(20, 192))
+		Isaac.RenderText(tostring(inv['Coins']), 28, 170, 1, 1, 1, 1)
+		Isaac.RenderText(tostring(inv['Bombs']), 28, 186, 1, 1, 1, 1)
+		Isaac.RenderText(tostring(inv['Keys']), 28, 202, 1, 1, 1, 1)
 	end
 end
 
@@ -1816,7 +1858,11 @@ function cnc:OnRender()
 		cnc:MinigameLogic()
 		cnc:HandleTransitions()
 		cnc:RoomTimer()
-		cnc:RenderPlayersActiveItem()
+		cnc:RenderInventory()
+
+		if cnc:IsInCNCRoom() then
+			cnc:RenderPlayersActiveItem()
+		end
 	end
 end
 
