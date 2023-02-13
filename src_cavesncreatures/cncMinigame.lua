@@ -1351,6 +1351,15 @@ function cnc:OnNewRoom()
 			end
 		end
 	end
+
+	for _, f in pairs(Isaac.FindByType(3)) do
+		f = f:ToFamiliar()
+
+		if f.Player and not f.Player:HasCollectible(g.CNC_PLAYER_TECHNICAL) then
+			f:FollowPosition(Vector(-1000, -1000))
+			f:GetData().forceOffScreen = true
+		end
+	end
 end
 
 ---@param pickup EntityPickup
@@ -1428,6 +1437,7 @@ function cnc:OnPostUpdate()
 				Isaac.GetPlayer(0):GetEffects():RemoveCollectibleEffect(CollectibleType.COLLECTIBLE_WAVY_CAP, 2)
 			end
 		end
+
 		if roomIndexOnMinigameClear then
 			if roomIndexOnMinigameClear ~= 0 then
 				g.game:StartRoomTransition(roomIndexOnMinigameClear, Direction.NO_DIRECTION, RoomTransitionAnim.FADE)
@@ -1436,6 +1446,17 @@ function cnc:OnPostUpdate()
 			end
 			roomIndexOnMinigameClear = nil
 			return
+		end
+
+		for _, f in pairs(Isaac.FindByType(3)) do
+			if f:GetData().forceOffScreen then
+				f.Position = Vector(-1000, -1000)
+				f.Friction = 0
+				f.Visible = false
+				f.EntityCollisionClass = EntityCollisionClass.ENTCOLL_NONE
+				f.GridCollisionClass = EntityGridCollisionClass.GRIDCOLL_NONE
+				f:AddEntityFlags(EntityFlag.FLAG_NO_TARGET)
+			end
 		end
 	end
 	if allDead then return end
