@@ -377,7 +377,7 @@ cncText.Prompts = {
 			}
 		}
 	},
-	--7: INNOCENT BEGGAR
+	-- 7: INNOCENT BEGGAR
 	{
 		Title = "You come across a beggar who asks for but a measely penny to help them get through the day.",
 		Options = {
@@ -402,6 +402,78 @@ cncText.Prompts = {
 					Speed = -0.2
 				},
 				Collectible = CollectibleType.COLLECTIBLE_DEAD_TOOTH
+			}
+		}
+	},
+	-- 8: CHEST
+	{
+		Title = "You come across a locked golden chest.",
+		Options = {
+			[1] = {"Select", "Open it.", "Key1"},
+			[2] = {"Select", "Open it.", PlayerType.PLAYER_CAIN},
+			[3] = {"Roll", "Blow up the lock.", "Bomb1"},
+		},
+		Outcome = {
+			[1] = "You find a bunch of coins inside.",
+			[2] = "You find a bunch of coins inside. You also find a magic potion in a hidden section!",
+			[3] = {
+				[1] = "The lock is too strong to be got rid of that easily.",
+				[2] = "The lock is too strong to be got rid of that easily.",
+				[3] = "The lock falls off and you search the chest, finding some coins inside."
+			},
+		},
+		Effect = {
+			[1] = {
+				Keys = -1,
+				Coins = 3
+			},
+			[2] = {
+				Coins = 3,
+				AddHearts = {
+					[HeartSubType.HEART_SOUL] = 2
+				}
+			},
+			[3] = {
+				[1] = {
+					Bomb = -1
+				},
+				[2] = {
+					Bomb = -1
+				},
+				[3] = {
+					Bomb = -1,
+					Coins = 2
+				},
+			},
+		}
+	},
+	-- 9: KEY MASTER
+	{
+		Title = "You come across a mysterious looking figure. It is asking you if you have any keys to spare.",
+		Options = {
+			[1] = {"Select", "You apologize; you have none on you."},
+			[2] = {"Select", "You give him one key.", "Key1"},
+			[3] = {"Select", "You give him two keys.", "Key2"},
+			[4] = {"Select", "You give him three keys.", "Key3"},
+		},
+		Outcome = {
+			[1] = "The stranger shrugs and walks away quickly.",
+			[2] = "The stranger rewards you for your kindness!",
+			[3] = "The stranger rewards you for your kindness!",
+			[4] = "The stranger rewards you for your kindness!",
+		},
+		Effect = {
+			[2] = {
+				Keys = -1,
+				Collectible = CollectibleType.COLLECTIBLE_CUPIDS_ARROW
+			},
+			[3] = {
+				Keys = -2,
+				Collectible = CollectibleType.COLLECTIBLE_ODD_MUSHROOM_LARGE
+			},
+			[4] = {
+				Keys = -3,
+				Collectible = CollectibleType.COLLECTIBLE_SUCCUBUS
 			}
 		}
 	}
@@ -664,27 +736,62 @@ cncText.Encounters = {
 ---@type Prompt[]
 cncText.RarePrompts = {
 	{
-		Title = "You find an impatient, brown anthropomorphic furry creature pointing to the next room",
+		Title = "You encounter an impatient, brown anthropomorphic furry creature pointing to the next room.",
 		Options = {
-			[1] = { "Select", "Follow its directions" },
-			[2] = { "Roll", "Roll a dice" },
-			[3] = { "Select", "Disobey its directions" }
+			[1] = { "Select", "Follow its directions." },
+			[2] = { "Roll", "Roll a dice for no reason." },
+			[3] = { "Select", "Disobey its directions." }
 		},
 		Outcome = {
 			[1] = "You walk into the next room, wondering what all that was about.",
 			[2] = {
 				[1] = "You rolled a low number. Disappointed, they throw you into the next room.",
-				[2] = "You rolled an ok enogh number to catch the creature's attention. They give you a penny for your troubles.",
-				[3] = "You rolled a high number. Impressed, the creature ",
+				[2] = "You rolled an ok enough number to catch the creature's attention. They give you a penny for your troubles.",
+				[3] = "You rolled a high number. The creature is impressed!",
 			},
 			[3] = "The creature's eyes glow bright as lightning strikes down around them from the ceiling. They utter a phrase spoken in legend before you're smited down.",
 		},
 		Effect = {
+			[2] = {
+				[2] = {
+					Coins = 1
+				}
+			},
 			[3] = {
 				DamagePlayers = 24
 			}
 		}
 	},
+	{
+		Title = "A weird crazy dog stands in your way. In the barking, you can only recognize words like 'stolen' and 'mod'.",
+		Options = {
+			[1] = { "Select", "You give a red flag to the dog." },
+			[2] = { "Select", "You show the dog thumbs down, telling it to bury itself on the spot."},
+			[3] = { "Roll", "You decide to punch the dog for no reason."},
+		},
+		Outcome = {
+			[1] = "The dog starts crying and whining like a little kid.",
+			[2] = "The dog starts crying and whining like a little kid.",
+			[3] = {
+				[1] = "The dog starts crying and whining like a little kid.",
+				[2] = "The dog starts crying and whining like a little kid.",
+				[3] = "The dog starts crying and whining like a little kid."
+			}
+		},
+		Effect = {
+			[3] = {
+				[1] = {
+					Collectible = CollectibleType.COLLECTIBLE_DOG_TOOTH
+				},
+				[2] = {
+					Collectible = CollectibleType.COLLECTIBLE_DOG_TOOTH
+				},
+				[3] = {
+					Collectible = CollectibleType.COLLECTIBLE_DOG_TOOTH
+				}
+			}
+		}
+	}
 }
 
 ---@type Prompt[]

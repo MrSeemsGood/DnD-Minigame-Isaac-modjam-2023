@@ -59,6 +59,29 @@ local gameState = {
 	AdventureEnded = false,
 	HudWasVisible = true,
 }
+
+-- Items show their effects even if the player bearing them is hidden.
+local CNC_BLACKLISTED_ITEMS = {
+	CollectibleType.COLLECTIBLE_2SPOOKY,
+	CollectibleType.COLLECTIBLE_120_VOLT,
+	CollectibleType.COLLECTIBLE_MONSTRANCE,
+	CollectibleType.COLLECTIBLE_PURGATORY,
+	CollectibleType.COLLECTIBLE_HUNGRY_SOUL,
+	CollectibleType.COLLECTIBLE_VANISHING_TWIN,
+	CollectibleType.COLLECTIBLE_TMTRAINER,
+	CollectibleType.COLLECTIBLE_SKATOLE,
+	CollectibleType.COLLECTIBLE_LOST_FLY,
+	CollectibleType.COLLECTIBLE_NIGHT_LIGHT,
+	CollectibleType.COLLECTIBLE_CAMO_UNDIES,
+	CollectibleType.COLLECTIBLE_BROKEN_MODEM,
+	CollectibleType.COLLECTIBLE_BROKEN_WATCH,
+	CollectibleType.COLLECTIBLE_STOP_WATCH,
+	CollectibleType.COLLECTIBLE_DEATHS_LIST,
+	CollectibleType.COLLECTIBLE_DADS_RING,
+	CollectibleType.COLLECTIBLE_SPEAR_OF_DESTINY,
+	CollectibleType.COLLECTIBLE_BURSTING_SACK
+}
+
 local debug = false
 
 ---@type GameState
@@ -180,6 +203,42 @@ local function getPlayers()
 	local players = VeeHelper.GetAllMainPlayers()
 	if #players > 4 then players = { players[1], players[2], players[3], players[4] } end
 	return players
+end
+
+local function processBlacklistedItemsOnMainPlayers()
+	local players = getPlayers()
+
+	for _, p in pairs(players) do
+		p:GetData().heldBlacklistedItems = {}
+
+		for _, id in pairs(CNC_BLACKLISTED_ITEMS) do
+			local n = p:GetCollectibleNum(id, true)
+
+			if n > 0 then
+				for i = 1, n do
+					-- ActiveSlot don't matter here since no actives are being removed from main players during the minigame.
+					p:RemoveCollectible(id, true, ActiveSlot.SLOT_PRIMARY, false)
+					table.insert(p:GetData().heldBlacklistedItems, id)
+				end
+			end
+		end
+	end
+end
+
+local function returnBlacklistedItemsToMainPlayers()
+	local players = getPlayers()
+
+	for _, p in pairs(players) do
+		local data = p:GetData().heldBlacklistedItems
+		if data and type(data) == 'table' and #data > 0 then
+			for _, item in pairs(data) do
+				-- Charge and ActiveSlot don't matter here since no actives are being removed from main players during the minigame.
+				p:AddCollectible(item, 0, false, ActiveSlot.SLOT_PRIMARY)
+			end
+
+			p:GetData().heldBlacklistedItems = true
+		end
+	end
 end
 
 ---@param action ButtonAction
@@ -338,6 +397,8 @@ local function initMinigame()
 	Isaac.GetPlayer().ControlsEnabled = false
 	g.music:Fadeout(0.03)
 	--print("minigame init")
+
+	processBlacklistedItemsOnMainPlayers()
 end
 
 local function initCharacterSelect()
@@ -475,7 +536,7 @@ local function applyEffectsOnNewPrompt()
 			if effects.Collectible then
 				for _, player in ipairs(cncPlayers) do
 					if not player:IsDead() then
-						player:AddCollectible(effects.Collectible, 12, false)
+						player:AddCollectible(effects.Collectible, 12, false, ActiveSlot.SLOT_PRIMARY)
 					end
 				end
 			end
@@ -1288,6 +1349,10 @@ function cnc:OnNewRoom()
 					}
 				}
 			end
+
+			-- Gives all blacklisted items back to main players.
+			returnBlacklistedItemsToMainPlayers()
+
 			resetMinigame()
 			return
 		elseif g.music:IsEnabled() and roomDescData.Type ~= RoomType.ROOM_BOSS then
@@ -1355,9 +1420,30 @@ function cnc:OnNewRoom()
 	for _, f in pairs(Isaac.FindByType(3)) do
 		f = f:ToFamiliar()
 
-		if f.Player and not f.Player:HasCollectible(g.CNC_PLAYER_TECHNICAL) then
-			f:FollowPosition(Vector(-1000, -1000))
-			f:GetData().forceOffScreen = true
+		if cnc:IsInCNCRoom() then
+			if f.Player and not f.Player:HasCollectible(g.CNC_PLAYER_TECHNICAL)
+			and not f:GetData().forceOffScreen then
+				f:GetData().forceOffScreen = true
+				f:GetData().defaultEntityCollisionClass = f.EntityCollisionClass
+				f:GetData().defaultGridCollisionClass = f.GridCollisionClass
+				f.EntityCollisionClass = EntityCollisionClass.ENTCOLL_NONE
+				f.GridCollisionClass = EntityGridCollisionClass.GRIDCOLL_NONE
+				f.Visible = false
+				f:AddEntityFlags(EntityFlag.FLAG_NO_TARGET)
+			end
+
+		else
+			-- Return all the familiars to their normal state.
+			if f:GetData().forceOffScreen then
+				f.Friction = 1
+				f.Visible = true
+				f:ClearEntityFlags(EntityFlag.FLAG_NO_TARGET)
+				f.EntityCollisionClass = f:GetData().defaultEntityCollisionClass
+				f.GridCollisionClass = f:GetData().defaultGridCollisionClass
+
+				f:GetData().forceOffScreen = false
+			end
+
 		end
 	end
 end
@@ -1452,10 +1538,6 @@ function cnc:OnPostUpdate()
 			if f:GetData().forceOffScreen then
 				f.Position = Vector(-1000, -1000)
 				f.Friction = 0
-				f.Visible = false
-				f.EntityCollisionClass = EntityCollisionClass.ENTCOLL_NONE
-				f.GridCollisionClass = EntityGridCollisionClass.GRIDCOLL_NONE
-				f:AddEntityFlags(EntityFlag.FLAG_NO_TARGET)
 			end
 		end
 	end
@@ -1831,8 +1913,10 @@ function cnc:RenderPlayersActiveItem()
 				local maxCharge = Isaac.GetItemConfig():GetCollectible(player:GetActiveItem(ActiveSlot.SLOT_PRIMARY)).MaxCharges
 				local charge = player:GetActiveCharge(ActiveSlot.SLOT_PRIMARY)
 
-				if maxCharge == 3 or maxCharge == 4 or maxCharge == 6 then
-					cncPlayerActiveChargebars[i]:SetFrame("charge_" .. tostring(charge) .. "_" .. tostring(maxCharge), 0)
+				for _, availableCharge in pairs({2, 3, 4, 6}) do
+					if maxCharge == availableCharge then
+						cncPlayerActiveChargebars[i]:SetFrame("charge_" .. tostring(charge) .. "_" .. tostring(maxCharge), 0)
+					end
 				end
 
 				cncPlayerActiveChargebars[i]:Render(Vector(64 + 48 * (i - 1), 32))
