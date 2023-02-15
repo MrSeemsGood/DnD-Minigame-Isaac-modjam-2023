@@ -101,7 +101,8 @@ local KEY_DELAY = 10
 local renderPrompt = {
 	Title = {},
 	Options = {},
-	Outcome = {}
+	Outcome = {},
+	Effect = {}
 }
 local TRANSITION_Y_TARGET = 25
 local TRANSITION_ALPHA_SPEED = 0.04
@@ -336,13 +337,21 @@ end
 
 ---@return OutcomeEffect | nil
 function cnc:GetPromptEffects()
-	local curPrompt = cncText:GetTableFromPromptType(state.PromptTypeSelected)
+	--! Am I doing this right?
+	--[[local curPrompt = cncText:GetTableFromPromptType(state.PromptTypeSelected)
 	if curPrompt[state.PromptSelected] then
 		if curPrompt[state.PromptSelected].Effect and curPrompt[state.PromptSelected].Effect[state.OptionSelectedSaved] then
 			local effects = curPrompt[state.PromptSelected].Effect[state.OptionSelectedSaved]
 			effects = effects[state.OutcomeResult] ~= nil and effects[state.OutcomeResult] or effects
 			return effects
 		end
+	end--]]
+
+	local curPrompt = renderPrompt
+	if curPrompt.Effect and curPrompt.Effect[state.OptionSelectedSaved] then
+		local effects = curPrompt.Effect[state.OptionSelectedSaved]
+		effects = effects[state.OutcomeResult] ~= nil and effects[state.OutcomeResult] or effects
+		return effects
 	end
 end
 
@@ -414,7 +423,8 @@ local function resetMinigame()
 	renderPrompt = {
 		Title = {},
 		Options = {},
-		Outcome = {}
+		Outcome = {},
+		Effect = {}
 	}
 	transitionY = {
 		Title = 0,
@@ -759,10 +769,8 @@ function cnc:startNextPrompt()
 			state.PromptTypeSelected = cncText.PromptType.NORMAL
 		end
 
-		promptTable = cncText:GetTableFromPromptType(state.PromptTypeSelected)
 		if state.PromptTypeSelected == cncText.PromptType.NORMAL or state.PromptTypeSelected == cncText.PromptType.ENEMY then
-			local tableToUse = state.PromptTypeSelected == cncText.PromptType.ENEMY and state.EncountersSeen or
-				state.PromptsSeen
+			local tableToUse = state.PromptTypeSelected == cncText.PromptType.ENEMY and state.EncountersSeen or state.PromptsSeen
 			if #tableToUse == 0 then
 				state.PromptSelected = VeeHelper.RandomNum(1, #promptTable)
 			else
@@ -780,35 +788,41 @@ function cnc:startNextPrompt()
 	local prompt = promptTable[state.PromptSelected]
 	--print(promptTable, prompt, prompt.Title)
 	local title = cnc:separateText({ prompt.Title }, 230)
-	renderPrompt.Title = title
-	renderPrompt.Options = {}
-	for _, option in ipairs(prompt.Options) do
-		local optionRequirment = option[3]
+	renderPrompt.Title = {
+		title,
+		{}, {}, {}
+	}
+	for i = 1, #prompt.Options do
+		local option = prompt.Options[i]
+		local outcome = prompt.Outcome[i]
+		local effect = prompt.Effect[i]
+
+		local optionRequirement = option[3]
 		local shouldCreate = true
 
-		if optionRequirment then
-			if type(optionRequirment) == "number"
-				and state.Characters.NumActive[optionRequirment + 1] == 0
+		if optionRequirement then
+			if type(optionRequirement) == "number"
+				and state.Characters.NumActive[optionRequirement + 1] == 0
 			then
 				shouldCreate = false
-			elseif type(optionRequirment) == "string"
+			elseif type(optionRequirement) == "string"
 				and (
 				(
-				string.sub(optionRequirment, 1, 3) ~= "Key"
-				and string.sub(optionRequirment, 1, 4) ~= "Bomb"
-				and string.sub(optionRequirment, 1, 4) ~= "Coin"
+				string.sub(optionRequirement, 1, 3) ~= "Key"
+				and string.sub(optionRequirement, 1, 4) ~= "Bomb"
+				and string.sub(optionRequirement, 1, 4) ~= "Coin"
 				)
 				or (
-				string.sub(optionRequirment, 1, 3) == "Key"
-				and state.Inventory.Keys < tonumber(string.sub(optionRequirment, 4, -1))
+				string.sub(optionRequirement, 1, 3) == "Key"
+				and state.Inventory.Keys < tonumber(string.sub(optionRequirement, 4, -1))
 				)
 				or (
-				string.sub(optionRequirment, 1, 4) == "Bomb"
-				and state.Inventory.Bombs < tonumber(string.sub(optionRequirment, 5, -1))
+				string.sub(optionRequirement, 1, 4) == "Bomb"
+				and state.Inventory.Bombs < tonumber(string.sub(optionRequirement, 5, -1))
 				)
 				or (
-				string.sub(optionRequirment, 1, 4) == "Coin"
-				and state.Inventory.Coins < tonumber(string.sub(optionRequirment, 5, -1))
+				string.sub(optionRequirement, 1, 4) == "Coin"
+				and state.Inventory.Coins < tonumber(string.sub(optionRequirement, 5, -1))
 				)
 				)
 			then
@@ -823,28 +837,25 @@ function cnc:startNextPrompt()
 				[PlayerType.PLAYER_JUDAS] = "Judas",
 			}
 			local prefix = ""
-			if type(optionRequirment) == "number" then
-				prefix = names[optionRequirment]
+			if type(optionRequirement) == "number" then
+				prefix = names[optionRequirement]
 				prefix = "[" .. prefix .. "] "
-			elseif type(optionRequirment) == "string" then
-				local name = string.sub(optionRequirment, 1, 3) == "Key" and string.sub(optionRequirment, 1, 3) or
-					string.sub(optionRequirment, 1, 4)
-				local num = name == "Key" and string.sub(optionRequirment, 4, -1) or
-					string.sub(optionRequirment, 5, -1)
-				if name == "Key" then
-					prefix = "-" .. num .. " " .. name
-				elseif name == "Bomb" then
-					prefix = "-" .. num .. " " .. name
-				elseif name == "Coin" then
-					prefix = "-" .. num .. " " .. name
-				end
-				prefix = "[" .. prefix .. "] "
+			elseif type(optionRequirement) == "string" then
+				local name = string.sub(optionRequirement, 1, 3) == "Key" and string.sub(optionRequirement, 1, 3) or
+					string.sub(optionRequirement, 1, 4)
+				local num = name == "Key" and string.sub(optionRequirement, 4, -1) or
+					string.sub(optionRequirement, 5, -1)
+				prefix = "[" .. "-" .. num .. " " .. name .. "] "
 			end
-			local prompt = {}
-			prompt[1] = option[1]
-			prompt[2] = prefix .. option[2]
-			prompt[3] = optionRequirment
-			table.insert(renderPrompt.Options, prompt)
+
+			-- Build a special renderPrompt table that holds ONLY accessible Option's, their Outcome's and Effect's.
+			table.insert(renderPrompt.Options, {
+				option[1],				-- prompt type
+				prefix .. option[2],	-- the prompt itself
+				optionRequirement		-- requirement
+			})
+			table.insert(renderPrompt.Outcome, outcome)
+			table.insert(renderPrompt.Effect, effect)
 		end
 	end
 end
@@ -1127,8 +1138,12 @@ function cnc:MinigameLogic()
 				and state.ScreenShown
 			then
 				if not state.HasSelected then
-					local prompt = cncText:GetTableFromPromptType(state.PromptTypeSelected)
-					local outcomeText = prompt[state.PromptSelected].Outcome[state.OptionSelectedSaved]
+					--! FOR SANIO (probably)
+					-- TODO: finish this
+					-- please :(
+
+					local outcomeText = renderPrompt.Outcome[state.OptionSelectedSaved]
+					local effect = renderPrompt.Effect[state.OptionSelectedSaved]
 
 					if cnc:IsRollOption() then
 						cnc:RollDice()
@@ -1142,13 +1157,16 @@ function cnc:MinigameLogic()
 							end
 						end
 					end
-					--print(prompt, prompt[state.PromptSelected], prompt[state.PromptSelected].Outcome, outcomeText, state.PromptTypeSelected, state.PromptSelected, state.OptionSelectedSaved)
 					if outcomeText[state.OutcomeResult] then
 						outcomeText = outcomeText[state.OutcomeResult]
+						effect = effect[state.OutcomeResult]
 					end
 
 					renderPrompt.Outcome = cnc:separateText({ outcomeText }, 300)
+					renderPrompt.Effect = effect
+					-- cnc:GetPromptEffects() got changed so look it up too. Should be all good, but idk
 					fadeType = "PromptDown"
+
 				else
 					if cnc:IsRollOption()
 						and state.NumAvailableRolls > 0
