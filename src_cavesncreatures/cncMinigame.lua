@@ -98,7 +98,7 @@ local bossVs = Sprite()
 local testStartPrompt = Keyboard.KEY_J
 local testEndPrompt = Keyboard.KEY_K
 local KEY_DELAY = 10
-local renderPrompt = {
+renderPrompt = {
 	Title = {},
 	Options = {},
 	Outcome = {},
@@ -347,9 +347,8 @@ function cnc:GetPromptEffects()
 		end
 	end--]]
 
-	local curPrompt = renderPrompt
-	if curPrompt.Effect and curPrompt.Effect[state.OptionSelectedSaved] then
-		local effects = curPrompt.Effect[state.OptionSelectedSaved]
+	if renderPrompt.Effect then
+		local effects = renderPrompt.Effect
 		effects = effects[state.OutcomeResult] ~= nil and effects[state.OutcomeResult] or effects
 		return effects
 	end
@@ -510,14 +509,10 @@ end
 
 function cnc:tryStartRoomEncounter()
 	local effects = cnc:GetPromptEffects()
-	if effects then
-		if effects.StartEncounter then
-			if not state.EncounterStarted then
-				local roomType = state.PromptTypeSelected == cncText.PromptType.BOSS and "boss" or "default"
-				Isaac.ExecuteCommand("goto s." .. roomType .. "." .. tostring(effects.StartEncounter))
-				state.EncounterStarted = true
-			end
-		end
+	if effects and effects.StartEncounter and not state.EncounterStarted then
+		local roomType = state.PromptTypeSelected == cncText.PromptType.BOSS and "boss" or "default"
+		Isaac.ExecuteCommand("goto s." .. roomType .. "." .. tostring(effects.StartEncounter))
+		state.EncounterStarted = true
 	end
 end
 
@@ -756,7 +751,7 @@ function cnc:startNextPrompt()
 	state.OptionSelected = 1
 	state.OptionSelectedSaved = 1
 
-	local promptTable = cncText:GetTableFromPromptType(state.PromptTypeSelected)
+	local promptTable
 
 	if selectNextPrompt then
 		if state.PromptProgress == state.MaxPrompts then
@@ -768,6 +763,8 @@ function cnc:startNextPrompt()
 		else
 			state.PromptTypeSelected = cncText.PromptType.NORMAL
 		end
+
+		promptTable = cncText:GetTableFromPromptType(state.PromptTypeSelected)
 
 		if state.PromptTypeSelected == cncText.PromptType.NORMAL or state.PromptTypeSelected == cncText.PromptType.ENEMY then
 			local tableToUse = state.PromptTypeSelected == cncText.PromptType.ENEMY and state.EncountersSeen or state.PromptsSeen
@@ -786,11 +783,13 @@ function cnc:startNextPrompt()
 		end
 	end
 	local prompt = promptTable[state.PromptSelected]
+	--print(type(prompt))
 	--print(promptTable, prompt, prompt.Title)
-	local title = cnc:separateText({ prompt.Title }, 230)
-	renderPrompt.Title = {
-		title,
-		{}, {}, {}
+	renderPrompt = {
+		Title = prompt.Title,
+		Options = {},
+		Outcome = {},
+		Effect = {}
 	}
 	for i = 1, #prompt.Options do
 		local option = prompt.Options[i]
@@ -945,6 +944,8 @@ local function renderText(stringTable, startingPos, textType)
 			renderDiceOption(text, posY, #stringTable > 1)
 		end
 
+		--print(text)
+
 		local yOffset = textType == "Title" and transitionY.Title or transitionY.Prompt
 		local alphaOffset = textType == "Title" and transitionAlpha.Title or transitionAlpha.Prompt
 		font:DrawString(text, posX, posY + yOffset, KColor(1, 1, 1, alphaOffset), boxLength, true)
@@ -1041,8 +1042,8 @@ function cnc:OnPromptTransition()
 					startMinigameReset()
 					--print("you won bitch!")
 				else
-					renderPrompt.Title = { "Room Cleared!" }
-					renderPrompt.Outcome = { "You defeat the creatures,", "moving onto the next room..." }
+					renderPrompt.Title = "Room Cleared!"
+					renderPrompt.Outcome = {"You defeat the creatures,", "moving onto the next room..."}
 					fadeType = "AllUp"
 					Isaac.ExecuteCommand("goto s.default.2")
 					background:Play("TransitionIn", true)
@@ -1138,10 +1139,6 @@ function cnc:MinigameLogic()
 				and state.ScreenShown
 			then
 				if not state.HasSelected then
-					--! FOR SANIO (probably)
-					-- TODO: finish this
-					-- please :(
-
 					local outcomeText = renderPrompt.Outcome[state.OptionSelectedSaved]
 					local effect = renderPrompt.Effect[state.OptionSelectedSaved]
 
@@ -1164,7 +1161,6 @@ function cnc:MinigameLogic()
 
 					renderPrompt.Outcome = cnc:separateText({ outcomeText }, 300)
 					renderPrompt.Effect = effect
-					-- cnc:GetPromptEffects() got changed so look it up too. Should be all good, but idk
 					fadeType = "PromptDown"
 
 				else
@@ -1197,7 +1193,7 @@ function cnc:MinigameLogic()
 				cnc:DiceAnimation()
 			end
 
-			renderText(renderPrompt.Title, -80, "Title")
+			renderText(cnc:separateText({ renderPrompt.Title }, 230), -80, "Title")
 
 			if not state.HasSelected then
 				if renderPrompt.Options[2] ~= nil then
@@ -1920,7 +1916,7 @@ end
 
 function cnc:RenderPlayersActiveItem()
 	for i, player in ipairs(cncPlayers) do
-		if player:GetActiveItem(ActiveSlot.SLOT_PRIMARY) and player:GetActiveItem(ActiveSlot.SLOT_PRIMARY) ~= -1 then
+		if Isaac.GetItemConfig():GetCollectible(player:GetActiveItem(ActiveSlot.SLOT_PRIMARY)) then
 			local gfx = Isaac.GetItemConfig():GetCollectible(player:GetActiveItem(ActiveSlot.SLOT_PRIMARY)).GfxFileName
 
 			if gfx and gfx ~= "" then

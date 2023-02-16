@@ -178,6 +178,7 @@ cncText.Prompts = {
 			[3] = "The bomb you placed does quick work of the rock.",
 		},
 		Effect = {
+			[1] = {},
 			[2] = {
 				[1] = {
 					DamagePlayers = 1,
@@ -212,6 +213,7 @@ cncText.Prompts = {
 			},
 		},
 		Effect = {
+			[1] = {},
 			[2] = {
 				[2] = {
 					Stats = {
@@ -244,6 +246,7 @@ cncText.Prompts = {
 			[3] = "Nothing happens when you bomb it.",
 		},
 		Effect = {
+			[1] = {},
 			[2] = {
 				[1] = {
 					Collectible = CollectibleType.COLLECTIBLE_MOMS_LIPSTICK
@@ -255,6 +258,7 @@ cncText.Prompts = {
 					Collectible = CollectibleType.COLLECTIBLE_MOMS_RING
 				},
 			},
+			[3] = {},
 		}
 	},
 	-- 4: OLD BOOKCASE
@@ -279,6 +283,7 @@ cncText.Prompts = {
 			},
 		},
 		Effect = {
+			[1] = {},
 			[2] = {
 				[1] = {
 					DamagePlayers = 1,
@@ -328,6 +333,7 @@ cncText.Prompts = {
 					DamageMult = 1.1
 				}
 			},
+			[2] = {},
 			[3] = {
 				[1] = {
 					Coins = -2
@@ -367,7 +373,8 @@ cncText.Prompts = {
 				},
 				[2] = {
 					DamagePlayers = 1
-				}
+				},
+				[3] = {},
 			},
 			[2] = {
 				Keys = 1
@@ -381,16 +388,17 @@ cncText.Prompts = {
 	{
 		Title = "You come across a beggar who asks for but a measely penny to help them get through the day.",
 		Options = {
-			[1] = { "Select", "Pay no notice to the beggar" },
-			[2] = { "Select", "Give a coin to the beggar", "Coin1" },
-			[3] = { "Select", "'Trade' with the beggar", PlayerType.PLAYER_CAIN },
+			[1] = { "Select", "Pay no notice to the beggar." },
+			[2] = { "Select", "Give a coin to the beggar.", "Coin1" },
+			[3] = { "Select", "'Trade' with the beggar.", PlayerType.PLAYER_CAIN },
 		},
 		Outcome = {
 			[1] = "You move forwards through the caves, leaving the beggar for dead.",
 			[2] = "You part ways with your penny and give it to the beggar. He thanks you and reveals himself to be a wizard! A magical spell grants you +1 damage to assist in defeating your foes.",
-			[3] = "You offer some coins in exchange for any valuables they have. They give you a tooth, but you run off the moment it's in your hands. A curse is enacted upon you from the beggar, you feel slower!"
+			[3] = "You offer some coins in exchange for any valuables they have. They give you a tooth, but you run off the moment it's in your hands. A curse is enacted upon you, you feel slower!"
 		},
 		Effect = {
+			[1] = {},
 			[2] = {
 				Coins = -1,
 				Stats = {
@@ -412,6 +420,7 @@ cncText.Prompts = {
 			[1] = {"Select", "Open it.", "Key1"},
 			[2] = {"Select", "Open it.", PlayerType.PLAYER_CAIN},
 			[3] = {"Roll", "Blow up the lock.", "Bomb1"},
+			[4] = {"Select", "Leave it be."}
 		},
 		Outcome = {
 			[1] = "You find a bunch of coins inside.",
@@ -421,6 +430,7 @@ cncText.Prompts = {
 				[2] = "The lock is too strong to be got rid of that easily.",
 				[3] = "The lock falls off and you search the chest, finding some coins inside."
 			},
+			[4] = "You walk away and leave the chest behind."
 		},
 		Effect = {
 			[1] = {
@@ -445,6 +455,7 @@ cncText.Prompts = {
 					Coins = 2
 				},
 			},
+			[4] = {},
 		}
 	},
 	-- 9: KEY MASTER
@@ -463,6 +474,7 @@ cncText.Prompts = {
 			[4] = "The stranger rewards you for your kindness!",
 		},
 		Effect = {
+			[1] = {},
 			[2] = {
 				Keys = -1,
 				Collectible = CollectibleType.COLLECTIBLE_CUPIDS_ARROW
@@ -752,6 +764,7 @@ cncText.RarePrompts = {
 			[3] = "The creature's eyes glow bright as lightning strikes down around them from the ceiling. They utter a phrase spoken in legend before you're smited down.",
 		},
 		Effect = {
+			[1] = {},
 			[2] = {
 				[2] = {
 					Coins = 1
@@ -779,6 +792,8 @@ cncText.RarePrompts = {
 			}
 		},
 		Effect = {
+			[1] = {},
+			[2] = {},
 			[3] = {
 				[1] = {
 					Collectible = CollectibleType.COLLECTIBLE_DOG_TOOTH
