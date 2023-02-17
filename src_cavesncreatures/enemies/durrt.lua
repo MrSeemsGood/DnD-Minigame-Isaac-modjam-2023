@@ -175,8 +175,9 @@ function durrt:onNpcUpdate(npc)
             anim = "normal"
             frame = VeeHelper.RandomNum(0, 2)
         end
+        p:GetSprite():ReplaceSpritesheet(0, "gfx/grid/rocks_caves.png")
+        p:GetSprite():LoadGraphics()
         p:GetSprite():SetFrame(anim, frame)
-        p:GetSprite():ReplaceSpritesheet(0, "gfx/rocks_caves.png")
         npc:GetData().rockToPickup:Destroy()
 
     elseif s:IsFinished('Pick') then

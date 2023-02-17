@@ -59,7 +59,7 @@ cncText.StatusEffect = {
 ---@field Title string
 ---@field Options {OptionType: string, Text: string} | {OptionType: string, Text: string, PlayerType: PlayerType} | {OptionType: string, Text: string, ConsumableNeeded: string}
 ---@field Outcome string[] | table<integer, table<integer, string>>
----@field Effect OutcomeEffect[] | table<integer, table<integer, OutcomeEffect>>
+---@field Effect OutcomeEffect[] | table<integer, table<OutcomeEffect, integer>>
 
 --Prompts are required to have the following:
 --Title
@@ -208,8 +208,8 @@ cncText.Prompts = {
 			[1] = "You walk into the next room.",
 			[2] = {
 				[1] = "The rope breaks as soon as you start climbing it.",
-				[2] = "The rope breaks as you've almost reach the bag. You fall down.",
-				[3] = "You succesfully climb the rope.",
+				[2] = "As you've almost reach the bag, the rope breaks and you fall. Speed down!",
+				[3] = "You succesfully climb the rope and take the bag's contents with you.",
 			},
 		},
 		Effect = {
@@ -217,7 +217,7 @@ cncText.Prompts = {
 			[2] = {
 				[2] = {
 					Stats = {
-						Speed = -0.1
+						Speed = -0.15
 					}
 				},
 				[3] = {
@@ -273,7 +273,7 @@ cncText.Prompts = {
 			[1] = "You walk into the next room. Right as you leave, you hear a loud thud as the bookcase finally collapses under its own weight.",
 			[2] = {
 				[1] = "You tilt the bookcase too much and it falls down on you.",
-				[2] = "All books here are extremely old and fragile. You can't find anything useful.",
+				[2] = "All books here are extremely old and fragile. You can't find anything useful. You take one page from a book with you.",
 				[3] = "You find a book and take it with you!",
 			},
 			[3] = {
@@ -310,7 +310,7 @@ cncText.Prompts = {
 	},
 	-- 5: STRANGER
 	{
-		Title = "A shady figure is approaching you, extending his hand towards.",
+		Title = "A shady figure is approaching you, extending his hand towards you.",
 		Options = {
 			[1] = { "Select", "You shake his hand." },
 			[2] = { "Select", "You back off and keep going." },
@@ -318,19 +318,19 @@ cncText.Prompts = {
 			[4] = { "Select", "You smile back very politely.", PlayerType.PLAYER_MAGDALENE},
 		},
 		Outcome = {
-			[1] = "The stranger wishes you the best of luck in traversing these caves.",
+			[1] = "The stranger wishes you the best of luck in traversing these caverns. Temporary x1.1 damage up!",
 			[2] = "The stranger frowns, calls you rude and leaves.",
 			[3] = {
 				[1] = "The stranger steals the coins you offer him and runs into the dark.",
 				[2] = "The stranger is not a merchant. He has nothing to offer you.",
-				[3] = "The stranger is excited. They'd been craving for a new customer!"
+				[3] = "The stranger is excited. They'd been craving for a new customer! New item bought!"
 			},
-			[4] = "The stranger blushes and welcomes you to the caves with a special gift.",
+			[4] = "The stranger blushes and welcomes you to the caverns with a special gift.",
 		},
 		Effect = {
 			[1] = {
-				StatsTemp = {
-					DamageMult = 1.1
+				Stats = {
+					DamageMult = 0.1
 				}
 			},
 			[2] = {},
@@ -338,6 +338,7 @@ cncText.Prompts = {
 				[1] = {
 					Coins = -2
 				},
+				[2] = {},
 				[3] = {
 					Coins = -2,
 					Collectible = CollectibleType.COLLECTIBLE_BOT_FLY
@@ -345,16 +346,16 @@ cncText.Prompts = {
 			},
 			[4] = {
 				Coins = 2,
-				Bombs = 2
+				Bombs = 1,
 			},
 		}
 	},
 	-- 6: PITCH BLACK
 	{
-		Title = "You enter a cavern. It's pitch black. Completely.",
+		Title = "You enter a cavern. It's pitch black. Completely dark.",
 		Options = {
 			[1] = { "Roll", "You walk through very carefully." },
-			[2] = { "Select", "You pass through.", PlayerType.PLAYER_CAIN},
+			[2] = { "Select", "You pass through with ease.", PlayerType.PLAYER_CAIN},
 			[3] = { "Select", "You lit the fuse on a bomb to observe the cavern.", "Bomb1"},
 		},
 		Outcome = {
@@ -363,8 +364,8 @@ cncText.Prompts = {
 				[2] = "You notice a spike trap, but you aren't very careful around it.",
 				[3] = "You notice a spike trap and barely pass through without getting hurt."
 			},
-			[2] = "You are used to the darkness, you manage to dodge a spike trap and even pick something up!",
-			[3] = "You see a spike trap in the middle of the room. You cross right before the bomb explodes.",
+			[2] = "You are used to the darkness, you manage to evade a spike trap and even pick up a key lying on a floor!",
+			[3] = "You can see a spike trap in the middle of the room. You cross right before the bomb explodes.",
 		},
 		Effect = {
 			[1] = {
@@ -394,8 +395,8 @@ cncText.Prompts = {
 		},
 		Outcome = {
 			[1] = "You move forwards through the caves, leaving the beggar for dead.",
-			[2] = "You part ways with your penny and give it to the beggar. He thanks you and reveals himself to be a wizard! A magical spell grants you +1 damage to assist in defeating your foes.",
-			[3] = "You offer some coins in exchange for any valuables they have. They give you a tooth, but you run off the moment it's in your hands. A curse is enacted upon you, you feel slower!"
+			[2] = "You part ways with your penny and give it to the beggar. He thanks you and reveals himself to be a wizard! His magical spell grants you +1 damage to assist in defeating your foes.",
+			[3] = "You offer some coins in exchange for any valuables they have. He gives you a tooth that feels cursed. Speed down!"
 		},
 		Effect = {
 			[1] = {},
@@ -407,7 +408,7 @@ cncText.Prompts = {
 			},
 			[3] = {
 				Stats = {
-					Speed = -0.2
+					Speed = -0.15
 				},
 				Collectible = CollectibleType.COLLECTIBLE_DEAD_TOOTH
 			}
@@ -418,7 +419,7 @@ cncText.Prompts = {
 		Title = "You come across a locked golden chest.",
 		Options = {
 			[1] = {"Select", "Open it.", "Key1"},
-			[2] = {"Select", "Open it.", PlayerType.PLAYER_CAIN},
+			[2] = {"Select", "Open it with your trusty lockpick.", PlayerType.PLAYER_CAIN},
 			[3] = {"Roll", "Blow up the lock.", "Bomb1"},
 			[4] = {"Select", "Leave it be."}
 		},
@@ -430,7 +431,7 @@ cncText.Prompts = {
 				[2] = "The lock is too strong to be got rid of that easily.",
 				[3] = "The lock falls off and you search the chest, finding some coins inside."
 			},
-			[4] = "You walk away and leave the chest behind."
+			[4] = "You walk away into the next room and leave the chest behind."
 		},
 		Effect = {
 			[1] = {
@@ -533,8 +534,8 @@ cncText.Encounters = {
 			[2] = {
 				StartEncounter = 1601,
 				Coins = 2,
-				Keys = 1,
 				Bombs = 1,
+				ApplyStatus = { StatusEffect = cncText.StatusEffect.FEAR, Duration = 45 },
 				Collectible = CollectibleType.COLLECTIBLE_OUIJA_BOARD
 			}
 		}
@@ -574,7 +575,7 @@ cncText.Encounters = {
 				}
 			},
 			[2] = {
-				StartEncounter = 1608,
+				StartEncounter = 1606,
 				Keys = 1,
 				Bombs = 1,
 				ApplyStatus = { StatusEffect = cncText.StatusEffect.CONFUSION, Duration = 60 }
@@ -589,9 +590,9 @@ cncText.Encounters = {
 		},
 		Outcome = {
 			[1] = {
-				[1] = "One of them has you trapped in a dead-end!",
+				[1] = "One of the creatures has trapped you in a dead-end!",
 				[2] = "You lead one of the creatures into a long thin hallway...",
-				[3] = "You succeed."
+				[3] = "You succeed and fight two of the creatures in a normal-sized cavern."
 			}
 		},
 		Effect = {
@@ -619,11 +620,11 @@ cncText.Encounters = {
 	{
 		Title = "You enter the lair of Ettercaps, spider-like aberrations.",
 		Options = {
-			[1] = { "Roll", "You try to sneak out through the smallest cavern." }
+			[1] = { "Roll", "You try to sneak through the smallest cavern." }
 		},
 		Outcome = {
 			[1] = {
-				[1] = "Unfortunately, this is the biggest one!",
+				[1] = "Unfortunately, this is the biggest cavern in a lair!",
 				[2] = "You encounter a medium-sized cavern.",
 				[3] = "You enter the smallest cavern in the lair."
 			}
@@ -658,7 +659,7 @@ cncText.Encounters = {
 		Options = {
 			[1] = { "Roll", "You try to remain neutral to them and not cause aggression." },
 			[2] = { "Select", "You reasonably decide to bomb them.", "Bomb1" },
-			[3] = { "Select", "Can Stone giants be compassionate?", PlayerType.PLAYER_MAGDALENE }
+			[3] = { "Select", "Can stone giants be compassionate?", PlayerType.PLAYER_MAGDALENE }
 		},
 		Outcome = {
 			[1] = {
@@ -667,7 +668,7 @@ cncText.Encounters = {
 				[3] = "Only the least wise giants decide to stand in your way."
 			},
 			[2] = "The explosion cleans up some space but reveals more enemies!",
-			[3] = "They can. All around is stone, all is soft inside."
+			[3] = "All around is stone, all is soft inside."
 		},
 		Effect = {
 			[1] = {
@@ -697,15 +698,16 @@ cncText.Encounters = {
 			},
 			[3] = {
 				StartEncounter = 1619,
-				Keys = 2,
-				Coins = 3,
-				Collectible = CollectibleType.COLLECTIBLE_SMALL_ROCK
+				Keys = 1,
+				Coins = 2,
+				Collectible = CollectibleType.COLLECTIBLE_SMALL_ROCK,
+				ApplyStatus = { StatusEffect = cncText.StatusEffect.FEAR, Duration = 60 }
 			}
 		}
 	},
 	-- 6: GRELLS
 	{
-		Title = "You encounter floating brains with tentacles and a beak. Oh, Mother Nature!",
+		Title = "You encounter weird creatures. They look like floating brains with tentacles and a beak. Oh, Mother Nature!",
 		Options = {
 			[1] = { "Roll", "You try to remain unnoticed." },
 			[2] = { "Select", "You try to sneak by.", PlayerType.PLAYER_CAIN }
@@ -740,6 +742,7 @@ cncText.Encounters = {
 				StartEncounter = 1616,
 				Coins = 3,
 				Keys = 2,
+				ApplyStatus = { StatusEffect = cncText.StatusEffect.CONFUSION, Duration = 30 }
 			}
 		}
 	},
@@ -865,6 +868,9 @@ end
 ---@param duration integer
 function cncText:ApplyStatusEffect(ent, status, duration)
 	local ref = EntityRef(ent)
+
+	print(status)
+	print(duration)
 
 	if status == cncText.StatusEffect.BURN then
 		ent:AddBurn(ref, duration, 3.5)

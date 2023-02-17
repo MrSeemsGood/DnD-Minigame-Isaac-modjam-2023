@@ -98,7 +98,7 @@ local bossVs = Sprite()
 local testStartPrompt = Keyboard.KEY_J
 local testEndPrompt = Keyboard.KEY_K
 local KEY_DELAY = 10
-renderPrompt = {
+local renderPrompt = {
 	Title = {},
 	Options = {},
 	Outcome = {},
@@ -553,12 +553,13 @@ local function applyEffectsOnRoomEnter()
 	local effects = cnc:GetPromptEffects()
 
 	if effects then
-		if (effects.ApplyStatus or effects.ApplyStatusPlayer) then
+		if (effects.ApplyStatus or effects.ApplyStatusPlayer or effects.DamageEnemies) then
 			for _, ent in ipairs(Isaac.GetRoomEntities()) do
 				if ent:ToNPC() and ent:IsActiveEnemy(false) then
 					if effects.ApplyStatus then
-						cncText:ApplyStatusEffect(ent:ToNPC(), effects.ApplyStatus[1], effects.ApplyStatus[2])
+						cncText:ApplyStatusEffect(ent:ToNPC(), effects.ApplyStatus.StatusEffect, effects.ApplyStatus.Duration)
 					end
+
 					if effects.DamageEnemies then
 						ent:AddEntityFlags(EntityFlag.FLAG_NO_FLASH_ON_DAMAGE)
 						ent:TakeDamage(effects.DamageEnemies, 0, EntityRef(ent), 0)
@@ -567,39 +568,9 @@ local function applyEffectsOnRoomEnter()
 				end
 				if ent:ToPlayer() then
 					if effects.ApplyStatusPlayer then
-						cncText:ApplyStatusEffect(ent:ToPlayer(), effects.ApplyStatus[1], effects.ApplyStatus[2])
+						cncText:ApplyStatusEffect(ent:ToPlayer(), effects.ApplyStatusPlayer.StatusEffect, effects.ApplyStatusPlayer.Duration)
 					end
 				end
-			end
-		end
-		for _, player in ipairs(cncPlayers) do
-			if effects.Stats or effects.StatsTemp then
-				if effects.Stats then
-					local data = player:GetData()
-
-					if not data.CNC_MinigameStats then
-						data.CNC_MinigameStats = {}
-						VeeHelper.CopyOverTable(statsTable, data.CNC_MinigameStats)
-					else
-						for stat, num in pairs(effects.Stats) do
-							data.CNC_MinigameStats[stat] = data.CNC_MinigameStats[stat] + num
-						end
-					end
-				end
-				if effects.StatsTemp then
-					local data = player:GetData()
-
-					if not data.CNC_MinigameStatsTemp then
-						data.CNC_MinigameStatsTemp = {}
-						VeeHelper.CopyOverTable(statsTable, data.CNC_MinigameStatsTemp)
-					else
-						for stat, num in pairs(effects.Stats) do
-							data.CNC_MinigameStatsTemp[stat] = num
-						end
-					end
-				end
-				player:AddCacheFlags(CacheFlag.CACHE_ALL)
-				player:EvaluateItems()
 			end
 		end
 	end
@@ -619,7 +590,7 @@ local function applyEffectsOnOutcome()
 				end
 				if effects.AddHearts and effects.AddHearts[1] then
 					for subType, num in pairs(effects.AddHearts) do
-						local num = num * 2
+						num = num * 2
 						if subType == HeartSubType.HEART_HALF or subType == HeartSubType.HEART_HALF_SOUL then
 							num = num / 2
 						end
@@ -655,6 +626,33 @@ local function applyEffectsOnOutcome()
 							player:AddRottenHearts(num)
 						end
 					end
+				end
+
+				if effects.Stats or effects.StatsTemp then
+					local data = player:GetData()
+
+					if effects.Stats then
+						if not data.CNC_MinigameStats then
+							data.CNC_MinigameStats = {}
+							VeeHelper.CopyOverTable(statsTable, data.CNC_MinigameStats)
+						end
+
+						for stat, num in pairs(effects.Stats) do
+							data.CNC_MinigameStats[stat] = data.CNC_MinigameStats[stat] + num
+						end
+					end
+					if effects.StatsTemp then
+						if not data.CNC_MinigameStatsTemp then
+							data.CNC_MinigameStatsTemp = {}
+							VeeHelper.CopyOverTable(statsTable, data.CNC_MinigameStatsTemp)
+						end
+						for stat, num in pairs(effects.Stats) do
+							data.CNC_MinigameStatsTemp[stat] = num
+						end
+					end
+
+					player:AddCacheFlags(CacheFlag.CACHE_ALL)
+					player:EvaluateItems()
 				end
 			end
 		end
@@ -1304,7 +1302,7 @@ end
 -- PLAYER/ROOM HANDLING --
 --------------------------
 
---Thank you tem
+-- Thank you tem
 function cnc:spawnCNCPlayers()
 	for i, player in ipairs(getPlayers()) do
 		local playerType = state.Characters.Selected[i] - 1
@@ -1318,8 +1316,18 @@ function cnc:spawnCNCPlayers()
 			strawman.Parent = player
 			strawman:AddCollectible(g.CNC_PLAYER_TECHNICAL)
 			strawman.ControlsEnabled = false
+			-- Adjust starting conditions for CnC characters
 			if playerType == PlayerType.PLAYER_ISAAC then
-				player:AddBombs( -1)
+				strawman:AddCollectible(CollectibleType.COLLECTIBLE_D1, 4, false, ActiveSlot.SLOT_PRIMARY)
+				state.Inventory.Bombs = state.Inventory.Bombs + 1
+			elseif playerType == PlayerType.PLAYER_MAGDALENE then
+				strawman:SetCard(0, 0)
+			elseif playerType == PlayerType.PLAYER_CAIN then
+				strawman:RemoveCollectible(CollectibleType.COLLECTIBLE_LUCKY_FOOT, true)
+				strawman:TryRemoveTrinket(TrinketType.TRINKET_PAPER_CLIP)
+				state.Inventory.Keys = state.Inventory.Keys + 1
+			elseif playerType == PlayerType.PLAYER_JUDAS then
+				state.Inventory.Coins = state.Inventory.Coins + 3
 			end
 			table.insert(cncPlayers, strawman)
 			Game():GetHUD():AssignPlayerHUDs()

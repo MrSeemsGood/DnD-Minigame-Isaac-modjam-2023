@@ -30,16 +30,6 @@ local function YouFuckedUp(slot)
 		local type = enemyToSpawn[1]
 		local variant = enemyToSpawn[2]
 		local subType = enemyToSpawn[3] ~= nil and enemyToSpawn[3] or 0
-		local pos = slot.Position
-		for doorSlot = 0, DoorSlot.NUM_DOOR_SLOTS do
-			local door = g.game:GetRoom():GetDoor(doorSlot)
-			local doorPos = g.game:GetRoom():GetDoorSlotPosition(doorSlot)
-
-			if door then
-				pos = doorPos
-				break
-			end
-		end
 		g.game:Spawn(type, variant, g.game:GetRoom():FindFreeTilePosition(slot.Position, 200 ^ 2),
 			Vector.Zero, slot, subType, slot.InitSeed)
 	end
@@ -63,14 +53,32 @@ end
 ---@param slot Entity
 local function SpawnRewards(slot)
 	local items = {
+		-- dice
+		CollectibleType.COLLECTIBLE_D4,
 		CollectibleType.COLLECTIBLE_D6,
-		CollectibleType.COLLECTIBLE_YUM_HEART,
-		CollectibleType.COLLECTIBLE_LUCKY_FOOT,
-		CollectibleType.COLLECTIBLE_BOOK_OF_BELIAL,
-		CollectibleType.COLLECTIBLE_D20,
 		CollectibleType.COLLECTIBLE_D8,
 		CollectibleType.COLLECTIBLE_D10,
 		CollectibleType.COLLECTIBLE_D12,
+		CollectibleType.COLLECTIBLE_D20,
+		CollectibleType.COLLECTIBLE_D100,
+		-- Isaac
+		CollectibleType.COLLECTIBLE_LIL_CHEST,
+		CollectibleType.COLLECTIBLE_OPTIONS,
+		-- Maggy
+		CollectibleType.COLLECTIBLE_YUM_HEART,
+		CollectibleType.COLLECTIBLE_MAGGYS_BOW,
+		CollectibleType.COLLECTIBLE_EUCHARIST,
+		CollectibleType.COLLECTIBLE_GUARDIAN_ANGEL,
+		-- Cain
+		CollectibleType.COLLECTIBLE_LUCKY_FOOT,
+		CollectibleType.COLLECTIBLE_CAINS_OTHER_EYE,
+		CollectibleType.COLLECTIBLE_SACK_OF_SACKS,
+		-- Judas
+		CollectibleType.COLLECTIBLE_BOOK_OF_BELIAL,
+		CollectibleType.COLLECTIBLE_MY_SHADOW,
+		CollectibleType.COLLECTIBLE_EYE_OF_BELIAL,
+		CollectibleType.COLLECTIBLE_BETRAYAL,
+		-- misc
 		CollectibleType.COLLECTIBLE_BERSERK,
 		CollectibleType.COLLECTIBLE_MONSTER_MANUAL,
 	}
@@ -89,9 +97,10 @@ local function SpawnRewards(slot)
 				["Coins"] = { PickupVariant.PICKUP_COIN, CoinSubType.COIN_PENNY },
 			}
 			if nameToType[name] then
-				local pos = g.game:GetRoom():FindFreePickupSpawnPosition(slot.Position, 1)
-				g.game:Spawn(EntityType.ENTITY_PICKUP, nameToType[name][1], pos, Vector.Zero, slot, nameToType[name][2],
-					slot.InitSeed)
+				for _  = 1, math.floor(num * 0.75) + 1 do
+					g.game:Spawn(EntityType.ENTITY_PICKUP, nameToType[name][1], slot.Position, Vector.FromAngle(vee.RandomNum(360)) * 2.5,
+						slot, nameToType[name][2], slot.InitSeed)
+				end
 			end
 			g.GameState.PickupsCollected[name] = 0
 		end
@@ -177,6 +186,19 @@ function cnctable:onPlayerCollision(player, collider, _)
 		g.GameState.BeggarInitSeed = collider.InitSeed
 		g.GameState.ShouldStart = true
 	end
+end
+
+-- 33% to turn any Shell Game into a CnC table
+local REPLACE_CHANCE = 33
+function cnctable:onPreTableSpawn(type, variant, _, _, _, _, seed)
+	local tableRng = RNG()
+	tableRng:SetSeed(seed, 35)
+
+	if type == EntityType.ENTITY_SLOT and variant == 6
+	and tableRng:RandomFloat() * 100 < REPLACE_CHANCE then
+		return {6, g.CNC_BEGGAR, 0, seed}
+	end
+
 end
 
 return cnctable

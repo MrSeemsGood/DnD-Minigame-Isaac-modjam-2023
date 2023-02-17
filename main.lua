@@ -54,6 +54,7 @@ mod:AddCallback(ModCallbacks.MC_EVALUATE_CACHE, cnc.OnCNCPlayerCache)
 mod:AddCallback(ModCallbacks.MC_POST_BOMB_INIT,
 	cnc.LampOilRopeBombsYouWantItItsYourMyFriendAsLongAsYouGotThemInTheMinigame)
 
+mod:AddCallback(ModCallbacks.MC_PRE_ENTITY_SPAWN, cncTable.onPreTableSpawn)
 mod:AddCallback(ModCallbacks.MC_PRE_PLAYER_COLLISION, cncTable.onPlayerCollision, 0)
 
 ---@param player EntityPlayer
